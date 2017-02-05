@@ -49,5 +49,58 @@ class Eternity2_SingletonMove
   //Used as an hash-map from the permutation to the IDOs.
   vector<IDO> first_permutation;
 };
+
+
+
+
+/****************************************
+*
+* L-shaped Move
+*
+* @author Elia
+*
+******************************************/
+class Eternity2_LMove
+{
+  friend bool operator==(const Eternity2_LMove& m1, const Eternity2_LMove& m2);
+  friend bool operator!=(const Eternity2_LMove& m1, const Eternity2_LMove& m2);
+  friend bool operator<(const Eternity2_LMove& m1, const Eternity2_LMove& m2);
+  friend ostream& operator<<(ostream& os, const Eternity2_LMove& c);
+  friend istream& operator>>(istream& is, Eternity2_LMove& c);
+ public:
+  Eternity2_LMove();
+  Eternity2_LMove(unsigned width, unsigned height);
+  
+  /*
+  * Tell where the "hole" in the L-shaped pattern is.
+  * U = up, L = left, ...
+  * An example is found below.
+  */
+  const unsigned HOLE_UL = 0;
+  const unsigned HOLE_UR = 1
+  const unsigned HOLE_DR = 2
+  const unsigned HOLE_DL = 3;
+  const unsigned NO_ELL = 4;
+  
+  /* 
+  * This is a (flattened) matrix representing the (n-1)*(m-1) 2x2 squares, left to right and top to bottom.
+  * The number inside each cell represents if there in an L in the square and how it's oriented.
+  *
+  * Example:
+  * 
+  *  |2|4|      |X|X| |
+  *  |4|0|  =>  |X| |X|
+  *             | |X|X|
+  */
+  vector<unsigned> FlatEllMatrix;
+  
+  
+};
+
+
+
+
+
+
 #endif
 

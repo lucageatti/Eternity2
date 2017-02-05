@@ -205,3 +205,92 @@ ostream& operator<<(ostream& os, const Eternity2_SingletonMove& mv)
   throw logic_error("operator<<(ostream& os, const Eternity2_SingletonMove& mv) not implemented yet");	
   return os;
 }
+
+
+
+
+
+
+/**************************************************************************************************************************
+***************************************************************************************************************************
+***************************************************************************************************************************
+*
+* L-shaped Move
+*
+* @author Elia
+*
+*		                                 @@@
+*		######                          @   @
+*		######                          @   @
+*		######                           ### 
+*		######                           ###                   
+*		######                           @ @                   
+*		######                          @   @                  
+*		######                         @     @                
+*		######                        @       @              
+*		######                        @       @               
+*		##################            @       @               
+*		##################             @     @                  
+*		##################              @@@@@
+*
+*
+***************************************************************************************************************************
+***************************************************************************************************************************
+***************************************************************************************************************************/
+Eternity2_LMove::Eternity2_LMove()
+{
+  // Insert the code that initializes the move
+  flatEllMatrix = vector<unsigned>();
+}
+
+Eternity2_LMove::Eternity2_LMove(unsigned width, unsigned height)
+{
+  // Insert the code that initializes the move
+  flatEllMatrix = vector<unsigned>(width*height);
+}
+
+
+bool operator==(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
+{
+  // Insert the code that checks if two moves are identical
+  unsigned n = mv1.flatEllMatrix.size();
+  if(m != mv1.flatEllMatrix.size()) return false;
+  for(unsigned i = 0; i<m; i++){
+	 if(mv1.flatEllMatrix.at(i)!=mv2.flatEllMatrix.at(i)) 
+		 return false;
+  }
+  return true;
+}
+
+bool operator!=(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
+{
+  // Insert the code that checks if two moves are different
+  return !(mv1==mv2);
+}
+
+bool operator<(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
+{
+  // Insert the code that checks if one move precedes another one
+  // (in any selected order)
+  unsigned n = mv1.flatEllMatrix.size();
+  if(n!=mv2.flatEllMatrix.size())
+	  throw logic_error("operator< for Eternity2_LMove called on instances with different size!");
+  for(unsigned i=0; i<; i++){
+	if(mv1.flatEllMatrix.at(i)<mv2.flatEllMatrix.at(i)) return true;
+  }
+  return false;
+}
+
+istream& operator>>(istream& is, Eternity2_LMove& mv)
+{
+  // Insert the code that read a move
+  throw logic_error("operator>>(istream& is, Eternity2_LMove& cìmv) not implemented yet");	
+  return is;
+}
+
+ostream& operator<<(ostream& os, const Eternity2_LMove& mv)
+{
+  // Insert the code that writes a move
+  throw logic_error("operator<<(ostream& os, const Eternity2_LMove& mv) not implemented yet");	
+  return os;
+}
