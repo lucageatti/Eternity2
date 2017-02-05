@@ -34,8 +34,8 @@ Color Eternity2_State::getColor(IDO ido, CardinalPoint pc) const {
 /*
 * Insert the tile with the given IDO in the given position.
 */
-void Eternity2_State::insertTile(IDO ido, unsigned x, unsigned y){
-  board.at(x).at(y) = ido;
+void Eternity2_State::insertTile(IDO ido,Coord crd){
+  board.at(crd.first).at(crd.second) = ido;
 }
 
 
@@ -121,49 +121,87 @@ ostream& operator<<(ostream& os, const Eternity2_State& st)
 
 
 
+
+
 /**********************************************************************************************
-*     MOVES
+*    SINGLETON MOVE
 ***********************************************************************************************/
 
 
-Eternity2_Move::Eternity2_Move()
+/*
+* Constructor of the "Eternity2_SingletonMove" class. It initializes the "permutation" vector. It cannot take as
+* parameters the list of coordinates, since easylocal++ requires all the move's constructors to have no parameters.
+* The "coords" vector is set with the public method "setCoords()".
+*/
+Eternity2_SingletonMove::Eternity2_SingletonMove()
 {
-  // Insert the code that initialize the move
-  cerr << "Eternity2_Move::Eternity2_Move() not implemented yet" << endl;
+   permutation = vector<IDO>(); //Size unknown
 }
 
-bool operator==(const Eternity2_Move& mv1, const Eternity2_Move& mv2)
+
+/*
+* Equality operator: if the two moves are not defined over the same set of positions, then they are different, i.e.:
+* checks if the vectors "coords" are the same.
+* Otherwise, checks if the vectors "permutation" of the two object are the same, i.e. for all i, the i-esim
+* cell of the two vector must contain the same IDO.
+*
+* ASSUMPTION: the elements of these vector are ordered. This allows to check the two vectors "coords" cell by cell.
+*/
+bool operator==(const Eternity2_SingletonMove& mv1, const Eternity2_SingletonMove& mv2)
 {
-  // Insert the code that checks if two moves are identical
-  throw logic_error("operator==(const Eternity2_Move& mv1, const Eternity2_Move& mv2) not implemented yet");	
+  vector<Coord> coords1 = mv1.coords;
+  vector<Coord> coords2 = mv2.coords;
+  if( coords1.size() != coords2.size() )
+    return false;
+  else{
+    //Check if "coords1" and "coords2" are the same. 
+    //ASSUMPTION: the elements of these vector are ordered
+    for(unsigned c = 0; c < coords1.size(); c++){
+      if( coords1.at(c).first != coords2.at(c).first || coords1.at(c).second != coords2.at(c).second )
+        return false;
+    }
+    //Check if "perm1" and "perm2" are the same.
+    vector<IDO> perm1 = mv1.permutation;
+    vector<IDO> perm2 = mv2.permutation;
+    for(unsigned c = 0; c < perm1.size(); c++){
+      if( perm1.at(c).first != perm2.at(c).first || perm1.at(c).second != perm2.at(c).second )
+        return false;
+    }
+  }
   return true;
 }
 
-bool operator!=(const Eternity2_Move& mv1, const Eternity2_Move& mv2)
+
+/*
+* Disequality operator
+*/
+bool operator!=(const Eternity2_SingletonMove& mv1, const Eternity2_SingletonMove& mv2)
 {
-  // Insert the code that checks if two moves are different
-  throw logic_error("operator!=(const Eternity2_Move& mv1, const Eternity2_Move& mv2) not implemented yet");	
-  return true;
+  return ! (mv1 == mv2);
 }
 
-bool operator<(const Eternity2_Move& mv1, const Eternity2_Move& mv2)
+
+/*
+* Less-than operator. It checks first if ... 
+*/
+bool operator<(const Eternity2_SingletonMove& mv1, const Eternity2_SingletonMove& mv2)
 {
   // Insert the code that checks if one move precedes another one
   // (in any selected order)
-  throw logic_error("operator<(const Eternity2_Move& mv1, const Eternity2_Move& mv2) not implemented yet");	
+  throw logic_error("operator<(const Eternity2_SingletonMove& mv1, const Eternity2_SingletonMove& mv2) not implemented yet");	
   return true;
 }
 
-istream& operator>>(istream& is, Eternity2_Move& mv)
+istream& operator>>(istream& is, Eternity2_SingletonMove& mv)
 {
   // Insert the code that read a move
-  throw logic_error("operator>>(istream& is, Eternity2_Move& mv) not implemented yet");	
+  throw logic_error("operator>>(istream& is, Eternity2_SingletonMove& mv) not implemented yet");	
   return is;
 }
 
-ostream& operator<<(ostream& os, const Eternity2_Move& mv)
+ostream& operator<<(ostream& os, const Eternity2_SingletonMove& mv)
 {
   // Insert the code that writes a move
-  throw logic_error("operator<<(ostream& os, const Eternity2_Move& mv) not implemented yet");	
+  throw logic_error("operator<<(ostream& os, const Eternity2_SingletonMove& mv) not implemented yet");	
   return os;
 }

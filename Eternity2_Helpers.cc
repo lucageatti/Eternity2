@@ -3,6 +3,7 @@
 
 
 
+
 /**********************************************************************************************
 *     COST-COMPONENTS
 ***********************************************************************************************/
@@ -113,7 +114,7 @@ void Eternity2_StateManager::RandomState(Eternity2_State& st)
   unsigned counter = 0;
   for(unsigned c = 0; c < st.getHeight(); c++){
     for(unsigned d = 0; d < st.getWidth(); d++){
-      st.insertTile(rdm_permutation.at(counter),c,d);
+      st.insertTile(rdm_permutation.at(counter),pair<unsigned,unsigned>(c,d));
       counter++;
     }
   }
@@ -127,13 +128,10 @@ void Eternity2_StateManager::RandomState(Eternity2_State& st)
 vector<IDO> Eternity2_StateManager::FisherYatesShuffleIDO(vector<IDO> hat) const {
   unsigned sz = hat.size();
   unsigned j;
-  IDO aux;
   for(unsigned i = sz-1; i > 0; i--){
     j = Random::Int(0,i);
-    aux = hat.at(i);
-    aux.second = Random::Int(0,3);
-    hat.at(i) = hat.at(j);
-    hat.at(j) = aux;
+    hat.at(i).second = Random::Int(0,3);
+    swap(hat.at(i), hat.at(j));
   }
   return hat;
 }
@@ -171,7 +169,7 @@ void Eternity2_OutputManager::OutputState(const Eternity2_State& st, Eternity2_O
 {
   for(unsigned r = 0; r < st.getHeight(); r++){
     for(unsigned c = 0; c < st.getWidth(); c++){
-      out.insertTile(st.getIDOAt(r,c), r, c);
+      out.insertTile(st.getIDOAt(r,c), pair<unsigned,unsigned>(r,c));
     }
   }
 }
@@ -183,52 +181,164 @@ void Eternity2_OutputManager::OutputState(const Eternity2_State& st, Eternity2_O
 
 
 /*****************************************************************************
- * Eternity2_Move Neighborhood Explorer Methods
+ * Eternity2_SingletonMove Neighborhood Explorer Methods
  *****************************************************************************/
 
-// initial move builder
-void Eternity2_MoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_Move& mv) const  throw(EmptyNeighborhood)
+/*
+* Creates a random move: this is done exploiting the "Fisher-Yates Algorithm" for compute a random permutation.
+* It modifies the vectors "permutation" and "aux_perm" of the object "mv".
+*/
+void Eternity2_SingletonMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_SingletonMove& mv) const  throw(EmptyNeighborhood)
 {
-  // insert the code that writes a random move on mv in state st
-	throw logic_error("Eternity2_MoveNeighborhoodExplorer::RandomMove not implemented yet");	
+  	vector<unsigned> aux_perm = FisherYatesShuffle(vector<unsigned>(0,mv.permutation.size()));
+    mv.setAuxPerm(aux_perm);
+    vector<IDO> first_permutation = mv.getFirstPermutation();
+    vector<IDO> permutation = vector<IDO>(aux_perm.size());
+    for(unsigned c = 0; c < aux_perm.size(); c++){
+      permutation.at(c) = first_permutation.at(c);
+      permutation.at(c).second = Random::Int(0,3);
+    }
+    mv.permutation = permutation;
 } 
 
-// check move feasibility
-bool Eternity2_MoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st, const Eternity2_Move& mv) const
+
+/*
+* Implementation of the "Fisher-Yates Algorithm". It generates a unbiased permutation of the vector "hat".
+*/
+vector<unsigned> Eternity2_SingletonMoveNeighborhoodExplorer::FisherYatesShuffle(vector<unsigned> hat) const {
+  unsigned sz = hat.size();
+  unsigned j;
+  for(unsigned i = sz-1; i > 0; i--){
+    j = Random::Int(0,i);
+    swap(hat.at(i), hat.at(j));
+  }
+  return hat;
+}
+
+
+/*
+* Checks if ...
+*/
+bool Eternity2_SingletonMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st, const Eternity2_SingletonMove& mv) const
 {
   // Insert the code that check is move mv is legal in state st 
   // (return true if legal, false otherwise)
-	throw logic_error("Eternity2_MoveNeighborhoodExplorer::FeasibleMove not implemented yet");	
+	throw logic_error("Eternity2_SingletonMoveNeighborhoodExplorer::FeasibleMove not implemented yet");	
   return true;
 } 
 
-// update the state according to the move 
-void Eternity2_MoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_Move& mv) const
+
+/*
+* Update the state according to the move.
+*/
+void Eternity2_SingletonMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_SingletonMove& mv) const
 {
-  // Insert the code that modify the state st based on the application of move mv
-	throw logic_error("Eternity2_MoveNeighborhoodExplorer::MakeMove not implemented yet");	
+  vector<Coord> coords = mv.getCoords();
+  for(unsigned c = 0; c < mv.permutation.size(); c++){
+    st.insertTile(mv.permutation.at(c), coords.at(c));
+  }	
 }  
 
-void Eternity2_MoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, Eternity2_Move& mv) const  throw(EmptyNeighborhood)
+
+/*
+* It creates the first move, choosing from the state "st" the tiles (IDOs) in the coordinates written in the vector "coords".
+* This is the original/first permutation, corresponding to 0, 1, ..., N and all the orientations set to 0.
+*/
+void Eternity2_SingletonMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, Eternity2_SingletonMove& mv) const  throw(EmptyNeighborhood)
 {
-  // Insert the code the generate the first move in the neighborhood and store it in mv
-	throw logic_error("Eternity2_MoveNeighborhoodExplorer::FirstMove not implemented yet");	
+  vector<Coord> mv_coords = mv.getCoords();
+  mv.permutation = vector<IDO>(mv_coords.size());
+  vector<unsigned> aux_perm = vector<unsigned>();
+  for(unsigned c = 0; c < mv_coords.size(); c++){
+    Coord xy = mv_coords.at(c);
+    IDO ido_xy = st.getIDOAt(xy.first, xy.second);
+    mv.permutation.at(c) = pair<ID,Orientation>(ido_xy.first, 0);
+    aux_perm.push_back(c); //initial permutation: 0, 1, ..., N.
+  }
+  mv.setAuxPerm(aux_perm);
+  mv.setFirstPermutation(mv.permutation);
 }
 
-bool Eternity2_MoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Eternity2_Move& mv) const
+
+/*
+* It computes the next move, computing the next permutation of the indexes 0, 1, ..., N.
+*/
+bool Eternity2_SingletonMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Eternity2_SingletonMove& mv) const
 {
-  // Insert the code that generate the move that follows mv in the neighborhood, and writes
-  // it back in mv. Return false if mv is already the last move. 
-	throw logic_error("Eternity2_MoveNeighborhoodExplorer::NextMove not implemented yet");	
+  while( incrementOrientation(mv) ){
+    return true;
+  }
+  while( incrementPermutation(mv) ){
+    return true;
+  }
+  return false;
+}
+
+
+/*
+* Increments the orientation: it makes an increment of a number in base 4.
+*/
+bool Eternity2_SingletonMoveNeighborhoodExplorer::incrementOrientation(Eternity2_SingletonMove& mv) const {
+  bool end = false;
+  for(unsigned c = 0; c < mv.permutation.size() && !end; c++){
+    IDO ido_c = mv.permutation.at(c);
+    if(ido_c.second < 3){
+      mv.permutation.at(c).second++;
+      for(unsigned d = c-1; d > -1; d--){
+        mv.permutation.at(d).second = 0;
+      }
+      end = true;
+    }
+  }
+  return end;
+}
+
+
+/*
+* Increments the permutation
+*/
+bool Eternity2_SingletonMoveNeighborhoodExplorer::incrementPermutation(Eternity2_SingletonMove& mv) const {
+  vector<unsigned> aux_perm = mv.getAuxPerm();
+  unsigned j = aux_perm.size();
+  unsigned i = aux_perm.size() - 1;
+
+  while (i > 0 && aux_perm.at(i-1) >= aux_perm.at(i)) 
+     i--; 
+  if (i == 0) //All the elements of "aux_perm" are in decreasing order
+    return false;
+
+  // (i-1) is the first decreasing elements from the end
+  while (aux_perm.at(j-1) <= aux_perm.at(i-1))
+    j--;
+  swap(aux_perm.at(i-1), aux_perm.at(j-1));
+  i++;
+  j = aux_perm.size();
+
+  // revert the elements in the tail of the array
+  while (i < j) 
+    {
+      swap(aux_perm.at(i-1), aux_perm.at(j-1));
+      i++;
+      j--;
+    }
+  mv.setAuxPerm(aux_perm);
+
+  //Modify the vector "permutation" and set all the orientations to 0.
+  vector<IDO> first_permutation = mv.getFirstPermutation();
+  for(unsigned c = 0; c < aux_perm.size(); c++){
+    mv.permutation.at( c ) = pair<ID,Orientation> (first_permutation.at( aux_perm.at(c) ) , 0);
+  }
   return true;
 }
 
-int Eternity2_MoveDeltaCostComponent1::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_Move& mv) const
+
+int Eternity2_SingletonMoveDeltaCostComponent1::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_SingletonMove& mv) const
 {
   int cost = 0;
-  // Insert the code that computes the delta cost of component 1 for move mv in state st
-	throw logic_error("Eternity2_MoveDeltaCostComponent1::ComputeDeltaCost not implemented yet");	
+  	
   return cost;
 }
+
+
 
 

@@ -121,8 +121,8 @@ Color Eternity2_Output::getColor(IDO ido, CardinalPoint pc) const {
 /*
 * Insert the tile with the given IDO in the given position.
 */
-void Eternity2_Output::insertTile(IDO ido, unsigned x, unsigned y){
-  board.at(x).at(y) = ido;
+void Eternity2_Output::insertTile(IDO ido, Coord crd){
+  board.at(crd.first).at(crd.second) = ido;
 }
 
 

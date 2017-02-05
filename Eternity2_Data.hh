@@ -35,7 +35,7 @@ class Eternity2_Output
 public:
   Eternity2_Output(const Eternity2_Input& i);
   Eternity2_Output& operator=(const Eternity2_Output& out);
-  void insertTile(IDO ido, unsigned x, unsigned y);
+  void insertTile(IDO ido, Coord crd);
 protected:
   const Eternity2_Input& in;
   vector<vector<IDO> > board; //board of couples (id,orientation) where orientation \in {0..3}

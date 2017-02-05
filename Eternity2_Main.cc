@@ -32,11 +32,11 @@ int main(int argc, const char* argv[])
   // cost components: second parameter is the cost, third is the type (true -> hard, false -> soft)
   Eternity2_CostComponent1 cc1(in, 1, true);
 
-  Eternity2_MoveDeltaCostComponent1 dcc1(in, cc1);
+  Eternity2_SingletonMoveDeltaCostComponent1 dcc1(in, cc1);
 
   // helpers
   Eternity2_StateManager Eternity2_sm(in);
-  Eternity2_MoveNeighborhoodExplorer Eternity2_nhe(in, Eternity2_sm);
+  Eternity2_SingletonMoveNeighborhoodExplorer Eternity2_nhe(in, Eternity2_sm);
 
   Eternity2_OutputManager Eternity2_om(in);
   
@@ -47,13 +47,13 @@ int main(int argc, const char* argv[])
   Eternity2_nhe.AddDeltaCostComponent(dcc1);
   
   // runners
-  HillClimbing<Eternity2_Input, Eternity2_State, Eternity2_Move> Eternity2_hc(in, Eternity2_sm, Eternity2_nhe, "Eternity2_MoveHillClimbing");
-  SteepestDescent<Eternity2_Input, Eternity2_State, Eternity2_Move> Eternity2_sd(in, Eternity2_sm, Eternity2_nhe, "Eternity2_MoveSteepestDescent");
-  SimulatedAnnealing<Eternity2_Input, Eternity2_State, Eternity2_Move> Eternity2_sa(in, Eternity2_sm, Eternity2_nhe, "Eternity2_MoveSimulatedAnnealing");
+  HillClimbing<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_hc(in, Eternity2_sm, Eternity2_nhe, "Eternity2_SingletonMoveHillClimbing");
+  SteepestDescent<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_sd(in, Eternity2_sm, Eternity2_nhe, "Eternity2_SingletonMoveSteepestDescent");
+  SimulatedAnnealing<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_sa(in, Eternity2_sm, Eternity2_nhe, "Eternity2_SingletonMoveSimulatedAnnealing");
 
   // tester
   Tester<Eternity2_Input, Eternity2_Output, Eternity2_State> tester(in,Eternity2_sm,Eternity2_om);
-  MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_Move> swap_move_test(in,Eternity2_sm,Eternity2_om,Eternity2_nhe, "Eternity2_Move move", tester); 
+  MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_SingletonMove> swap_move_test(in,Eternity2_sm,Eternity2_om,Eternity2_nhe, "Eternity2_SingletonMove move", tester); 
 
   SimpleLocalSearch<Eternity2_Input, Eternity2_Output, Eternity2_State> Eternity2_solver(in, Eternity2_sm, Eternity2_om, "Eternity2 solver");
   if (!CommandLineParameters::Parse(argc, argv, true, false))
