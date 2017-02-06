@@ -240,7 +240,8 @@ ostream& operator<<(ostream& os, const Eternity2_SingletonMove& mv)
 Eternity2_LMove::Eternity2_LMove()
 {
   // Insert the code that initializes the move
-  flatEllMatrix = vector<unsigned>();
+  //flatEllMatrix = vector<unsigned>();
+  flatEllMatrix = vector<vector<unsigned>>();
   EllSelection = vector<unsigned>();
   ln = 0;
   // TODO use constants here (less readable though)

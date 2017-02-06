@@ -123,5 +123,5 @@ public:
   void FirstMove(const Eternity2_State&,Eternity2_LMove&) const throw(EmptyNeighborhood);  
   bool NextMove(const Eternity2_State&,Eternity2_LMove&) const;   
 protected:
-  vector<unsigned> EllGeneration(const Eternity2_State&) const;
+  vector<vector<unsigned>> EllGeneration(const Eternity2_State&) const;
 };

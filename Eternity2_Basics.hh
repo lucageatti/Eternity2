@@ -70,7 +70,6 @@ class Eternity2_LMove
  public:
   Eternity2_LMove();
   
-  protected:
   /*
   * Tell where the "hole" in the L-shaped pattern is.
   * U = up, L = left, ...
@@ -83,6 +82,7 @@ class Eternity2_LMove
   const unsigned NO_ELL = 4;
   const unsigned ANY_ELL = 5; // used in placementMatrix
   
+ protected:
   /* 
   * This is a (flattened) matrix representing the (n-1)*(m-1) 2x2 squares, left to right and top to bottom.
   * n is the number of rows, m is the number of columns.
@@ -94,7 +94,7 @@ class Eternity2_LMove
   *  |4|0|  =>  |X| |X|
   *             | |X|X|
   */
-  vector<unsigned> FlatEllMatrix;
+  vector<vector<unsigned>> FlatEllMatrix;
   
   // Which Ls are selected for permutation
   vector<unsigned> EllSelection;

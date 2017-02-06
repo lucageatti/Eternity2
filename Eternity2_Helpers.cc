@@ -390,10 +390,43 @@ bool Eternity2_LMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Et
 * other horizontally or vertically.
 * This should be called only once as the partition is not modified by the move.
 */
-vector<unsigned> EllGeneration(const Eternity2_State& st) const
+vector<vector<unsigned>> EllGeneration(const Eternity2_State& st) const
 {
-	vector<unsigned> partition = 
+	r = st.getHeight(); // Rows
+	c = st.getWidth(); // Columns
 	
+	/* Space between the current cell and each border of the matrix
+	*  L= left, U = up, ... 
+	*/
+	unsigned spaceL=0;
+	unsigned spaceR=0;
+	unsigned spaceU=0;
+	unsigned spaceD=0;
+	
+	// Current row and column
+	unsigned cr = 0;
+	unsigned cc = 0;
+	// Orientation of the last L inserted
+	unsigned lo = 0;
+	
+	bool done = false;
+	
+	// Initialize the matrix
+	vector<vector<unsigned>> partition = vector<unsigned>(r);
+	for(int i = 0; i<r; i++){
+		partition.at(i) = vector<unsigned>(c, ANY_ELL);
+	}
+	// Randomized start
+	lo = Random::Int(0,3);
+	partition.at(0).at(0) = lo;
+	
+	while(!done){
+		spaceL = cc;
+		spaceR = c-cc-1;
+		spaceU = cr;
+		spaceD = r-cr-1;
+		unsigned i1 = 2 - std::max(2,spaceL);
+	}
 }
 
 int Eternity2_LMoveDeltaCostComponent1::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const
