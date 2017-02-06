@@ -341,4 +341,75 @@ int Eternity2_SingletonMoveDeltaCostComponent1::ComputeDeltaCost(const Eternity2
 
 
 
+/**************************************************************************************************
+***************************************************************************************************
+* L Move
+*
+* @author Elia
+**************************************************************************************************
+*************************************************************************************************/
+
+// initial move builder
+void Eternity2_LMoveNeighborhoodExplorer::RandomMove(const XYZ_State& st, Eternity2_LMove& mv) const  throw(EmptyNeighborhood)
+{
+  // insert the code that writes a random move on mv in state st
+	throw logic_error("Eternity2_LMoveNeighborhoodExplorer::RandomMove not implemented yet");	
+} 
+
+// check move feasibility
+bool Eternity2_LMoveNeighborhoodExplorer::FeasibleMove(const XYZ_State& st, const Eternity2_LMove& mv) const
+{
+  // Insert the code that check is move mv is legal in state st 
+  // (return true if legal, false otherwise)
+	
+} 
+
+// update the state according to the move 
+void Eternity2_LMoveNeighborhoodExplorer::MakeMove(XYZ_State& st, const Eternity2_LMove& mv) const
+{
+  // Insert the code that modify the state st based on the application of move mv
+	throw logic_error("Eternity2_LMoveNeighborhoodExplorer::MakeMove not implemented yet");	
+}  
+
+void Eternity2_LMoveNeighborhoodExplorer::FirstMove(const XYZ_State& st, Eternity2_LMove& mv) const  throw(EmptyNeighborhood)
+{
+  // Insert the code the generate the first move in the neighborhood and store it in mv
+	throw logic_error("Eternity2_LMoveNeighborhoodExplorer::FirstMove not implemented yet");	
+}
+
+bool Eternity2_LMoveNeighborhoodExplorer::NextMove(const XYZ_State& st, Eternity2_LMove& mv) const
+{
+  // Insert the code that generate the move that follows mv in the neighborhood, and writes
+  // it back in mv. Return false if mv is already the last move. 
+	throw logic_error("Eternity2_LMoveNeighborhoodExplorer::NextMove not implemented yet");	
+  return true;
+}
+
+/*
+* Partition the board into L-shaped clusters such that no two of them "touch" each
+* other horizontally or vertically.
+* This should be called only once as the partition is not modified by the move.
+*/
+vector<unsigned> EllGeneration(const Eternity2_State&) const
+{
+	
+	
+}
+
+int Eternity2_LMoveDeltaCostComponent1::ComputeDeltaCost(const XYZ_State& st, const Eternity2_LMove& mv) const
+{
+  int cost = 0;
+  // Insert the code that computes the delta cost of component 1 for move mv in state st
+	throw logic_error("Eternity2_LMoveDeltaCostComponent1::ComputeDeltaCost not implemented yet");	
+  return cost;
+}
+          
+int Eternity2_LMoveDeltaCostComponent2::ComputeDeltaCost(const XYZ_State& st, const Eternity2_LMove& mv) const
+{
+  int cost = 0;
+  // Insert the code that computes the delta cost of component 1 for move mv in state st
+	throw logic_error("Eternity2_LMoveDeltaCostComponent2::ComputeDeltaCost not implemented yet");	
+  return cost;
+}
+
 

@@ -241,12 +241,15 @@ Eternity2_LMove::Eternity2_LMove()
 {
   // Insert the code that initializes the move
   flatEllMatrix = vector<unsigned>();
-}
-
-Eternity2_LMove::Eternity2_LMove(unsigned width, unsigned height)
-{
-  // Insert the code that initializes the move
-  flatEllMatrix = vector<unsigned>(width*height);
+  EllSelection = vector<unsigned>();
+  ln = 0;
+  // TODO use constants here (less readable though)
+  unsigned[] r0 = {5,5,2,3,5};
+  unsigned[] r1 = {5,2,4,4,3};
+  unsigned[] r2 = {2,4,0,4,4};
+  unsigned[] r3 = {1,4,4,4,0};
+  unsigned[] r4 = {5,1,4,0,5};
+  placementMatrix = {r0,r1,r2,r3,r4}
 }
 
 
@@ -257,6 +260,13 @@ bool operator==(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
   if(m != mv1.flatEllMatrix.size()) return false;
   for(unsigned i = 0; i<m; i++){
 	 if(mv1.flatEllMatrix.at(i)!=mv2.flatEllMatrix.at(i)) 
+		 return false;
+  }
+  
+  n = mv1.EllSelection.size();
+  if(m != mv1.EllSelection.size()) return false;
+  for(unsigned i = 0; i<m; i++){
+	 if(mv1.EllSelection.at(i)!=mv2.EllSelection.at(i)) 
 		 return false;
   }
   return true;
