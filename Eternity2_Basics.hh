@@ -74,6 +74,8 @@ class Eternity2_LMove
   * Tell where the "hole" in the L-shaped pattern is.
   * U = up, L = left, ...
   * An example is found below.
+  *
+  * Assumption: HOLE_UL < HOLE_UR < HOLE_DR < HOLE_DL
   */
   const unsigned HOLE_UL = 0;
   const unsigned HOLE_UR = 1
@@ -105,6 +107,10 @@ class Eternity2_LMove
   // This matrix tells us if, which and where Ls can be placed around a given L.
   // TODO explain this
   unsigned[unsigned[]] placementMatrix;
+  
+  // Read the placement matrix, modifying it depending on the ell considered.
+  // TODO explain this as well
+  unsigned readPlacementMatrix(unsigned row, unsigned column, unsigned ell);
   
 };
 
