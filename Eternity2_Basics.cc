@@ -244,6 +244,7 @@ Eternity2_LMove::Eternity2_LMove()
   flatEllMatrix = vector<vector<unsigned>>();
   EllSelection = vector<unsigned>();
   ln = 0;
+  // Placement matrix for HOLE_UL
   // TODO use constants here (less readable though)
   unsigned[] r0 = {5,5,2,3,5};
   unsigned[] r1 = {5,2,4,4,3};
@@ -304,4 +305,34 @@ ostream& operator<<(ostream& os, const Eternity2_LMove& mv)
   // Insert the code that writes a move
   throw logic_error("operator<<(ostream& os, const Eternity2_LMove& mv) not implemented yet");	
   return os;
+}
+
+/* Read the placement matrix for a given ell.
+* The placement matrix tells us which ell placements are valid after
+* placing a given ell in a 5x5 area around it. 
+* Only the placement matrix for HOLE_UL is stored; the others are
+* computed by modifying it at run-time.*/
+unsigned readPlacementMatrix(unsigned row, unsigned column, unsigned ell){
+	unsigned ret = NO_ELL;
+	unsigned rows = sizeof(placementMatrix);
+	unsigned cols = sizeof(placementMatrix[0]);
+	switch(ell){
+		case 0:
+			ret = placementMatrix[row,column];
+			break;
+		case 1:
+			ret = placementMatrix[rows-1-column,row];
+			break;
+		case 2:
+			ret = placementMatrix[rows-1-row,cols-1-column];
+			break;
+		case 3:
+			ret = placementMatrix[column,cols-1-row];
+			break;
+		default:
+			ret = ell;
+			break;
+	}
+	if(ret < NO_ELL) ret+=ell;
+	return ret;
 }
