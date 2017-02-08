@@ -165,7 +165,7 @@ class ThreeTileStreakMoveDeltaCostComponent
     : DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_ThreeTileStreakMove>(in,cc,"ThreeTileStreakMoveDeltaCostComponent") 
     {}
     
-    int ComputeDeltaCost(const Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const { return 0; }
+    int ComputeDeltaCost(const Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const;
 };
 
 

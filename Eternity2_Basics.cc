@@ -293,9 +293,9 @@ Eternity2_ThreeTileStreakMove::Eternity2_ThreeTileStreakMove()
 }
 
 // Compute simple tile-wise moves from the three tile streak moves.
-vector<pair<IDO,Coord>> Eternity2_ThreeTileStreakMove::computeSimpleMoves(const Eternity2_State& st) const
+vector<tuple<tileMove,tileMove,tileMove,int>> Eternity2_ThreeTileStreakMove::computeSimpleMoves(const Eternity2_State& st) const
 {
-    vector<pair<IDO,Coord>> changes;
+    vector<tuple<tileMove,tileMove,tileMove,int>> changes;
     Coord from,to;
     int from_dir,to_dir;
 
@@ -320,9 +320,14 @@ vector<pair<IDO,Coord>> Eternity2_ThreeTileStreakMove::computeSimpleMoves(const 
 
         m2 = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*permutation[i].second + 3*from_dir + to_dir) % 4),to);
 
-        changes.push_back(m);
-        changes.push_back(m1);
-        changes.push_back(m2);
+        if (permutation[i].second)
+        {
+          changes.push_back(make_tuple(m2,m,m1,to_dir));
+
+        } else {
+
+          changes.push_back(make_tuple(m1,m,m2,to_dir));
+        }
     }
 
     return changes;

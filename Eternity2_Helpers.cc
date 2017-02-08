@@ -503,47 +503,261 @@ bool ThreeTileStreakMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State
 
 void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const
 {
-    vector<pair<IDO,Coord>> changes = mv.computeSimpleMoves(st);
-    /*
-    Coord from,to;
-    int from_dir,to_dir;
-
-    for (int i = 0; i < st.random_tts.size(); ++i)
-    {
-        pair<IDO,Coord> m,m1,m2;
-
-        from = st.random_tts[mv.getTTSPerm(i)].first;
-        from_dir = st.random_tts[mv.getTTSPerm(i)].second;
-        to = st.random_tts[i].first;
-        to_dir = st.random_tts[i].second;
-
-        m = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*mv.getTTSOrientation(i) + 3*from_dir + to_dir) % 4),to);
-
-        from = make_pair(from.first - from_dir,from.second + from_dir - 1);
-        to = make_pair(to.first - to_dir + to_dir*2*mv.getTTSOrientation(i),to.second + to_dir - 1 + (1 - to_dir)*2*mv.getTTSOrientation(i));
-
-        m1 = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*mv.getTTSOrientation(i) + 3*from_dir + to_dir) % 4),to);
-        
-        from = make_pair(from.first + 2*from_dir,from.second + 2 - 2*from_dir);
-        to = make_pair(to.first + 2*to_dir - to_dir*4*mv.getTTSOrientation(i),to.second + 2 - 2*to_dir - (1 - to_dir)*4*mv.getTTSOrientation(i));
-
-        m2 = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*mv.getTTSOrientation(i) + 3*from_dir + to_dir) % 4),to);
-
-        changes.push_back(m);
-        changes.push_back(m1);
-        changes.push_back(m2);
-    }
-    */
+    vector<tuple<tileMove,tileMove,tileMove,int>> changes = mv.computeSimpleMoves(st);
 
     for (int i = 0; i < changes.size(); ++i)
     {
-        st.insertTile(changes[i].first,changes[i].second);
+        st.insertTile(std::get<0>(changes[i]).first,std::get<0>(changes[i]).second);
+        st.insertTile(std::get<1>(changes[i]).first,std::get<1>(changes[i]).second);
+        st.insertTile(std::get<2>(changes[i]).first,std::get<2>(changes[i]).second);
     }
 }
 
+// Computes the delta-cost of a TTS move. The method first converts tts moves into
+// simple tile-wise moves, and then calls the 'singleTileCost' method.
+// This will also consider violations inside the same tile streak. At first this may
+// seem wrong, but in the end will promote the best positioning of well formed
+// streaks, since a streak without internal violations will have lower cost.
+int ThreeTileStreakMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const
+{
+    int adj_color,i,cost = 0;
+    Coord c;
+    vector<tuple<tileMove,tileMove,tileMove,int>> changes = mv.computeSimpleMoves(st);
+    for (i = 0; i < changes.size(); ++i)
+    {
+        if(std::get<3>(changes[i]))
+        {
+          // Streak vertically oriented
+
+          ////// Upper tile //////
+          // NORTH
+          if (std::get<0>(changes[i]).second.first == 0)
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(std::get<0>(changes[i]).second.first - 1,std::get<0>(changes[i]).second.second);
+              adj_color = st.getColor(st.getIDOAt(c),SOUTH);
+          }
+          cost += (st.getColor(std::get<0>(changes[i]).first,NORTH) != adj_color);
+          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),NORTH) != adj_color);
+
+          // WEST
+          if (std::get<0>(changes[i]).second.second == 0)
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(std::get<0>(changes[i]).second.first,std::get<0>(changes[i]).second.second - 1);
+              adj_color = st.getColor(st.getIDOAt(c),EAST);
+          }
+          cost += (st.getColor(std::get<0>(changes[i]).first,WEST) != adj_color);
+          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),WEST) != adj_color);
+
+          // EAST
+          if (std::get<0>(changes[i]).second.second + 1 >= st.getWidth())
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(std::get<0>(changes[i]).second.first,std::get<0>(changes[i]).second.second + 1);
+              adj_color = st.getColor(st.getIDOAt(c),WEST);
+          }
+          cost += (st.getColor(std::get<0>(changes[i]).first,EAST) != adj_color);
+          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),EAST) != adj_color);
+
+          ////// Middle tile //////
+          // WEST
+          if (std::get<1>(changes[i]).second.second == 0)
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(std::get<1>(changes[i]).second.first,std::get<1>(changes[i]).second.second - 1);
+              adj_color = st.getColor(st.getIDOAt(c),EAST);
+          }
+          cost += (st.getColor(std::get<1>(changes[i]).first,WEST) != adj_color);
+          cost -= (st.getColor(st.getIDOAt(std::get<1>(changes[i]).second),WEST) != adj_color);
+
+          // EAST
+          if (std::get<1>(changes[i]).second.second + 1 >= st.getWidth())
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(std::get<1>(changes[i]).second.first,std::get<1>(changes[i]).second.second + 1);
+              adj_color = st.getColor(st.getIDOAt(c),WEST);
+          }
+          cost += (st.getColor(std::get<1>(changes[i]).first,EAST) != adj_color);
+          cost -= (st.getColor(st.getIDOAt(std::get<1>(changes[i]).second),EAST) != adj_color);
+
+          ////// Lower tile //////
+          // WEST
+          if (std::get<2>(changes[i]).second.second == 0)
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(std::get<2>(changes[i]).second.first,std::get<2>(changes[i]).second.second - 1);
+              adj_color = st.getColor(st.getIDOAt(c),EAST);
+          }
+          cost += (st.getColor(std::get<2>(changes[i]).first,WEST) != adj_color);
+          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),WEST) != adj_color);
+
+          // EAST
+          if (std::get<2>(changes[i]).second.second + 1 >= st.getWidth())
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(std::get<2>(changes[i]).second.first,std::get<2>(changes[i]).second.second + 1);
+              adj_color = st.getColor(st.getIDOAt(c),WEST);
+          }
+          cost += (st.getColor(std::get<2>(changes[i]).first,EAST) != adj_color);
+          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),EAST) != adj_color);
+
+          // SOUTH
+          if (std::get<2>(changes[i]).second.first + 1 >= st.getHeight())
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(std::get<2>(changes[i]).second.first + 1,std::get<2>(changes[i]).second.second);
+              adj_color = st.getColor(st.getIDOAt(c),NORTH);
+          }
+          cost += (st.getColor(std::get<2>(changes[i]).first,SOUTH) != adj_color);
+          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),SOUTH) != adj_color);
 
 
+        } else {
 
+          // Streak horizontally oriented
+
+          ////// Left Tile //////
+          // NORTH
+          if (std::get<0>(changes[i]).second.first == 0)
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(std::get<0>(changes[i]).second.first - 1,std::get<0>(changes[i]).second.second);
+              adj_color = st.getColor(st.getIDOAt(c),SOUTH);
+          }
+          cost += (st.getColor(std::get<0>(changes[i]).first,NORTH) != adj_color);
+          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),NORTH) != adj_color);
+
+          // WEST
+          if (std::get<0>(changes[i]).second.second == 0)
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(std::get<0>(changes[i]).second.first,std::get<0>(changes[i]).second.second - 1);
+              adj_color = st.getColor(st.getIDOAt(c),EAST);
+          }
+          cost += (st.getColor(std::get<0>(changes[i]).first,WEST) != adj_color);
+          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),WEST) != adj_color);
+
+          // SOUTH
+          if (std::get<0>(changes[i]).second.first + 1 >= st.getHeight())
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(std::get<0>(changes[i]).second.first + 1,std::get<0>(changes[i]).second.second);
+              adj_color = st.getColor(st.getIDOAt(c),NORTH);
+          }
+          cost += (st.getColor(std::get<0>(changes[i]).first,SOUTH) != adj_color);
+          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),SOUTH) != adj_color);
+          
+          ////// Middle Tile //////
+          // NORTH
+          if (std::get<1>(changes[i]).second.first == 0)
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(std::get<1>(changes[i]).second.first - 1,std::get<1>(changes[i]).second.second);
+              adj_color = st.getColor(st.getIDOAt(c),SOUTH);
+          }
+          cost += (st.getColor(std::get<1>(changes[i]).first,NORTH) != adj_color);
+          cost -= (st.getColor(st.getIDOAt(std::get<1>(changes[i]).second),NORTH) != adj_color);
+
+          // SOUTH
+          if (std::get<1>(changes[i]).second.first + 1 >= st.getHeight())
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(std::get<1>(changes[i]).second.first + 1,std::get<1>(changes[i]).second.second);
+              adj_color = st.getColor(st.getIDOAt(c),NORTH);
+          }
+          cost += (st.getColor(std::get<1>(changes[i]).first,SOUTH) != adj_color);
+          cost -= (st.getColor(st.getIDOAt(std::get<1>(changes[i]).second),SOUTH) != adj_color);
+
+          ////// Right Tile //////
+          // NORTH
+          if (std::get<2>(changes[i]).second.first == 0)
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(std::get<2>(changes[i]).second.first - 1,std::get<2>(changes[i]).second.second);
+              adj_color = st.getColor(st.getIDOAt(c),SOUTH);
+          }
+          cost += (st.getColor(std::get<2>(changes[i]).first,NORTH) != adj_color);
+          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),NORTH) != adj_color);
+
+          // EAST
+          if (std::get<2>(changes[i]).second.second + 1 >= st.getWidth())
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(std::get<2>(changes[i]).second.first,std::get<2>(changes[i]).second.second + 1);
+              adj_color = st.getColor(st.getIDOAt(c),WEST);
+          }
+          cost += (st.getColor(std::get<2>(changes[i]).first,EAST) != adj_color);
+          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),EAST) != adj_color);
+
+
+          // SOUTH
+          if (std::get<2>(changes[i]).second.first + 1 >= st.getHeight())
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(std::get<2>(changes[i]).second.first + 1,std::get<2>(changes[i]).second.second);
+              adj_color = st.getColor(st.getIDOAt(c),NORTH);
+          }
+          cost += (st.getColor(std::get<2>(changes[i]).first,SOUTH) != adj_color);
+          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),SOUTH) != adj_color);
+        }
+    }
+
+  return cost;
+}
+
+
+/***************************************************************************
+ * Shared general purpose methods
+ ***************************************************************************/
 
 /*
 * Computes the cost of a single tile, given its orientation and a state.
