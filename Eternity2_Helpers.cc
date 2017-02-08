@@ -317,8 +317,8 @@ void EvenChessboardMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& s
 {   
   mv.setCoordinates(st.even_chessboard);
   mv.createPermutationVector(st.even_chessboard.size());
-    
-  vector<unsigned> rdm_perm = FisherYatesShuffle(st.random_singleton.size());
+  
+  vector<unsigned> rdm_perm = FisherYatesShuffle(st.even_chessboard.size());
 
   for(unsigned c = 0; c < mv.getSize(); c++){
     mv.setIndex(c, rdm_perm.at(c));
@@ -364,7 +364,7 @@ void OddChessboardMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st
   mv.setCoordinates(st.odd_chessboard);
   mv.createPermutationVector(st.odd_chessboard.size());
     
-  vector<unsigned> rdm_perm = FisherYatesShuffle(st.random_singleton.size());
+  vector<unsigned> rdm_perm = FisherYatesShuffle(st.odd_chessboard.size());
 
   for(unsigned c = 0; c < mv.getSize(); c++){
     mv.setIndex(c, rdm_perm.at(c));
