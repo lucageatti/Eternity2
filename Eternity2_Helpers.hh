@@ -18,7 +18,7 @@ using namespace EasyLocal::Core;
 class Eternity2_CostComponent : public CostComponent<Eternity2_Input,Eternity2_State> 
 {
 public:
-  Eternity2_CostComponent(const Eternity2_Input & in, int w, bool hard) : CostComponent<Eternity2_Input,Eternity2_State>(in,w,hard,"Eternity2_CostComponent1") 
+  Eternity2_CostComponent(const Eternity2_Input & in, int w, bool hard) : CostComponent<Eternity2_Input,Eternity2_State>(in,w,hard,"Eternity2_CostComponent") 
   {}
   int ComputeCost(const Eternity2_State& st) const;
   void PrintViolations(const Eternity2_State& st, ostream& os = cout) const;
@@ -143,6 +143,47 @@ public:
     : GenericMoveNeighborhoodExplorer(pin,  psm) {}
   void RandomMove(const Eternity2_State&, Eternity2_GenericMove&) const throw(EmptyNeighborhood);          
   void FirstMove(const Eternity2_State&, Eternity2_GenericMove&) const throw(EmptyNeighborhood);  
+};
+
+
+
+
+
+
+
+
+/***************************************************************************
+ * ThreeTileStreak Move Neighborhood Explorer:
+ ***************************************************************************/
+
+class ThreeTileStreakMoveDeltaCostComponent
+  : public DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_ThreeTileStreakMove>
+{
+  public:
+    
+    ThreeTileStreakMoveDeltaCostComponent(const Eternity2_Input & in, Eternity2_CostComponent& cc) 
+    : DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_ThreeTileStreakMove>(in,cc,"ThreeTileStreakMoveDeltaCostComponent") 
+    {}
+    
+    int ComputeDeltaCost(const Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const { return 0; }
+};
+
+
+class ThreeTileStreakMoveNeighborhoodExplorer
+  : public NeighborhoodExplorer<Eternity2_Input,Eternity2_State,Eternity2_ThreeTileStreakMove> 
+{
+  public:
+    ThreeTileStreakMoveNeighborhoodExplorer(const Eternity2_Input & pin, StateManager<Eternity2_Input,Eternity2_State>& psm)  
+      : NeighborhoodExplorer<Eternity2_Input,Eternity2_State,Eternity2_ThreeTileStreakMove>(pin, psm, "ThreeTileStreakMoveNeighborhoodExplorer") {} 
+    void RandomMove(const Eternity2_State&, Eternity2_ThreeTileStreakMove&) const throw(EmptyNeighborhood);          
+    bool FeasibleMove(const Eternity2_State&, const Eternity2_ThreeTileStreakMove&) const;  
+    void MakeMove(Eternity2_State&,const Eternity2_ThreeTileStreakMove&) const;             
+    void FirstMove(const Eternity2_State&,Eternity2_ThreeTileStreakMove&) const throw(EmptyNeighborhood);  
+    bool NextMove(const Eternity2_State&,Eternity2_ThreeTileStreakMove&) const;
+
+  protected:
+    bool incrementOrientation(Eternity2_ThreeTileStreakMove& mv) const;
+    bool incrementPermutation(Eternity2_ThreeTileStreakMove& mv) const;
 };
 
 

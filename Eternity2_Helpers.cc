@@ -394,6 +394,155 @@ void OddChessboardMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st,
 
 
 
+
+
+
+
+
+/***************************************************************************
+ * ThreeTileStreak Move Neighborhood Explorer:
+ ***************************************************************************/
+
+
+// Random move (permutation of the clusters of tiles): unbiased random permutation
+// is achieved using Fisher-Yates shuffle algorithm.
+void ThreeTileStreakMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_ThreeTileStreakMove& mv) const throw(EmptyNeighborhood)
+{
+    int i,r;
+    vector<pair<unsigned,int>> perm = vector<pair<unsigned,int>>(st.random_tts.size());
+    vector<unsigned> rand_perm = FisherYatesShuffle(st.random_tts.size());
+
+    for (i = 0; i < st.random_tts.size(); ++i)
+    {
+      r = Random::Int(0,1);
+      perm[i] = make_pair(rand_perm[i],r);
+    }
+
+    mv.setPermutation(perm);
+} 
+
+
+
+
+// First permutation of the three-tile streaks, corresponding to the sequence 1,2,...,n, with standard orientation (0).
+void ThreeTileStreakMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, Eternity2_ThreeTileStreakMove& mv) const  throw(EmptyNeighborhood)
+{
+    vector<pair<unsigned,int>> perm = vector<pair<unsigned,int>>(st.random_tts.size());
+
+    for (int i = 0; i < st.random_tts.size(); ++i)
+    {
+      perm[i] = make_pair(i,0);
+    }
+
+    mv.setPermutation(perm);
+}
+
+// Next permutation of the streaks. Orientations are incremented first, then comes the actuall permutation of the tiles
+bool ThreeTileStreakMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Eternity2_ThreeTileStreakMove& mv) const
+{
+    int s = st.random_tts.size();
+    int j;
+    int i = s-1;
+
+    while (i >= 0 && mv.getTTSOrientation(i) == 1)
+    {
+        mv.setTTSOrientation(i,0);
+        --i;
+    }
+
+    if (i >= 0)
+    {
+        mv.setTTSOrientation(i,1);
+    
+    } else {
+
+        // Find the first descending value i starting from the bottom of the vector
+        for (i = s-2; i >= 0 && mv.getTTSPerm(i) >= mv.getTTSPerm(i+1); --i);
+
+        // If i < 0 this is the final permutation
+        if (i < 0) return false;
+        
+        // Find the first value j smaller than i
+        for (j = i+1; j < s && mv.getTTSPerm(j) >= mv.getTTSPerm(i); ++j);
+
+        // Swap i and j-1
+        mv.swapPerm(i,j-1);
+
+        // Reverse the subvector [i+1,s-1]
+        int begin = i+1, end = s-1;
+        while (begin < end)
+        {
+            mv.swapPerm(begin,end);
+            ++begin; --end;
+        }
+    }
+
+    return true;
+}
+
+// Feasibility Check 
+bool ThreeTileStreakMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const
+{
+    // Generated permutations of clusters of tiles are always feasible
+    return true;
+} 
+
+//      -------------------                  -------------------
+//      |     |     |     |    direct (0)    |     |     |     |
+//      |  1  |  c  |  2  |   ----------->   |  1  |  c  |  2  |
+//      |     |     |     |                  |     |     |     |
+//      -------------------                  -------------------
+//         horizontal (0)                       horizontal (0)
+//
+//      -------------------                  -------------------
+//      |     |     |     |    inverse (1)   |     |     |     |
+//      |  1  |  c  |  2  |   ----------->   |  2  |  c  |  1  |
+//      |     |     |     |                  |     |     |     |
+//      -------------------                  -------------------
+//         horizontal (0)                       horizontal (0)
+
+void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const
+{
+    vector<pair<IDO,Coord>> changes;
+    Coord from,to;
+    int from_dir,to_dir;
+
+    for (int i = 0; i < st.random_tts.size(); ++i)
+    {
+        pair<IDO,Coord> m,m1,m2;
+
+        from = st.random_tts[mv.getTTSPerm(i)].first;
+        from_dir = st.random_tts[mv.getTTSPerm(i)].second;
+        to = st.random_tts[i].first;
+        to_dir = st.random_tts[i].second;
+
+        m = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*mv.getTTSOrientation(i) + 3*from_dir + to_dir) % 4),to);
+
+        from = make_pair(from.first - from_dir,from.second + from_dir - 1);
+        to = make_pair(to.first - to_dir + to_dir*2*mv.getTTSOrientation(i),to.second + to_dir - 1 + (1 - to_dir)*2*mv.getTTSOrientation(i));
+
+        m1 = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*mv.getTTSOrientation(i) + 3*from_dir + to_dir) % 4),to);
+        
+        from = make_pair(from.first + 2*from_dir,from.second + 2 - 2*from_dir);
+        to = make_pair(to.first + 2*to_dir - to_dir*4*mv.getTTSOrientation(i),to.second + 2 - 2*to_dir - (1 - to_dir)*4*mv.getTTSOrientation(i));
+
+        m2 = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*mv.getTTSOrientation(i) + 3*from_dir + to_dir) % 4),to);
+
+        changes.push_back(m);
+        changes.push_back(m1);
+        changes.push_back(m2);
+    }
+
+    for (int i = 0; i < changes.size(); ++i)
+    {
+        st.insertTile(changes[i].first,changes[i].second);
+    }
+}
+
+
+
+
+
 /*
 * Computes the cost of a single tile, given its orientation and a state.
 */

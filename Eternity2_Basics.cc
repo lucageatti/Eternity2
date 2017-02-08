@@ -77,6 +77,11 @@ Eternity2_State::Eternity2_State(const Eternity2_Input &my_in)
     } while( ! cover.at(rdm_pos_x).at(rdm_pos_y) );
   }
 
+
+  //ThreeTilesStreak
+  random_tts = vector<pair<Coord,int> >(2);
+  random_tts.at(0) = pair<Coord,int>(pair<unsigned,unsigned>(1,0),1);
+  random_tts.at(1) = pair<Coord,int>(pair<unsigned,unsigned>(1,2),1);
 }
 
 
@@ -279,6 +284,65 @@ Eternity2_OddChessboardMove::Eternity2_OddChessboardMove() : Eternity2_GenericMo
 
 
 
+// The Eternity2 Move constructor simply instantiate an unsized vector. To define 
+// a move properly, 'setCoords' method needs to be called. If 'size' is set to -1
+// the move is not specified yet.
+Eternity2_ThreeTileStreakMove::Eternity2_ThreeTileStreakMove()
+{
+    permutation = vector<pair<unsigned,int>>();
+}
+
+// Swaps two elements in a permutation of the tiles
+void Eternity2_ThreeTileStreakMove::swapPerm(int i, int j)
+{
+    swap(permutation[i],permutation[j]);
+}
+
+// Checks the equality between moves.
+// N.B. we assume the elements of the 'coords' vectors are ordered.
+bool operator==(const Eternity2_ThreeTileStreakMove& mv1, const Eternity2_ThreeTileStreakMove& mv2)
+{
+    int i;
+
+    if (mv1.getSize() != mv2.getSize())
+    {
+      return false;
+    
+    } else {
+
+      for (i = 0; i < mv1.getSize() && mv1.permutation[i] == mv2.permutation[i]; ++i);
+      return (i == mv1.getSize());
+    }
+}
+
+bool operator!=(const Eternity2_ThreeTileStreakMove& mv1, const Eternity2_ThreeTileStreakMove& mv2)
+{
+  return !(mv1 == mv2);
+}
+
+bool operator<(const Eternity2_ThreeTileStreakMove& mv1, const Eternity2_ThreeTileStreakMove& mv2)
+{
+  // Insert the code that checks if one move precedes another one
+  // (in any selected order)
+  throw logic_error("operator<(const Eternity2_ThreeTileStreakMove& mv1, const Eternity2_ThreeTileStreakMove& mv2) not implemented yet"); 
+  return true;
+}
+
+istream& operator>>(istream& is, Eternity2_ThreeTileStreakMove& mv)
+{
+  // Insert the code that read a move
+  throw logic_error("operator>>(istream& is, Eternity2_ThreeTileStreakMove& mv) not implemented yet"); 
+  return is;
+}
+
+ostream& operator<<(ostream& os, const Eternity2_ThreeTileStreakMove& mv)
+{
+    for (int i = 0; i < mv.getSize(); ++i)
+    {
+        os << i << "<-- <" << mv.getPermutation()[i].first << "," << mv.getPermutation()[i].second << ">" << endl;
+    }
+    return os;
+}
 
 
 
