@@ -411,16 +411,38 @@ vector<vector<unsigned>> EllGeneration(const Eternity2_State& st, const Eternity
 	
 	bool done = false;
 	
+	unsigned nextPosr = 0;
+	unsigned nextPosc = 0;
+	
 	// Initialize the matrix
-	vector<vector<unsigned>> partition = vector<unsigned>(r);
+	vector<vector<unsigned>> partition = vector<<vector>unsigned>(r);
 	for(int i = 0; i<r; i++){
 		partition.at(i) = vector<unsigned>(c, mv.ANY_ELL);
 	}
-	// Randomized start
-	lo = Random::Int(0,3);
-	partition.at(0).at(0) = lo;
-	
-	while(!done){
+		
+	while(/*!done*/ /*cc < c &&*/ cr < r){
+		
+		if(cc==0 && cr == 0){
+			// Randomized start
+			lo = Random::Int(0,3);
+			partition.at(0).at(0) = lo;
+		}else{ 
+		
+			// Use the computed constraints
+			if(partition.at(cr).at(cc) == mv.ANY_ELL){
+				// No constraints, use random
+				lo = Random::Int(0,3);
+				partition.at(cr).at(cc) = lo;				
+			}else if(partition.at(cr).at(cc) < mv.NO_ELL){
+				// A constraint has been placed here
+				lo = partition.at(cr).at(cc);				
+			}
+			
+		}
+		
+		/* Now we want to place constraints on which ells can be placed next
+		* based on the ell placed this iteration. */
+		// Compute the area to work on
 		spaceL = cc;
 		spaceR = c-cc-1;
 		//spaceU = cr;
@@ -429,7 +451,45 @@ vector<vector<unsigned>> EllGeneration(const Eternity2_State& st, const Eternity
 		unsigned j1 = 2;//2 - std::max(2,spaceU);
 		unsigned i2 = std::min(4, 2+spaceR);
 		unsigned j2 = std::min(4,2+spaceD);
+		
+		/* The placement matrix tells us which constraints to put around the 
+		* last placed ell in a 5x5 radius.
+		* I read the placement matrix from (i1,2) to (i2,j2) so constraints 
+		* can be placed on which ells (if any) to place next.
+		* Actually I can skip (i1,j1) to (2,2)*/
+		for(unsigned i=3; i<=i2; i++){
+			unsigned constraint = mv.readPlacementMatrix(2,i,lo);
+			partition.at(2).at(i) = constraint;
+			// Jump to the first position that allows and ell
+			if(nextPosr == 0 && nextPosc == 0 && constraint != mv.NO_ELL){ 
+				nextPosr = 2;
+				nextPosc = i;
+			}
+		}
+		for(unsigned j=j1; j<=j2; j++){
+			for(unsigned i=i1; i<=i2; i++){
+				unsigned constraint = mv.readPlacementMatrix(j,i);
+				partition.at(j).at(i) = constraint;
+				// Jump to the first position that allows and ell
+				if(nextPosr == 0 && && nextPosc == 0 && constraint != mv.NO_ELL){ 
+					nextPosr = 2;
+					nextPosc = i;
+				}
+			}
+		}
+		
+		// Jump over squares where ells are not allowed
+		if(nextPosr > 0 && nextPosc > 0){
+			cc = nextPosc;
+			cr = nextPosr;
+			nextPosc = 0;
+			nextPosr = 0;
+		}else if(++cc == c){ // Move to the next position
+			cc = 0;
+			cr++;
+		} 
 	}
+	// End while
 }
 
 int Eternity2_LMoveDeltaCostComponent1::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const

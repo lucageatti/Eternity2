@@ -84,6 +84,10 @@ class Eternity2_LMove
   const unsigned NO_ELL = 4;
   const unsigned ANY_ELL = 5; // used in placementMatrix
   
+  // Read the placement matrix, modifying it depending on the ell considered.
+  // TODO explain this as well
+  unsigned readPlacementMatrix(unsigned row, unsigned column, unsigned ell);
+  
  protected:
   /* 
   * This is a (flattened) matrix representing the (n-1)*(m-1) 2x2 squares, left to right and top to bottom.
@@ -107,10 +111,6 @@ class Eternity2_LMove
   // This matrix tells us if, which and where Ls can be placed around a given L.
   // TODO explain this
   unsigned[unsigned[]] placementMatrix;
-  
-  // Read the placement matrix, modifying it depending on the ell considered.
-  // TODO explain this as well
-  unsigned readPlacementMatrix(unsigned row, unsigned column, unsigned ell);
   
 };
 
