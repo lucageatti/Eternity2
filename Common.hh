@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include <easylocal/easylocal.hh>
 
 using namespace std;
 

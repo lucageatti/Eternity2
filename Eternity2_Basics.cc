@@ -1,6 +1,7 @@
 // File Eternity2_Basics.cc
 #include "Eternity2_Basics.hh"
 
+
 /**********************************************************************************************
 *     STATE
 ***********************************************************************************************/
@@ -17,6 +18,65 @@ Eternity2_State::Eternity2_State(const Eternity2_Input &my_in)
   for(unsigned c = 0; c < in.getHeight(); c++){
     board.at(c) = vector<IDO> (in.getWidth());
   }
+
+  //Setting the coordinates for the Singleton Moves
+  for(unsigned r = 0; r < in.getHeight(); r++){
+    for(unsigned c = 0; c < in.getWidth(); c++){
+      if( r % 2 == 0  &&  c % 2 == 0 )
+        even_chessboard.push_back( pair<unsigned,unsigned>(r,c) );
+      if( r % 2 == 1  &&  c % 2 == 1 )
+        even_chessboard.push_back( pair<unsigned,unsigned>(r,c) );
+      if( r % 2 == 0  &&  c % 2 == 1 )
+        odd_chessboard.push_back( pair<unsigned,unsigned>(r,c) );
+      if( r % 2 == 1  &&  c % 2 == 0 )
+        odd_chessboard.push_back( pair<unsigned,unsigned>(r,c) );
+    }
+  }
+
+  //Singleton Move
+  vector<vector<bool> > cover = vector<vector<bool> >(in.getHeight());
+  int num_free = in.getHeight() * in.getWidth(); //All the cells are free
+  for(unsigned r = 0; r < cover.size(); r++){
+    cover.at(r) = vector<bool>(in.getWidth());
+    for(unsigned c = 0; c < in.getWidth(); c++){
+      cover.at(r).at(c) = 0;
+    }
+  }
+
+  while( num_free > 0 ){
+    int rdm_pos_x;
+    int rdm_pos_y;
+    do{
+      rdm_pos_x = Random::Int(0,in.getHeight()-1);
+      rdm_pos_y = Random::Int(0,in.getWidth()-1);
+      if( ! cover.at(rdm_pos_x).at(rdm_pos_y) ){
+        cover.at(rdm_pos_x).at(rdm_pos_y) = 1;
+        num_free--;
+        if( rdm_pos_x > 0 ){
+          if( ! cover.at(rdm_pos_x-1).at(rdm_pos_y) )
+            num_free--;
+          cover.at(rdm_pos_x-1).at(rdm_pos_y) = 1;
+        }
+        if( rdm_pos_x < in.getHeight()-1 ){
+          if( ! cover.at(rdm_pos_x+1).at(rdm_pos_y) )
+            num_free--;
+          cover.at(rdm_pos_x+1).at(rdm_pos_y) = 1;
+        }
+        if( rdm_pos_y > 0 ){
+          if( !cover.at(rdm_pos_x).at(rdm_pos_y-1) )
+            num_free--;
+          cover.at(rdm_pos_x).at(rdm_pos_y-1) = 1;
+        }
+        if( rdm_pos_y < in.getWidth()-1 ){
+          if( !cover.at(rdm_pos_x).at(rdm_pos_y+1) )
+            num_free--;
+          cover.at(rdm_pos_x).at(rdm_pos_y+1) = 1;
+        }
+        random_singleton.push_back(pair<unsigned,unsigned>(rdm_pos_x,rdm_pos_y));
+      }
+    } while( ! cover.at(rdm_pos_x).at(rdm_pos_y) );
+  }
+
 }
 
 
@@ -26,10 +86,16 @@ Eternity2_State::Eternity2_State(const Eternity2_Input &my_in)
 */
 Color Eternity2_State::getColor(IDO ido, CardinalPoint pc) const {
   Tile t = in.getTileAt(ido.first);
-  Color cl = t.cardinals.at( abs((pc-ido.second)%4) );
+  Color cl = t.cardinals.at( strangeMod(pc-ido.second,4) );
   return cl;
 }
 
+int Eternity2_State::strangeMod(int dividend, int divisor) const {
+  if(dividend < 0){
+    dividend += divisor;
+  }
+  return dividend % divisor;
+}
 
 /*
 * Insert the tile with the given IDO in the given position.
@@ -49,7 +115,7 @@ Eternity2_State& Eternity2_State::operator=(const Eternity2_State& st)
   for(unsigned r = 0; r < st.getHeight(); r++){
     board.at(r) = vector<IDO>(st.getWidth());
     for(unsigned c = 0; c < st.getWidth(); c++){
-      board.at(r).at(c) = st.getIDOAt(r,c);
+      board.at(r).at(c) = st.getIDOAt(pair<unsigned,unsigned>(r,c));
     }
   }
 
@@ -70,8 +136,8 @@ bool operator==(const Eternity2_State& st1, const Eternity2_State& st2)
   }
   for(unsigned r = 0; r < st1.getHeight(); r++){
     for(unsigned c = 0; c < st1.getWidth(); c++){
-      IDO t1 = st1.getIDOAt(r,c);
-      IDO t2 = st2.getIDOAt(r,c);
+      IDO t1 = st1.getIDOAt(pair<unsigned,unsigned>(r,c));
+      IDO t2 = st2.getIDOAt(pair<unsigned,unsigned>(r,c));
       if( t1.first != t2.first || t1.second != t2.second )
         return false;
     }
@@ -85,33 +151,12 @@ bool operator==(const Eternity2_State& st1, const Eternity2_State& st2)
 */
 ostream& operator<<(ostream& os, const Eternity2_State& st)
 {
-  for(unsigned c = 0; c < st.in.getWidth(); c++){
-    CardinalPoint pc = 2;
-    unsigned counter = 0;
-    while( counter != 3 ){
-
-      for(unsigned d = 0; d < st.in.getHeight(); d++){
-        
-        IDO ido_cd = st.board.at(c).at(d);
-        
-        if( pc % 2 == 0 ){
-          os << "   " << st.getColor( ido_cd, pc ) << "     ";
-        }else{
-          os << st.getColor( ido_cd, pc ) << "      ";
-          os << st.getColor( ido_cd, pc+2 ) << " ";
-        }
-
-      }
-      os << endl;
-      switch(pc){
-        case 0: pc = 0; break;
-        case 1: pc = 0; break;
-        case 2: pc = 1; break;
-        default: exit(0);
-      }
-      counter++;
+  vector<vector<IDO> > board = st.board;
+  for(unsigned r = 0; r < st.getHeight(); r++){
+    for(unsigned c = 0; c < st.getWidth(); c++){
+      os << "(" << board.at(r).at(c).first << "," << board.at(r).at(c).second << ")" << "   ";
     }
-    //os << endl;
+    os << endl;
   }
   return os;
 }
@@ -129,25 +174,25 @@ ostream& operator<<(ostream& os, const Eternity2_State& st)
 
 
 /*
-* Constructor of the "Eternity2_SingletonMove" class. It initializes the "permutation" vector. It cannot take as
+* Constructor of the "Eternity2_GenericMove" class. It initializes the "permutation" vector. It cannot take as
 * parameters the list of coordinates, since easylocal++ requires all the move's constructors to have no parameters.
 * The "coords" vector is set with the public method "setCoords()".
 */
-Eternity2_SingletonMove::Eternity2_SingletonMove()
+Eternity2_GenericMove::Eternity2_GenericMove()
 {
-   permutation = vector<IDO>(); //Size unknown
+  
 }
 
 
 /*
 * Equality operator: if the two moves are not defined over the same set of positions, then they are different, i.e.:
-* checks if the vectors "coords" are the same.
+* check if the vectors "coords" are the same.
 * Otherwise, checks if the vectors "permutation" of the two object are the same, i.e. for all i, the i-esim
 * cell of the two vector must contain the same IDO.
 *
 * ASSUMPTION: the elements of these vector are ordered. This allows to check the two vectors "coords" cell by cell.
 */
-bool operator==(const Eternity2_SingletonMove& mv1, const Eternity2_SingletonMove& mv2)
+bool operator==(const Eternity2_GenericMove& mv1, const Eternity2_GenericMove& mv2)
 {
   vector<Coord> coords1 = mv1.coords;
   vector<Coord> coords2 = mv2.coords;
@@ -161,8 +206,8 @@ bool operator==(const Eternity2_SingletonMove& mv1, const Eternity2_SingletonMov
         return false;
     }
     //Check if "perm1" and "perm2" are the same.
-    vector<IDO> perm1 = mv1.permutation;
-    vector<IDO> perm2 = mv2.permutation;
+    vector<pair<unsigned,Orientation> > perm1 = mv1.permutation;
+    vector<pair<unsigned,Orientation> > perm2 = mv2.permutation;
     for(unsigned c = 0; c < perm1.size(); c++){
       if( perm1.at(c).first != perm2.at(c).first || perm1.at(c).second != perm2.at(c).second )
         return false;
@@ -175,7 +220,7 @@ bool operator==(const Eternity2_SingletonMove& mv1, const Eternity2_SingletonMov
 /*
 * Disequality operator
 */
-bool operator!=(const Eternity2_SingletonMove& mv1, const Eternity2_SingletonMove& mv2)
+bool operator!=(const Eternity2_GenericMove& mv1, const Eternity2_GenericMove& mv2)
 {
   return ! (mv1 == mv2);
 }
@@ -184,24 +229,57 @@ bool operator!=(const Eternity2_SingletonMove& mv1, const Eternity2_SingletonMov
 /*
 * Less-than operator. It checks first if ... 
 */
-bool operator<(const Eternity2_SingletonMove& mv1, const Eternity2_SingletonMove& mv2)
+bool operator<(const Eternity2_GenericMove& mv1, const Eternity2_GenericMove& mv2)
 {
   // Insert the code that checks if one move precedes another one
   // (in any selected order)
-  throw logic_error("operator<(const Eternity2_SingletonMove& mv1, const Eternity2_SingletonMove& mv2) not implemented yet");	
+  throw logic_error("operator<(const Eternity2_GenericMove& mv1, const Eternity2_GenericMove& mv2) not implemented yet");	
   return true;
 }
 
-istream& operator>>(istream& is, Eternity2_SingletonMove& mv)
+istream& operator>>(istream& is, Eternity2_GenericMove& mv)
 {
   // Insert the code that read a move
-  throw logic_error("operator>>(istream& is, Eternity2_SingletonMove& mv) not implemented yet");	
+  throw logic_error("operator>>(istream& is, Eternity2_GenericMove& mv) not implemented yet");	
   return is;
 }
 
-ostream& operator<<(ostream& os, const Eternity2_SingletonMove& mv)
+ostream& operator<<(ostream& os, const Eternity2_GenericMove& mv)
 {
-  // Insert the code that writes a move
-  throw logic_error("operator<<(ostream& os, const Eternity2_SingletonMove& mv) not implemented yet");	
+  os << endl;
+  for(unsigned crd = 0; crd < mv.coords.size(); crd++){
+    os << "(" << mv.coords.at(crd).first << "," << mv.coords.at(crd).second << ")   :   ";
+    os << "old position = (" << mv.coords.at( mv.permutation.at(crd).first ).first << "," << mv.coords.at( mv.permutation.at(crd).first ).second << ")";
+    os << "   orientation = " << mv.permutation.at(crd).second << endl;
+  }
   return os;
 }
+
+
+
+
+Eternity2_SingletonMove::Eternity2_SingletonMove() : Eternity2_GenericMove() {
+
+};
+
+
+Eternity2_EvenChessboardMove::Eternity2_EvenChessboardMove() : Eternity2_GenericMove() {
+
+};
+
+
+Eternity2_OddChessboardMove::Eternity2_OddChessboardMove() : Eternity2_GenericMove() {
+
+};
+
+
+
+
+
+
+
+
+
+
+
+

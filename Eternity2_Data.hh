@@ -40,6 +40,7 @@ protected:
   const Eternity2_Input& in;
   vector<vector<IDO> > board; //board of couples (id,orientation) where orientation \in {0..3}
   Color getColor(IDO ido, CardinalPoint pc) const; //for the "<<"
+  int strangeMod(int dividend, int divisor) const ;
 };
 
 
