@@ -353,7 +353,7 @@ int Eternity2_SingletonMoveDeltaCostComponent1::ComputeDeltaCost(const Eternity2
 void Eternity2_LMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_LMove& mv) const  throw(EmptyNeighborhood)
 {
   // insert the code that writes a random move on mv in state st
-	throw logic_error("Eternity2_LMoveNeighborhoodExplorer::RandomMove not implemented yet");	
+  // shuffle partition
 } 
 
 // check move feasibility
@@ -361,7 +361,19 @@ bool Eternity2_LMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st
 {
   // Insert the code that check is move mv is legal in state st 
   // (return true if legal, false otherwise)
-	
+  
+  // Check that elements are not repeated
+  vector<IDO> temp = vector<IDO>(mv.EllSelection.size());
+  for(unsigned i = 0; i < temp.size(); i++){
+	  IDO ido = mv.EllSelection.at(i);
+	  if(temp.at(ido.first) != null){
+		  return false;
+	  }
+	  temp.at(ido.first) = ido;
+  }
+  
+  // Maybe we should check that the generated L-partition is good.
+  return true;
 } 
 
 // update the state according to the move 
@@ -374,14 +386,57 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
 void Eternity2_LMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, Eternity2_LMove& mv) const  throw(EmptyNeighborhood)
 {
   // Insert the code the generate the first move in the neighborhood and store it in mv
-	throw logic_error("Eternity2_LMoveNeighborhoodExplorer::FirstMove not implemented yet");	
+  // The list of ells in the partition is produced.
+  mv.EllSelection = vector<IDO>(mv.ells);
+  unsigned id = 0;
+  for(unsigned i=0; i<st.getHeight(); i++){
+	  for(unsigned j=0; j<st.getWidth(); j++){
+		  unsigned ell = mv.FlatEllMatrix.at(i).at(j);
+		  if(ell < mv.NO_ELL)
+		  mv.EllSelection.at(id) = pair<unsigned,unsigned>(id,ell);
+	  }
+  }
 }
 
 bool Eternity2_LMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Eternity2_LMove& mv) const
 {
   // Insert the code that generate the move that follows mv in the neighborhood, and writes
-  // it back in mv. Return false if mv is already the last move. 
-	throw logic_error("Eternity2_LMoveNeighborhoodExplorer::NextMove not implemented yet");	
+  // it back in mv. Return false if mv is already the last move.
+  unsigned size = mv.EllSelection.size();
+  unsigned i= size;
+  // Find the pivot, i.e. the element before the longest non-increasing suffix
+  unsigned pivot=i;
+  while( i>0 && pivot >= size){
+	  if(mv.EllSelection.at(i) > mv.EllSelection.at(i-1))
+		  pivot = i-1;
+	  i--;
+  }
+  
+  if(pivot >= size) return false;
+  
+  // Find the rightmost element greater than the pivot
+  i = size-1;
+  unsigned succ = size;
+  while(i > pivot && succ >= size){
+	  if(mv.EllSelection.at(i) > mv.EllSelection.at(pivot))
+		  succ = i;
+	  i--;
+  }
+  
+  //if(succ >= size) return false;
+  
+  // Exchange the pivot with the successor
+  IDO temp = mv.EllSelection.at(succ);
+  mv.EllSelection.at(succ) = mv.EllSelection.at(pivot);
+  mv.EllSelection.at(pivot) = temp;
+  
+  // Invert the suffix delimited by the pivot
+  for(i = 1; i <= (size-pivot)/2; i++){
+	  temp = mv.EllSelection.at(pivot + i);
+	  mv.EllSelection.at(pivot+i) = mv.EllSelection.at(size-i);
+	  mv.EllSelection.at(size-i) = temp;
+  }
+  
   return true;
 }
 
@@ -394,6 +449,7 @@ vector<vector<unsigned>> EllGeneration(const Eternity2_State& st, const Eternity
 {
 	r = st.getHeight(); // Rows
 	c = st.getWidth(); // Columns
+	mv.ells = 0;
 	
 	/* Space between the current cell and each border of the matrix
 	*  L= left, U = up, ... 
@@ -439,6 +495,7 @@ vector<vector<unsigned>> EllGeneration(const Eternity2_State& st, const Eternity
 			}
 			
 		}
+		mv.ells++;
 		
 		/* Now we want to place constraints on which ells can be placed next
 		* based on the ell placed this iteration. */

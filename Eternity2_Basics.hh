@@ -75,7 +75,6 @@ class Eternity2_LMove
   * U = up, L = left, ...
   * An example is found below.
   *
-  * Assumption: HOLE_UL < HOLE_UR < HOLE_DR < HOLE_DL
   */
   const unsigned HOLE_UL = 0;
   const unsigned HOLE_UR = 1
@@ -103,10 +102,10 @@ class Eternity2_LMove
   vector<vector<unsigned>> FlatEllMatrix;
   
   // Which Ls are selected for permutation
-  vector<unsigned> EllSelection;
+  vector<IDO> EllSelection;
   
-  // How many Ls are there?
-  unsigned ln;
+  // How many ells in the partition
+  unsigned ells;
   
   // This matrix tells us if, which and where Ls can be placed around a given L.
   // TODO explain this

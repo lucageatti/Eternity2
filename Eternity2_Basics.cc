@@ -311,7 +311,9 @@ ostream& operator<<(ostream& os, const Eternity2_LMove& mv)
 * The placement matrix tells us which ell placements are valid after
 * placing a given ell in a 5x5 area around it. 
 * Only the placement matrix for HOLE_UL is stored; the others are
-* computed by modifying it at run-time.*/
+* computed by modifying it at run-time.
+* This function essentially maps a position on a matrix into the corresponding
+* position in the rotated matrix, and adds something to the result.*/
 unsigned readPlacementMatrix(unsigned row, unsigned column, unsigned ell){
 	unsigned ret = NO_ELL;
 	unsigned rows = sizeof(placementMatrix);
