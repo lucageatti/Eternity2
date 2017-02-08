@@ -87,7 +87,7 @@ class Eternity2_LMove
   // TODO explain this as well
   unsigned readPlacementMatrix(unsigned row, unsigned column, unsigned ell);
   
- protected:
+ //protected:
   /* 
   * This is a (flattened) matrix representing the (n-1)*(m-1) 2x2 squares, left to right and top to bottom.
   * n is the number of rows, m is the number of columns.
@@ -103,6 +103,9 @@ class Eternity2_LMove
   
   // Which Ls are selected for permutation
   vector<IDO> EllSelection;
+  
+  // List of ells in the placement matrix and their coordinates on the board
+  vector<pair<pair<unsigned,unsigned>,unsigned>> EllList;
   
   // How many ells in the partition
   unsigned ells;

@@ -380,7 +380,42 @@ bool Eternity2_LMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st
 void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_LMove& mv) const
 {
   // Insert the code that modify the state st based on the application of move mv
-	throw logic_error("Eternity2_LMoveNeighborhoodExplorer::MakeMove not implemented yet");	
+  unsigned cols = st.getWidth();
+  for(unsigned i = 0; i < mv.EllSelection; i++){
+	  // Swap EllList(i) with EllSelection(i) on the board
+	  unsigned i1 = mv.EllList.at(i).first().first();
+	  unsigned j1 = mv.EllList.at(i).first().second();
+	  unsigned i2 = mv.EllList.at(mv.EllSelection.at(i).first()).first().first();
+	  unsigned j2 = mv.EllList.at(mv.EllSelection.at(i).first()).first().second();
+	  // Backup IDOs
+	  IDO[] eLstIDO = { st.getIDOAt(i1,j1), st.getIDOAt(i1,j1+1),
+		st.getIDOAt(i1+1,j1),st.getIDOAt(i1+1,j1+1) };
+	  IDO[] eSelIDO = { st.getIDOAt(i2,j2), st.getIDOAt(i2,j2+1),
+		st.getIDOAt(i2+1,j2),st.getIDOAt(i2+1,j2+1) };
+	  // Backup coordinates
+	  pair<unsigned,unsigned>[] eLstCoord = 
+		{ pair<unsigned,unsigned>(i1,j1), pair<unsigned,unsigned>(i1,j1+1), 
+		pair<unsigned,unsigned>(i1+1,j1), pair<unsigned,unsigned>(i1+1,j1+1) };
+	  pair<unsigned,unsigned>[] eSelCoord = 
+		{ pair<unsigned,unsigned>(i2,j2), pair<unsigned,unsigned>(i2,j2+1), 
+		pair<unsigned,unsigned>(i2+1,j2), pair<unsigned,unsigned>(i2+1,j2+1) };
+	  // Calculate the rotation needed
+	  int diff = mv.EllList.at(mv.EllSelection.at(i).first()).second() - mv.EllList.at(i).second();
+	  int rot;
+	  int rot21;
+	  if(diff>0){
+		  rot12=diff;
+	  }
+	  /*int rot12 = mv.EllList.at(mv.EllSelection.at(i).first()).second() - mv.EllList.at(i).second();
+	  int rot21 = mv.EllList.at(i).second() - mv.EllList.at(mv.EllSelection.at(i).first()).second();*/
+	  // Do the swap
+	  for(unsigned j = 0; j<3; j++){
+		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[j].first(), eLstIDO[j].second()+rot12),
+			pair<unsigned,unsigned>(eSelCoord[j+rot12].first(), eSelCoord[j+rot12].second()) );
+		  st.insertTile( pair<unsigned,unsigned>(eSelIDO[j].first(), eSelIDO[j].second()+rot21),
+			pair<unsigned,unsigned>(eSelCoord[j+rot12].first(), eSelCoord[j+rot12].second()) );  
+	  }
+  }
 }  
 
 void Eternity2_LMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, Eternity2_LMove& mv) const  throw(EmptyNeighborhood)
@@ -450,6 +485,7 @@ vector<vector<unsigned>> EllGeneration(const Eternity2_State& st, const Eternity
 	r = st.getHeight(); // Rows
 	c = st.getWidth(); // Columns
 	mv.ells = 0;
+	mv.EllList = vector<pair<pair<unsigned,unsigned>,unsigned>>(mv.ells);
 	
 	/* Space between the current cell and each border of the matrix
 	*  L= left, U = up, ... 
@@ -492,11 +528,20 @@ vector<vector<unsigned>> EllGeneration(const Eternity2_State& st, const Eternity
 			}else if(partition.at(cr).at(cc) < mv.NO_ELL){
 				// A constraint has been placed here
 				lo = partition.at(cr).at(cc);				
+			}else{
+				lo = NO_ELL;
+				if(++cc == c){ // Move to the next position
+					cc = 0;
+					cr++;
+				} 
+				continue;
 			}
 			
 		}
+
 		mv.ells++;
-		
+		mv.EllList.push_back(pair<unsigned,unsigned>,unsigned>(pair<unsigned,unsigned>(cr,cc),lo))
+			
 		/* Now we want to place constraints on which ells can be placed next
 		* based on the ell placed this iteration. */
 		// Compute the area to work on
@@ -547,6 +592,7 @@ vector<vector<unsigned>> EllGeneration(const Eternity2_State& st, const Eternity
 		} 
 	}
 	// End while
+
 }
 
 int Eternity2_LMoveDeltaCostComponent1::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const
