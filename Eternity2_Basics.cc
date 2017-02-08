@@ -292,6 +292,43 @@ Eternity2_ThreeTileStreakMove::Eternity2_ThreeTileStreakMove()
     permutation = vector<pair<unsigned,int>>();
 }
 
+// Compute simple tile-wise moves from the three tile streak moves.
+vector<pair<IDO,Coord>> Eternity2_ThreeTileStreakMove::computeSimpleMoves(const Eternity2_State& st) const
+{
+    vector<pair<IDO,Coord>> changes;
+    Coord from,to;
+    int from_dir,to_dir;
+
+    for (int i = 0; i < st.random_tts.size(); ++i)
+    {
+        pair<IDO,Coord> m,m1,m2;
+
+        from = st.random_tts[permutation[i].first].first;
+        from_dir = st.random_tts[permutation[i].first].second;
+        to = st.random_tts[i].first;
+        to_dir = st.random_tts[i].second;
+
+        m = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*permutation[i].second + 3*from_dir + to_dir) % 4),to);
+
+        from = make_pair(from.first - from_dir,from.second + from_dir - 1);
+        to = make_pair(to.first - to_dir + to_dir*2*permutation[i].second,to.second + to_dir - 1 + (1 - to_dir)*2*permutation[i].second);
+
+        m1 = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*permutation[i].second + 3*from_dir + to_dir) % 4),to);
+        
+        from = make_pair(from.first + 2*from_dir,from.second + 2 - 2*from_dir);
+        to = make_pair(to.first + 2*to_dir - to_dir*4*permutation[i].second,to.second + 2 - 2*to_dir - (1 - to_dir)*4*permutation[i].second);
+
+        m2 = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*permutation[i].second + 3*from_dir + to_dir) % 4),to);
+
+        changes.push_back(m);
+        changes.push_back(m1);
+        changes.push_back(m2);
+    }
+
+    return changes;
+}
+
+
 // Swaps two elements in a permutation of the tiles
 void Eternity2_ThreeTileStreakMove::swapPerm(int i, int j)
 {

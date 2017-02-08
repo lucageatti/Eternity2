@@ -503,7 +503,8 @@ bool ThreeTileStreakMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State
 
 void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const
 {
-    vector<pair<IDO,Coord>> changes;
+    vector<pair<IDO,Coord>> changes = mv.computeSimpleMoves(st);
+    /*
     Coord from,to;
     int from_dir,to_dir;
 
@@ -532,6 +533,7 @@ void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, cons
         changes.push_back(m1);
         changes.push_back(m2);
     }
+    */
 
     for (int i = 0; i < changes.size(); ++i)
     {

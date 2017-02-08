@@ -113,6 +113,7 @@ class Eternity2_ThreeTileStreakMove
 
     int getSize() const {return permutation.size(); }
 
+    vector<pair<IDO,Coord>> computeSimpleMoves(const Eternity2_State& st) const;
     void swapPerm(int i, int j);
  
   protected:
