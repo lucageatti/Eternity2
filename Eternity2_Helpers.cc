@@ -372,7 +372,7 @@ bool Eternity2_LMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st
 	  temp.at(ido.first) = ido;
   }
   
-  // Maybe we should check that the generated L-partition is good.
+  // Maybe we should check that the generated L-partition is good. (but not here)
   return true;
 } 
 
@@ -610,12 +610,3 @@ int Eternity2_LMoveDeltaCostComponent1::ComputeDeltaCost(const Eternity2_State& 
   return cost;
 }
           
-int Eternity2_LMoveDeltaCostComponent2::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const
-{
-  int cost = 0;
-  // Insert the code that computes the delta cost of component 1 for move mv in state st
-	throw logic_error("Eternity2_LMoveDeltaCostComponent2::ComputeDeltaCost not implemented yet");	
-  return cost;
-}
-
-
