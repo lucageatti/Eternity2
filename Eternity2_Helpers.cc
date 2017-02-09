@@ -389,31 +389,38 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
 	  unsigned j2 = mv.EllList.at(mv.EllSelection.at(i).first()).first().second();
 	  // Backup IDOs
 	  IDO[] eLstIDO = { st.getIDOAt(i1,j1), st.getIDOAt(i1,j1+1),
-		st.getIDOAt(i1+1,j1),st.getIDOAt(i1+1,j1+1) };
+		st.getIDOAt(i1+1,j1+1), st.getIDOAt(i1+1,j1) };
 	  IDO[] eSelIDO = { st.getIDOAt(i2,j2), st.getIDOAt(i2,j2+1),
-		st.getIDOAt(i2+1,j2),st.getIDOAt(i2+1,j2+1) };
+		st.getIDOAt(i2+1,j2+1),st.getIDOAt(i2+1,j2) };
 	  // Backup coordinates
 	  pair<unsigned,unsigned>[] eLstCoord = 
 		{ pair<unsigned,unsigned>(i1,j1), pair<unsigned,unsigned>(i1,j1+1), 
-		pair<unsigned,unsigned>(i1+1,j1), pair<unsigned,unsigned>(i1+1,j1+1) };
+		pair<unsigned,unsigned>(i1+1,j1+1), pair<unsigned,unsigned>(i1+1,j1) };
 	  pair<unsigned,unsigned>[] eSelCoord = 
 		{ pair<unsigned,unsigned>(i2,j2), pair<unsigned,unsigned>(i2,j2+1), 
-		pair<unsigned,unsigned>(i2+1,j2), pair<unsigned,unsigned>(i2+1,j2+1) };
+		pair<unsigned,unsigned>(i2+1,j2+1), pair<unsigned,unsigned>(i2+1,j2) };
 	  // Calculate the rotation needed
-	  int diff = mv.EllList.at(mv.EllSelection.at(i).first()).second() - mv.EllList.at(i).second();
-	  int rot;
-	  int rot21;
-	  if(diff>0){
-		  rot12=diff;
-	  }
-	  /*int rot12 = mv.EllList.at(mv.EllSelection.at(i).first()).second() - mv.EllList.at(i).second();
-	  int rot21 = mv.EllList.at(i).second() - mv.EllList.at(mv.EllSelection.at(i).first()).second();*/
+	  // OCCHIO AL MODULO NEGATIVO
+	  int rot12 = mv.EllList.at(mv.EllSelection.at(i).first()).second() - mv.EllList.at(i).second();
+	  //int rot21 = mv.EllList.at(i).second() - mv.EllList.at(mv.EllSelection.at(i).first()).second();
+	  
 	  // Do the swap
+	  /* Swap Example:
+	   *
+	   *   | |#| = |0|1| --> |#| | = |3|0| 
+	   *   |#|#| = |3|2| --> |#|#| = |2|1|
+	   *
+	   * I do a clockwise rotation of 1 (respectively -1), also rotating each individual cell.
+	   */
 	  for(unsigned j = 0; j<3; j++){
+		  int k1 = (j+rot12)%4;
+		  int k2 = (j-rot12)%4;
+		  if(k1 < 0) k1*=-1;
+		  if(k2 < 0) k2*=-1;
 		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[j].first(), eLstIDO[j].second()+rot12),
-			pair<unsigned,unsigned>(eSelCoord[j+rot12].first(), eSelCoord[j+rot12].second()) );
-		  st.insertTile( pair<unsigned,unsigned>(eSelIDO[j].first(), eSelIDO[j].second()+rot21),
-			pair<unsigned,unsigned>(eSelCoord[j+rot12].first(), eSelCoord[j+rot12].second()) );  
+			pair<unsigned,unsigned>(eSelCoord[].first(k1), eSelCoord[k1].second()) );
+		  st.insertTile( pair<unsigned,unsigned>(eSelIDO[j].first(), eSelIDO[j].second()-rot12),
+			pair<unsigned,unsigned>(eSelCoord[k2].first(), eSelCoord[k2].second()) );  
 	  }
   }
 }  
