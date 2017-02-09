@@ -189,7 +189,6 @@ class Eternity2_LMove
   // This matrix tells us if, which and where Ls can be placed around a given L.
   // TODO explain this
   unsigned placementMatrix[][];
-  
 };
 
 
