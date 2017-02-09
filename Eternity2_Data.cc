@@ -113,8 +113,15 @@ Eternity2_Output& Eternity2_Output::operator=(const Eternity2_Output& out)
 */
 Color Eternity2_Output::getColor(IDO ido, CardinalPoint pc) const {
   Tile t = in.getTileAt(ido.first);
-  Color cl = t.cardinals.at( abs((pc-ido.second)%4) );
+  Color cl = t.cardinals.at( strangeMod(pc-ido.second,4) );
   return cl;
+}
+
+int Eternity2_Output::strangeMod(int dividend, int divisor) const {
+  if(dividend < 0){
+    dividend += divisor;
+  }
+  return dividend % divisor;
 }
 
 

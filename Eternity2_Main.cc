@@ -4,6 +4,7 @@ using namespace EasyLocal::Debug;
 
 int main(int argc, const char* argv[])
 {
+  
   ParameterBox main_parameters("main", "Main Program options");
 
   // The set of arguments added are the following:
@@ -30,13 +31,19 @@ int main(int argc, const char* argv[])
     Random::Seed(seed);
   
   // cost components: second parameter is the cost, third is the type (true -> hard, false -> soft)
-  Eternity2_CostComponent1 cc1(in, 1, true);
+  Eternity2_CostComponent cc1(in, 1, true);
 
-  Eternity2_SingletonMoveDeltaCostComponent1 dcc1(in, cc1);
+  SingletonMoveDeltaCostComponent singleton_move(in, cc1);
+  EvenChessboardMoveDeltaCostComponent even_chessboard_move(in, cc1);
+  OddChessboardMoveDeltaCostComponent odd_chessboard_move(in, cc1);
+  ThreeTileStreakMoveDeltaCostComponent tts_move(in, cc1);
 
   // helpers
   Eternity2_StateManager Eternity2_sm(in);
-  Eternity2_SingletonMoveNeighborhoodExplorer Eternity2_nhe(in, Eternity2_sm);
+  SingletonMoveNeighborhoodExplorer singleton_nhe(in, Eternity2_sm);
+  EvenChessboardMoveNeighborhoodExplorer even_chess_nhe(in, Eternity2_sm);
+  OddChessboardMoveNeighborhoodExplorer odd_chess_nhe(in, Eternity2_sm);
+  ThreeTileStreakMoveNeighborhoodExplorer tts_nhe(in, Eternity2_sm);
 
   Eternity2_OutputManager Eternity2_om(in);
   
@@ -44,17 +51,23 @@ int main(int argc, const char* argv[])
   Eternity2_sm.AddCostComponent(cc1);
   
   // All delta cost components must be added to the neighborhood explorer
-  Eternity2_nhe.AddDeltaCostComponent(dcc1);
+  singleton_nhe.AddDeltaCostComponent(singleton_move);
+  even_chess_nhe.AddDeltaCostComponent(even_chessboard_move);
+  odd_chess_nhe.AddDeltaCostComponent(odd_chessboard_move);
+  tts_nhe.AddDeltaCostComponent(tts_move);
   
   // runners
-  HillClimbing<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_hc(in, Eternity2_sm, Eternity2_nhe, "Eternity2_SingletonMoveHillClimbing");
-  SteepestDescent<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_sd(in, Eternity2_sm, Eternity2_nhe, "Eternity2_SingletonMoveSteepestDescent");
-  SimulatedAnnealing<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_sa(in, Eternity2_sm, Eternity2_nhe, "Eternity2_SingletonMoveSimulatedAnnealing");
+  HillClimbing<Eternity2_Input, Eternity2_State, Eternity2_GenericMove> Eternity2_hc(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveHillClimbing");
+  SteepestDescent<Eternity2_Input, Eternity2_State, Eternity2_GenericMove> Eternity2_sd(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSteepestDescent");
+  SimulatedAnnealing<Eternity2_Input, Eternity2_State, Eternity2_GenericMove> Eternity2_sa(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSimulatedAnnealing");
 
   // tester
   Tester<Eternity2_Input, Eternity2_Output, Eternity2_State> tester(in,Eternity2_sm,Eternity2_om);
-  MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_SingletonMove> swap_move_test(in,Eternity2_sm,Eternity2_om,Eternity2_nhe, "Eternity2_SingletonMove move", tester); 
-
+  MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_GenericMove> singleton_move_test(in,Eternity2_sm,Eternity2_om,singleton_nhe, "Singleton Move", tester);
+  MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_GenericMove> even_chessboard_move_test(in,Eternity2_sm,Eternity2_om,even_chess_nhe, "Even Chessboard Move", tester);
+  MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_GenericMove> odd_chessboard_move_test(in,Eternity2_sm,Eternity2_om,odd_chess_nhe, "Odd Chessboard Move", tester);
+  MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_ThreeTileStreakMove> tts_move_test(in,Eternity2_sm,Eternity2_om,tts_nhe, "Three Tiles Streak Move", tester);
+  
   SimpleLocalSearch<Eternity2_Input, Eternity2_Output, Eternity2_State> Eternity2_solver(in, Eternity2_sm, Eternity2_om, "Eternity2 solver");
   if (!CommandLineParameters::Parse(argc, argv, true, false))
     return 1;
