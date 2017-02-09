@@ -853,6 +853,7 @@ void Eternity2_LMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, 
 {
   // insert the code that writes a random move on mv in state st
   // shuffle partition
+  EllSelection = FisherYatesShuffle(EllList.size());
 } 
 
 // check move feasibility
