@@ -261,11 +261,6 @@ ostream& operator<<(ostream& os, const Eternity2_GenericMove& mv)
 }
 
 
-
-
-<<<<<<< HEAD
-
-
 /**************************************************************************************************************************
 ***************************************************************************************************************************
 ***************************************************************************************************************************
@@ -393,7 +388,7 @@ unsigned readPlacementMatrix(unsigned row, unsigned column, unsigned ell){
 	if(ret < NO_ELL) ret+=ell;
 	return ret;
 }
-=======
+
 Eternity2_SingletonMove::Eternity2_SingletonMove() : Eternity2_GenericMove() {
 
 };
@@ -517,7 +512,3 @@ ostream& operator<<(ostream& os, const Eternity2_ThreeTileStreakMove& mv)
     return os;
 }
 
-
-
-
->>>>>>> master

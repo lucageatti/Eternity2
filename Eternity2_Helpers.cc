@@ -862,13 +862,13 @@ bool Eternity2_LMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st
   // (return true if legal, false otherwise)
   
   // Check that elements are not repeated
-  vector<IDO> temp = vector<IDO>(mv.EllSelection.size());
+  vector<unsigned> temp = vector<unsigned>(mv.EllSelection.size());
   for(unsigned i = 0; i < temp.size(); i++){
-	  IDO ido = mv.EllSelection.at(i);
-	  if(temp.at(ido.first) != null){
+	  unsigned sel = mv.EllSelection.at(i);
+	  if(temp.at(sel) != null){
 		  return false;
 	  }
-	  temp.at(ido.first) = ido;
+	  temp.at(sel) = sel;
   }
   
   // Maybe we should check that the generated L-partition is good. (but not here)
@@ -880,12 +880,12 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
 {
   // Insert the code that modifies the state st based on the application of move mv
   unsigned cols = st.getWidth();
-  for(unsigned i = 0; i < mv.EllSelection; i++){
+  for(unsigned i = 0; i < mv.EllSelection.size() && mv.EllSelection.at(i) > i; i++){
 	  // Swap EllList(i) with EllSelection(i) on the board
 	  unsigned i1 = mv.EllList.at(i).first().first();
 	  unsigned j1 = mv.EllList.at(i).first().second();
-	  unsigned i2 = mv.EllList.at(mv.EllSelection.at(i).first()).first().first();
-	  unsigned j2 = mv.EllList.at(mv.EllSelection.at(i).first()).first().second();
+	  unsigned i2 = mv.EllList.at(mv.EllSelection.at(i)).first().first();
+	  unsigned j2 = mv.EllList.at(mv.EllSelection.at(i)).first().second();
 	  // Backup IDOs
 	  IDO[] eLstIDO = { st.getIDOAt(i1,j1), st.getIDOAt(i1,j1+1),
 		st.getIDOAt(i1+1,j1+1), st.getIDOAt(i1+1,j1) };
@@ -900,7 +900,7 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
 		pair<unsigned,unsigned>(i2+1,j2+1), pair<unsigned,unsigned>(i2+1,j2) };
 	  // Calculate the rotation needed
 	  // OCCHIO AL MODULO NEGATIVO
-	  int rot12 = mv.EllList.at(mv.EllSelection.at(i).first()).second() - mv.EllList.at(i).second();
+	  int rot12 = mv.EllList.at(mv.EllSelection.at(i)).second() - mv.EllList.at(i).second();
 	  //int rot21 = mv.EllList.at(i).second() - mv.EllList.at(mv.EllSelection.at(i).first()).second();
 	  
 	  // Do the swap
@@ -912,13 +912,23 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
 	   * I do a clockwise rotation of 1 (respectively -1), also rotating each individual cell.
 	   */
 	  for(unsigned j = 0; j<3; j++){
-		  int k1 = (j+rot12)%4;
-		  int k2 = (j-rot12)%4;
-		  if(k1 < 0) k1*=-1;
-		  if(k2 < 0) k2*=-1;
-		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[j].first(), eLstIDO[j].second()+rot12),
+		  int k1 = (j+rot12);
+		  if(k1 < 0) k1 += 4;
+		  k1 = k1 % 4;
+		  int k2 = (j-rot12);
+		  if(k2 < 0) k2 += 4;
+		  k1 = k1 % 4;
+		  
+		  int lido = (eLstIDO[j].second()+rot12);
+		  if(lido < 0) lido += 4;
+		  lido = lido % 4;
+		  int sido = (eSelIDO[j].second()-rot12);
+		  if(sido < 0) sido += 4;
+		  sido = sido % 4;
+		  
+		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[j].first(), lido),
 			pair<unsigned,unsigned>(eSelCoord[k1].first(), eSelCoord[k1].second()) );
-		  st.insertTile( pair<unsigned,unsigned>(eSelIDO[j].first(), eSelIDO[j].second()-rot12),
+		  st.insertTile( pair<unsigned,unsigned>(eSelIDO[j].first(), sido),
 			pair<unsigned,unsigned>(eLstCoord[k2].first(), eLstCoord[k2].second()) );  
 	  }
   }
@@ -928,13 +938,13 @@ void Eternity2_LMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, E
 {
   // Insert the code the generate the first move in the neighborhood and store it in mv
   // The list of ells in the partition is produced.
-  mv.EllSelection = vector<IDO>(mv.ells);
+  mv.EllSelection = vector<unsigned>(mv.ells);
   unsigned id = 0;
   for(unsigned i=0; i<st.getHeight(); i++){
 	  for(unsigned j=0; j<st.getWidth(); j++){
 		  unsigned ell = mv.FlatEllMatrix.at(i).at(j);
 		  if(ell < mv.NO_ELL)
-		  mv.EllSelection.at(id) = pair<unsigned,unsigned>(id,ell);
+		  mv.EllSelection.at(id) = id++;
 	  }
   }
 }
@@ -1109,12 +1119,12 @@ int Eternity2_LMoveDeltaCostComponent1::ComputeDeltaCost(const Eternity2_State& 
   //int singleTileCost(IDO ido, Coord crd, const Eternity2_State& st)
   // Same code as MakeMove, but I calculate the deltacost instead of updating the state
   unsigned cols = st.getWidth();
-  for(unsigned i = 0; i < mv.EllSelection; i++){
+  for(unsigned i = 0; i < mv.EllSelection.size() && mv.EllSelection.at(i) > i; i++){ // Avoid duplicate swaps
 	  // Swap EllList(i) with EllSelection(i) on the board
 	  unsigned i1 = mv.EllList.at(i).first().first();
 	  unsigned j1 = mv.EllList.at(i).first().second();
-	  unsigned i2 = mv.EllList.at(mv.EllSelection.at(i).first()).first().first();
-	  unsigned j2 = mv.EllList.at(mv.EllSelection.at(i).first()).first().second();
+	  unsigned i2 = mv.EllList.at(mv.EllSelection.at(i)).first().first();
+	  unsigned j2 = mv.EllList.at(mv.EllSelection.at(i)).first().second();
 	  // Backup IDOs
 	  IDO[] eLstIDO = { st.getIDOAt(i1,j1), st.getIDOAt(i1,j1+1),
 		st.getIDOAt(i1+1,j1+1), st.getIDOAt(i1+1,j1) };
@@ -1127,21 +1137,56 @@ int Eternity2_LMoveDeltaCostComponent1::ComputeDeltaCost(const Eternity2_State& 
 	  pair<unsigned,unsigned>[] eSelCoord = 
 		{ pair<unsigned,unsigned>(i2,j2), pair<unsigned,unsigned>(i2,j2+1), 
 		pair<unsigned,unsigned>(i2+1,j2+1), pair<unsigned,unsigned>(i2+1,j2) };
-	  // Calculate the rotation needed
-	  // OCCHIO AL MODULO NEGATIVO
-	  int rot12 = mv.EllList.at(mv.EllSelection.at(i).first()).second() - mv.EllList.at(i).second();
+	  // Calculate the rotation 
+	  int rot12 = mv.EllList.at(mv.EllSelection.at(i)).second() - mv.EllList.at(i).second();
 	  
-	  // Do the swap
+	  // Original cost
+	  for(unsigned j = 0; j < 3; j++){
+		  int d1 = singleTileCost(pair<unsigned,unsigned>(eLstIDO[j].first(), eLstIDO[j].second()),
+			pair<unsigned,unsigned>(eLstCoord[j].first(), eLstCoord[j].second()), st);
+		  int d2 = singleTileCost(pair<unsigned,unsigned>(eSelIDO[j].first(), eSelIDO[j].second()),
+			pair<unsigned,unsigned>(eSelCoord[j].first(), eSelCoord[j].second()), st);
+		
+		  cost += d1+d2;
+	  }
+	  // Swap
 	  for(unsigned j = 0; j<3; j++){
-		  int k1 = (j+rot12)%4;
-		  int k2 = (j-rot12)%4;
-		  if(k1 < 0) k1*=-1;
-		  if(k2 < 0) k2*=-1;
-		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[j].first(), eLstIDO[j].second()+rot12),
+		  int k1 = (j+rot12);
+		  if(k1 < 0) k1 += 4;
+		  k1 = k1 % 4;
+		  int k2 = (j-rot12);
+		  if(k2 < 0) k2 += 4;
+		  k1 = k1 % 4;
+		  
+		  int lido = (eLstIDO[j].second()+rot12);
+		  if(lido < 0) lido += 4;
+		  lido = lido % 4;
+		  int sido = (eSelIDO[j].second()-rot12);
+		  if(sido < 0) sido += 4;
+		  sido = sido % 4;
+		  
+		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[j].first(), lido),
 			pair<unsigned,unsigned>(eSelCoord[k1].first(), eSelCoord[k1].second()) );
-		  st.insertTile( pair<unsigned,unsigned>(eSelIDO[j].first(), eSelIDO[j].second()-rot12),
+		  st.insertTile( pair<unsigned,unsigned>(eSelIDO[j].first(), sido),
 			pair<unsigned,unsigned>(eLstCoord[k2].first(), eLstCoord[k2].second()) );  
 	  }
+	  // Swapped cost
+	  for(unsigned j = 0; j < 3; j++){		  
+		  int d1s = singleTileCost(pair<unsigned,unsigned>(eLstIDO[j].first(), eLstIDO[j].second()),
+			pair<unsigned,unsigned>(eLstCoord[j].first(), eLstCoord[j].second()), st);
+		  int d2s = singleTileCost(pair<unsigned,unsigned>(eSelIDO[j].first(), eSelIDO[j].second()),
+			pair<unsigned,unsigned>(eSelCoord[j].first(), eSelCoord[j].second()), st);
+		  cost -= d1s+d2s;
+	  }
+	  // Undo swap
+	  for(unsigned j = 0; j < 3; j++){
+		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[j].first(), eLstIDO[j].second()),
+			pair<unsigned,unsigned>(eLstCoord[j].first(), eLstCoord[j].second()) );
+		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[mv.EllSelection.at(j)].first(), eLstIDO[mv.EllSelection.at(j)].second()),
+			pair<unsigned,unsigned>(eLstCoord[mv.EllSelection.at(j)].first(), eLstCoord[mv.EllSelection.at(j)].second()) );
+	  }
+	  
+	  
   }
   
   return cost;

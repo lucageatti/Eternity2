@@ -177,9 +177,10 @@ class Eternity2_LMove
   vector<vector<unsigned>> FlatEllMatrix;
   
   // Which Ls are selected for permutation
-  vector<IDO> EllSelection;
+  vector<unsigned> EllSelection;
   
   // List of ells in the placement matrix and their coordinates on the board
+  // EllList[i]= ( (coordX , coordY) , ellOrientation )
   vector<pair<pair<unsigned,unsigned>,unsigned>> EllList;
   
   // How many ells in the partition
