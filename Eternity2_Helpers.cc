@@ -243,10 +243,70 @@ int GenericMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, c
   vector<Coord> coords = mv.getCoordinates();
   for(unsigned c = 0; c < coords.size(); c++){
     Coord xy = coords.at(c);
-    cost -= singleTileCost(st.getIDOAt(xy), xy, st); //before
+    cost -= deltaSingleTileCost(st.getIDOAt(xy), xy, st); //before
     
     IDO new_ido = pair<ID,Orientation>( st.getIDOAt(coords.at(mv.getIndexAt(c))).first, mv.getOrientationAt(c));
-    cost += singleTileCost(new_ido, xy, st); //after
+    cost += deltaSingleTileCost(new_ido, xy, st); //after
+  }
+  return cost;
+}
+
+
+/*
+* Computes the cost of a single tile, given its orientation and a state.
+*/
+int GenericMoveDeltaCostComponent::deltaSingleTileCost(IDO ido, Coord crd, const Eternity2_State& st) const {
+  unsigned cost = 0;
+  unsigned r = crd.first;
+  unsigned c = crd.second;
+  for(unsigned cp = 0; cp < 4; cp++){
+    Color color_crd = st.getColor(ido,cp);
+    //Nord border
+    if(r == 0 && cp == 2){
+      if( color_crd != 0 )
+        cost++;
+    }
+    //Sud border
+    if(r == st.getHeight()-1 && cp == 0){
+      if( color_crd != 0 )
+        cost++;
+    }
+    //Ovest border
+    if(c == 0 && cp == 1){
+      if( color_crd != 0 )
+        cost++;
+    }
+    //Est border
+    if(c == st.getWidth()-1 && cp == 3){
+      if( color_crd != 0 )
+        cost++;
+    }
+        
+    //Inner borders
+    if(r != st.getHeight()-1 && cp == 0){
+      IDO ido_sud = st.getIDOAt( pair<unsigned,unsigned>(r+1,c) );
+      Color color_sud = st.getColor(ido_sud,2);
+      if( color_crd != color_sud )
+        cost++;
+    }
+    else if(c != 0 && cp == 1){
+      IDO ido_ovest = st.getIDOAt( pair<unsigned,unsigned>(r,c-1) );
+      Color color_ovest = st.getColor(ido_ovest,3);
+      if( color_crd != color_ovest )
+        cost++;
+    }
+    else if(r != 0 && cp == 2){
+      IDO ido_nord = st.getIDOAt( pair<unsigned,unsigned>(r-1,c) );
+      Color color_nord = st.getColor(ido_nord,0);
+      if( color_crd != color_nord )
+        cost++;
+    }
+    else if(c != st.getWidth()-1 && cp == 3){
+      IDO ido_est = st.getIDOAt( pair<unsigned,unsigned>(r,c+1) );
+      Color color_est = st.getColor(ido_est,1);
+      if( color_crd != color_est )
+        cost++;
+    }
   }
   return cost;
 }

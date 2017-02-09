@@ -242,13 +242,22 @@ bool operator<(const Eternity2_GenericMove& mv1, const Eternity2_GenericMove& mv
   return true;
 }
 
+/*
+* Reads a move from file. The syntax of the file is something like this:
+* (2,0) -> (0,1) 0
+* (1,2) -> (1,2) 1
+* (0,1) -> (2,0) 2
+*/
 istream& operator>>(istream& is, Eternity2_GenericMove& mv)
 {
-  // Insert the code that read a move
-  throw logic_error("operator>>(istream& is, Eternity2_GenericMove& mv) not implemented yet");	
+  throw logic_error("operator<(const Eternity2_GenericMove& mv1, const Eternity2_GenericMove& mv2) not implemented yet");
   return is;
 }
 
+
+/*
+* Print of the move.
+*/
 ostream& operator<<(ostream& os, const Eternity2_GenericMove& mv)
 {
   os << endl;
