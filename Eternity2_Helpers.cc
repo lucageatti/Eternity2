@@ -878,7 +878,7 @@ bool Eternity2_LMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st
 // update the state according to the move 
 void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_LMove& mv) const
 {
-  // Insert the code that modify the state st based on the application of move mv
+  // Insert the code that modifies the state st based on the application of move mv
   unsigned cols = st.getWidth();
   for(unsigned i = 0; i < mv.EllSelection; i++){
 	  // Swap EllList(i) with EllSelection(i) on the board
@@ -917,9 +917,9 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
 		  if(k1 < 0) k1*=-1;
 		  if(k2 < 0) k2*=-1;
 		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[j].first(), eLstIDO[j].second()+rot12),
-			pair<unsigned,unsigned>(eSelCoord[].first(k1), eSelCoord[k1].second()) );
+			pair<unsigned,unsigned>(eSelCoord[k1].first(), eSelCoord[k1].second()) );
 		  st.insertTile( pair<unsigned,unsigned>(eSelIDO[j].first(), eSelIDO[j].second()-rot12),
-			pair<unsigned,unsigned>(eSelCoord[k2].first(), eSelCoord[k2].second()) );  
+			pair<unsigned,unsigned>(eLstCoord[k2].first(), eLstCoord[k2].second()) );  
 	  }
   }
 }  
@@ -1105,7 +1105,45 @@ int Eternity2_LMoveDeltaCostComponent1::ComputeDeltaCost(const Eternity2_State& 
 {
   int cost = 0;
   // Insert the code that computes the delta cost of component 1 for move mv in state st
-	throw logic_error("Eternity2_LMoveDeltaCostComponent1::ComputeDeltaCost not implemented yet");	
+  
+  //int singleTileCost(IDO ido, Coord crd, const Eternity2_State& st)
+  // Same code as MakeMove, but I calculate the deltacost instead of updating the state
+  unsigned cols = st.getWidth();
+  for(unsigned i = 0; i < mv.EllSelection; i++){
+	  // Swap EllList(i) with EllSelection(i) on the board
+	  unsigned i1 = mv.EllList.at(i).first().first();
+	  unsigned j1 = mv.EllList.at(i).first().second();
+	  unsigned i2 = mv.EllList.at(mv.EllSelection.at(i).first()).first().first();
+	  unsigned j2 = mv.EllList.at(mv.EllSelection.at(i).first()).first().second();
+	  // Backup IDOs
+	  IDO[] eLstIDO = { st.getIDOAt(i1,j1), st.getIDOAt(i1,j1+1),
+		st.getIDOAt(i1+1,j1+1), st.getIDOAt(i1+1,j1) };
+	  IDO[] eSelIDO = { st.getIDOAt(i2,j2), st.getIDOAt(i2,j2+1),
+		st.getIDOAt(i2+1,j2+1),st.getIDOAt(i2+1,j2) };
+	  // Backup coordinates
+	  pair<unsigned,unsigned>[] eLstCoord = 
+		{ pair<unsigned,unsigned>(i1,j1), pair<unsigned,unsigned>(i1,j1+1), 
+		pair<unsigned,unsigned>(i1+1,j1+1), pair<unsigned,unsigned>(i1+1,j1) };
+	  pair<unsigned,unsigned>[] eSelCoord = 
+		{ pair<unsigned,unsigned>(i2,j2), pair<unsigned,unsigned>(i2,j2+1), 
+		pair<unsigned,unsigned>(i2+1,j2+1), pair<unsigned,unsigned>(i2+1,j2) };
+	  // Calculate the rotation needed
+	  // OCCHIO AL MODULO NEGATIVO
+	  int rot12 = mv.EllList.at(mv.EllSelection.at(i).first()).second() - mv.EllList.at(i).second();
+	  
+	  // Do the swap
+	  for(unsigned j = 0; j<3; j++){
+		  int k1 = (j+rot12)%4;
+		  int k2 = (j-rot12)%4;
+		  if(k1 < 0) k1*=-1;
+		  if(k2 < 0) k2*=-1;
+		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[j].first(), eLstIDO[j].second()+rot12),
+			pair<unsigned,unsigned>(eSelCoord[k1].first(), eSelCoord[k1].second()) );
+		  st.insertTile( pair<unsigned,unsigned>(eSelIDO[j].first(), eSelIDO[j].second()-rot12),
+			pair<unsigned,unsigned>(eLstCoord[k2].first(), eLstCoord[k2].second()) );  
+	  }
+  }
+  
   return cost;
 }
           
