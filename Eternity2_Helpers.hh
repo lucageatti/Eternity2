@@ -51,6 +51,8 @@ public:
     : DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_GenericMove>(in,cc,"GenericMoveDeltaCostComponent1") 
   {}
   int ComputeDeltaCost(const Eternity2_State& st, const Eternity2_GenericMove& mv) const;
+protected:
+  int deltaSingleTileCost(IDO ido, Coord crd, const Eternity2_State& st) const;
 };
 
 
