@@ -181,7 +181,7 @@ class Eternity2_LMove
   
   // List of ells in the placement matrix and their coordinates on the board
   // EllList[i]= ( (coordX , coordY) , ellOrientation )
-  vector<pair<pair<unsigned,unsigned>,unsigned>> EllList;
+  vector<tuple<unsigned,unsigned,unsigned>> ellList;
   
   // How many ells in the partition
   unsigned ells;
@@ -191,6 +191,10 @@ class Eternity2_LMove
   // Placement matrix is for HOLE_UL
   // TODO use constants here (less readable though)
   constexpr static unsigned placementMatrix[5][5] = {{5,5,2,3,5},{5,2,4,4,3},{2,4,0,4,4},{1,4,4,4,0},{5,1,4,0,5}};
+
+  vector<vector<unsigned>> EllGeneration(const Eternity2_State&/*,const Eternity2_LMove&*/);
+
+  //void setElls(unsigned i){ ells = i; }
 };
 
 

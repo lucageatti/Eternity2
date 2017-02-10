@@ -380,6 +380,131 @@ unsigned Eternity2_LMove::readPlacementMatrix(unsigned row, unsigned column, uns
   return ret;
 }
 
+/*
+* Partition the board into L-shaped clusters such that no two of them "touch" each
+* other horizontally or vertically.
+* This should be called only once as the partition is not modified by the move.
+*/
+vector<vector<unsigned>> Eternity2_LMove::EllGeneration(const Eternity2_State& st)
+{
+  unsigned r = st.getHeight(); // Rows
+  unsigned c = st.getWidth(); // Columns
+  ells = 0;
+  ellList = vector<tuple<unsigned,unsigned,unsigned>>(ells);
+  
+  /* Space between the current cell and each border of the matrix
+  *  L= left, U = up, ... 
+  */
+  unsigned spaceL=0;
+  unsigned spaceR=0;
+  unsigned spaceU=0;
+  unsigned spaceD=0;
+  
+  // Current row and column
+  unsigned cr = 0;
+  unsigned cc = 0;
+  // Orientation of the last L inserted
+  unsigned lo = 0;
+  
+  bool done = false;
+  
+  unsigned nextPosr = 0;
+  unsigned nextPosc = 0;
+  
+  // Initialize the matrix
+  vector<vector<unsigned>> partition = vector<vector<unsigned>>(r);
+  for(int i = 0; i<r; i++){
+    partition.at(i) = vector<unsigned>(c, ANY_ELL);
+  }
+    
+  while(/*!done*/ /*cc < c &&*/ cr < r){
+    
+    if(cc==0 && cr == 0){
+      // Randomized start
+      lo = Random::Int(0,3);
+      partition.at(0).at(0) = lo;
+    }else{ 
+    
+      // Use the computed constraints
+      if(partition.at(cr).at(cc) == ANY_ELL){
+        // No constraints, use random
+        lo = Random::Int(0,3);
+        partition.at(cr).at(cc) = lo;       
+      }else if(partition.at(cr).at(cc) < NO_ELL){
+        // A constraint has been placed here
+        lo = partition.at(cr).at(cc);       
+      }else{
+        lo = NO_ELL;
+        if(++cc == c){ // Move to the next position
+          cc = 0;
+          cr++;
+        } 
+        continue;
+      }
+      
+    }
+
+    ells++;
+    ellList.push_back(tuple<unsigned,unsigned,unsigned>(cr,cc,lo));
+      
+    /* Now we want to place constraints on which ells can be placed next
+    * based on the ell placed this iteration. */
+    // Compute the area to work on
+    spaceL = cc;
+    spaceR = c-cc-1;
+    //spaceU = cr;
+    spaceD = r-cr-1;
+    unsigned i1 = std::max(2-spaceL, 0);
+    unsigned j1 = 2;//2 - std::max(2,spaceU);
+    unsigned i2 = std::min(4, 2+spaceR);
+    unsigned j2 = std::min(4,2+spaceD);
+    
+    /* The placement matrix tells us which constraints to put around the 
+    * last placed ell in a 5x5 radius.
+    * I read the placement matrix from (i1,2) to (i2,j2) so constraints 
+    * can be placed on which ells (if any) to place next.
+    * Actually I can skip (i1,j1) to (2,2)*/
+    for(unsigned i=3; i<=i2; i++){
+      unsigned constraint = readPlacementMatrix(2,i,lo);
+      partition.at(2).at(i) = constraint;
+      // Jump to the first position that allows and ell
+      if(nextPosr == 0 && nextPosc == 0 && constraint != NO_ELL){ 
+        nextPosr = 2;
+        nextPosc = i;
+      }
+    }
+    for(unsigned j=j1; j<=j2; j++){
+      for(unsigned i=i1; i<=i2; i++){
+        unsigned constraint = readPlacementMatrix(j,i);
+        partition.at(j).at(i) = constraint;
+        // Jump to the first position that allows and ell
+        if(nextPosr == 0 && && nextPosc == 0 && constraint != NO_ELL){ 
+          nextPosr = 2;
+          nextPosc = i;
+        }
+      }
+    }
+    
+    // Jump over squares where ells are not allowed
+    if(nextPosr > 0 && nextPosc > 0){
+      cc = nextPosc;
+      cr = nextPosr;
+      nextPosc = 0;
+      nextPosr = 0;
+    }else if(++cc == c){ // Move to the next position
+      cc = 0;
+      cr++;
+    } 
+  }
+  // End while
+
+}
+
+
+
+
+
+
 
 Eternity2_SingletonMove::Eternity2_SingletonMove() : Eternity2_GenericMove() {
 

@@ -853,7 +853,7 @@ void Eternity2_LMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, 
 {
   // insert the code that writes a random move on mv in state st
   // shuffle partition
-  EllSelection = FisherYatesShuffle(EllList.size());
+  mv.ellSelection = FisherYatesShuffle(mv.ellList.size());
 } 
 
 // check move feasibility
@@ -863,10 +863,10 @@ bool Eternity2_LMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st
   // (return true if legal, false otherwise)
   
   // Check that elements are not repeated
-  vector<unsigned> temp = vector<unsigned>(mv.EllSelection.size());
+  vector<unsigned> temp = vector<unsigned>(mv.ellSelection.size());
   for(unsigned i = 0; i < temp.size(); i++){
-	  unsigned sel = mv.EllSelection.at(i);
-	  if(temp.at(sel) != null){
+	  unsigned sel = mv.ellSelection.at(i);
+	  if(temp.at(sel) != 0){
 		  return false;
 	  }
 	  temp.at(sel) = sel;
@@ -881,28 +881,28 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
 {
   // Insert the code that modifies the state st based on the application of move mv
   unsigned cols = st.getWidth();
-  for(unsigned i = 0; i < mv.EllSelection.size() && mv.EllSelection.at(i) > i; i++){
-	  // Swap EllList(i) with EllSelection(i) on the board
-	  unsigned i1 = mv.EllList.at(i).first().first();
-	  unsigned j1 = mv.EllList.at(i).first().second();
-	  unsigned i2 = mv.EllList.at(mv.EllSelection.at(i)).first().first();
-	  unsigned j2 = mv.EllList.at(mv.EllSelection.at(i)).first().second();
+  for(unsigned i = 0; i < mv.ellSelection.size() && mv.ellSelection.at(i) > i; i++){
+	  // Swap ellList(i) with ellSelection(i) on the board
+	  unsigned i1 = get<0>(mv.ellList.at(i));
+	  unsigned j1 = get<1>(mv.ellList.at(i));
+	  unsigned i2 = get<0>(mv.ellList.at(mv.ellSelection.at(i)));
+	  unsigned j2 = get<1>(mv.ellList.at(mv.ellSelection.at(i)));
 	  // Backup IDOs
-	  IDO[] eLstIDO = { st.getIDOAt(i1,j1), st.getIDOAt(i1,j1+1),
-		st.getIDOAt(i1+1,j1+1), st.getIDOAt(i1+1,j1) };
-	  IDO[] eSelIDO = { st.getIDOAt(i2,j2), st.getIDOAt(i2,j2+1),
-		st.getIDOAt(i2+1,j2+1),st.getIDOAt(i2+1,j2) };
+	  IDO eLstIDO[]= { st.getIDOAt(pair<unsigned,unsigned>(i1,j1)), st.getIDOAt(pair<unsigned,unsigned>(i1,j1+1)),
+		st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1+1)), st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1)) };
+	  IDO eSelIDO[]= { st.getIDOAt(pair<unsigned,unsigned>(i2,j2)), st.getIDOAt(pair<unsigned,unsigned>(i2,j2+1)),
+		st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2+1)),st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2)) };
 	  // Backup coordinates
-	  pair<unsigned,unsigned>[] eLstCoord = 
+	  pair<unsigned,unsigned> eLstCoord[] = 
 		{ pair<unsigned,unsigned>(i1,j1), pair<unsigned,unsigned>(i1,j1+1), 
 		pair<unsigned,unsigned>(i1+1,j1+1), pair<unsigned,unsigned>(i1+1,j1) };
-	  pair<unsigned,unsigned>[] eSelCoord = 
+	  pair<unsigned,unsigned> eSelCoord[] = 
 		{ pair<unsigned,unsigned>(i2,j2), pair<unsigned,unsigned>(i2,j2+1), 
 		pair<unsigned,unsigned>(i2+1,j2+1), pair<unsigned,unsigned>(i2+1,j2) };
 	  // Calculate the rotation needed
 	  // OCCHIO AL MODULO NEGATIVO
-	  int rot12 = mv.EllList.at(mv.EllSelection.at(i)).second() - mv.EllList.at(i).second();
-	  //int rot21 = mv.EllList.at(i).second() - mv.EllList.at(mv.EllSelection.at(i).first()).second();
+	  int rot12 = get<2>(mv.ellList.at(mv.ellSelection.at(i))) - get<2>(mv.ellList.at(i));
+	  //int rot21 = mv.ellList.at(i).second() - mv.ellList.at(mv.ellSelection.at(i).first()).second();
 	  
 	  // Do the swap
 	  /* Swap Example:
@@ -920,17 +920,17 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
 		  if(k2 < 0) k2 += 4;
 		  k1 = k1 % 4;
 		  
-		  int lido = (eLstIDO[j].second()+rot12);
+		  int lido = get<1>(eLstIDO[j]) + rot12;
 		  if(lido < 0) lido += 4;
 		  lido = lido % 4;
-		  int sido = (eSelIDO[j].second()-rot12);
+		  int sido = get<1>(eSelIDO[j])-rot12;
 		  if(sido < 0) sido += 4;
 		  sido = sido % 4;
 		  
-		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[j].first(), lido),
-			pair<unsigned,unsigned>(eSelCoord[k1].first(), eSelCoord[k1].second()) );
-		  st.insertTile( pair<unsigned,unsigned>(eSelIDO[j].first(), sido),
-			pair<unsigned,unsigned>(eLstCoord[k2].first(), eLstCoord[k2].second()) );  
+		  st.insertTile( pair<unsigned,unsigned>(get<0>(eLstIDO[j]), lido),
+			pair<unsigned,unsigned>(get<0>(eSelCoord[k1]), get<1>(eSelCoord[k1])) );
+		  st.insertTile( pair<unsigned,unsigned>(get<0>(eSelIDO[j]), sido),
+			pair<unsigned,unsigned>(get<0>(eLstCoord[k2]), get<1>(eLstCoord[k2])) );  
 	  }
   }
 }  
@@ -939,13 +939,13 @@ void Eternity2_LMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, E
 {
   // Insert the code the generate the first move in the neighborhood and store it in mv
   // The list of ells in the partition is produced.
-  mv.EllSelection = vector<unsigned>(mv.ells);
+  mv.ellSelection = vector<unsigned>(mv.ells);
   unsigned id = 0;
   for(unsigned i=0; i<st.getHeight(); i++){
 	  for(unsigned j=0; j<st.getWidth(); j++){
-		  unsigned ell = mv.FlatEllMatrix.at(i).at(j);
+		  unsigned ell = mv.ellMatrix.at(i).at(j);
 		  if(ell < mv.NO_ELL)
-		  mv.EllSelection.at(id) = id++;
+		  mv.ellSelection.at(id) = id++;
 	  }
   }
 }
@@ -954,12 +954,12 @@ bool Eternity2_LMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Et
 {
   // Insert the code that generate the move that follows mv in the neighborhood, and writes
   // it back in mv. Return false if mv is already the last move.
-  unsigned size = mv.EllSelection.size();
+  unsigned size = mv.ellSelection.size();
   unsigned i= size;
   // Find the pivot, i.e. the element before the longest non-increasing suffix
   unsigned pivot=i;
   while( i>0 && pivot >= size){
-	  if(mv.EllSelection.at(i) > mv.EllSelection.at(i-1))
+	  if(mv.ellSelection.at(i) > mv.ellSelection.at(i-1))
 		  pivot = i-1;
 	  i--;
   }
@@ -970,7 +970,7 @@ bool Eternity2_LMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Et
   i = size-1;
   unsigned succ = size;
   while(i > pivot && succ >= size){
-	  if(mv.EllSelection.at(i) > mv.EllSelection.at(pivot))
+	  if(mv.ellSelection.at(i) > mv.ellSelection.at(pivot))
 		  succ = i;
 	  i--;
   }
@@ -978,139 +978,20 @@ bool Eternity2_LMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Et
   //if(succ >= size) return false;
   
   // Exchange the pivot with the successor
-  IDO temp = mv.EllSelection.at(succ);
-  mv.EllSelection.at(succ) = mv.EllSelection.at(pivot);
-  mv.EllSelection.at(pivot) = temp;
+  unsigned temp = mv.ellSelection.at(succ);
+  mv.ellSelection.at(succ) = mv.ellSelection.at(pivot);
+  mv.ellSelection.at(pivot) = temp;
   
   // Invert the suffix delimited by the pivot
   for(i = 1; i <= (size-pivot)/2; i++){
-	  temp = mv.EllSelection.at(pivot + i);
-	  mv.EllSelection.at(pivot+i) = mv.EllSelection.at(size-i);
-	  mv.EllSelection.at(size-i) = temp;
+	  temp = mv.ellSelection.at(pivot + i);
+	  mv.ellSelection.at(pivot+i) = mv.ellSelection.at(size-i);
+	  mv.ellSelection.at(size-i) = temp;
   }
   
   return true;
 }
 
-/*
-* Partition the board into L-shaped clusters such that no two of them "touch" each
-* other horizontally or vertically.
-* This should be called only once as the partition is not modified by the move.
-*/
-vector<vector<unsigned>> EllGeneration(const Eternity2_State& st, const Eternity2_LMove& mv) const
-{
-	r = st.getHeight(); // Rows
-	c = st.getWidth(); // Columns
-	mv.ells = 0;
-	mv.EllList = vector<pair<pair<unsigned,unsigned>,unsigned>>(mv.ells);
-	
-	/* Space between the current cell and each border of the matrix
-	*  L= left, U = up, ... 
-	*/
-	unsigned spaceL=0;
-	unsigned spaceR=0;
-	unsigned spaceU=0;
-	unsigned spaceD=0;
-	
-	// Current row and column
-	unsigned cr = 0;
-	unsigned cc = 0;
-	// Orientation of the last L inserted
-	unsigned lo = 0;
-	
-	bool done = false;
-	
-	unsigned nextPosr = 0;
-	unsigned nextPosc = 0;
-	
-	// Initialize the matrix
-	vector<vector<unsigned>> partition = vector<<vector>unsigned>(r);
-	for(int i = 0; i<r; i++){
-		partition.at(i) = vector<unsigned>(c, mv.ANY_ELL);
-	}
-		
-	while(/*!done*/ /*cc < c &&*/ cr < r){
-		
-		if(cc==0 && cr == 0){
-			// Randomized start
-			lo = Random::Int(0,3);
-			partition.at(0).at(0) = lo;
-		}else{ 
-		
-			// Use the computed constraints
-			if(partition.at(cr).at(cc) == mv.ANY_ELL){
-				// No constraints, use random
-				lo = Random::Int(0,3);
-				partition.at(cr).at(cc) = lo;				
-			}else if(partition.at(cr).at(cc) < mv.NO_ELL){
-				// A constraint has been placed here
-				lo = partition.at(cr).at(cc);				
-			}else{
-				lo = NO_ELL;
-				if(++cc == c){ // Move to the next position
-					cc = 0;
-					cr++;
-				} 
-				continue;
-			}
-			
-		}
-
-		mv.ells++;
-		mv.EllList.push_back(pair<unsigned,unsigned>,unsigned>(pair<unsigned,unsigned>(cr,cc),lo))
-			
-		/* Now we want to place constraints on which ells can be placed next
-		* based on the ell placed this iteration. */
-		// Compute the area to work on
-		spaceL = cc;
-		spaceR = c-cc-1;
-		//spaceU = cr;
-		spaceD = r-cr-1;
-		unsigned i1 = std::max(2-spaceL, 0);
-		unsigned j1 = 2;//2 - std::max(2,spaceU);
-		unsigned i2 = std::min(4, 2+spaceR);
-		unsigned j2 = std::min(4,2+spaceD);
-		
-		/* The placement matrix tells us which constraints to put around the 
-		* last placed ell in a 5x5 radius.
-		* I read the placement matrix from (i1,2) to (i2,j2) so constraints 
-		* can be placed on which ells (if any) to place next.
-		* Actually I can skip (i1,j1) to (2,2)*/
-		for(unsigned i=3; i<=i2; i++){
-			unsigned constraint = mv.readPlacementMatrix(2,i,lo);
-			partition.at(2).at(i) = constraint;
-			// Jump to the first position that allows and ell
-			if(nextPosr == 0 && nextPosc == 0 && constraint != mv.NO_ELL){ 
-				nextPosr = 2;
-				nextPosc = i;
-			}
-		}
-		for(unsigned j=j1; j<=j2; j++){
-			for(unsigned i=i1; i<=i2; i++){
-				unsigned constraint = mv.readPlacementMatrix(j,i);
-				partition.at(j).at(i) = constraint;
-				// Jump to the first position that allows and ell
-				if(nextPosr == 0 && && nextPosc == 0 && constraint != mv.NO_ELL){ 
-					nextPosr = 2;
-					nextPosc = i;
-				}
-			}
-		}
-		
-		// Jump over squares where ells are not allowed
-		if(nextPosr > 0 && nextPosc > 0){
-			cc = nextPosc;
-			cr = nextPosr;
-			nextPosc = 0;
-			nextPosr = 0;
-		}else if(++cc == c){ // Move to the next position
-			cc = 0;
-			cr++;
-		} 
-	}
-	// End while
-
-}
 
 int Eternity2_LMoveDeltaCostComponent1::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const
 {
@@ -1120,17 +1001,17 @@ int Eternity2_LMoveDeltaCostComponent1::ComputeDeltaCost(const Eternity2_State& 
   //int singleTileCost(IDO ido, Coord crd, const Eternity2_State& st)
   // Same code as MakeMove, but I calculate the deltacost instead of updating the state
   unsigned cols = st.getWidth();
-  for(unsigned i = 0; i < mv.EllSelection.size() && mv.EllSelection.at(i) > i; i++){ // Avoid duplicate swaps
-	  // Swap EllList(i) with EllSelection(i) on the board
-	  unsigned i1 = mv.EllList.at(i).first().first();
-	  unsigned j1 = mv.EllList.at(i).first().second();
-	  unsigned i2 = mv.EllList.at(mv.EllSelection.at(i)).first().first();
-	  unsigned j2 = mv.EllList.at(mv.EllSelection.at(i)).first().second();
-	  // Backup IDOs
-	  IDO[] eLstIDO = { st.getIDOAt(i1,j1), st.getIDOAt(i1,j1+1),
-		st.getIDOAt(i1+1,j1+1), st.getIDOAt(i1+1,j1) };
-	  IDO[] eSelIDO = { st.getIDOAt(i2,j2), st.getIDOAt(i2,j2+1),
-		st.getIDOAt(i2+1,j2+1),st.getIDOAt(i2+1,j2) };
+  for(unsigned i = 0; i < mv.ellSelection.size() && mv.ellSelection.at(i) > i; i++){ // Avoid duplicate swaps
+	  // Swap ellList(i) with ellSelection(i) on the board
+    unsigned i1 = get<0>(mv.ellList.at(i));
+    unsigned j1 = get<1>(mv.ellList.at(i));
+    unsigned i2 = get<0>(mv.ellList.at(mv.ellSelection.at(i)));
+    unsigned j2 = get<1>(mv.ellList.at(mv.ellSelection.at(i)));
+    // Backup IDOs
+    IDO eLstIDO[]= { st.getIDOAt(pair<unsigned,unsigned>(i1,j1)), st.getIDOAt(pair<unsigned,unsigned>(i1,j1+1)),
+    st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1+1)), st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1)) };
+    IDO eSelIDO[]= { st.getIDOAt(pair<unsigned,unsigned>(i2,j2)), st.getIDOAt(pair<unsigned,unsigned>(i2,j2+1)),
+    st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2+1)),st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2)) };
 	  // Backup coordinates
 	  pair<unsigned,unsigned>[] eLstCoord = 
 		{ pair<unsigned,unsigned>(i1,j1), pair<unsigned,unsigned>(i1,j1+1), 
@@ -1139,7 +1020,7 @@ int Eternity2_LMoveDeltaCostComponent1::ComputeDeltaCost(const Eternity2_State& 
 		{ pair<unsigned,unsigned>(i2,j2), pair<unsigned,unsigned>(i2,j2+1), 
 		pair<unsigned,unsigned>(i2+1,j2+1), pair<unsigned,unsigned>(i2+1,j2) };
 	  // Calculate the rotation 
-	  int rot12 = mv.EllList.at(mv.EllSelection.at(i)).second() - mv.EllList.at(i).second();
+	  int rot12 = mv.ellList.at(mv.ellSelection.at(i)).second() - mv.ellList.at(i).second();
 	  
 	  // Original cost
 	  for(unsigned j = 0; j < 3; j++){
@@ -1183,8 +1064,8 @@ int Eternity2_LMoveDeltaCostComponent1::ComputeDeltaCost(const Eternity2_State& 
 	  for(unsigned j = 0; j < 3; j++){
 		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[j].first(), eLstIDO[j].second()),
 			pair<unsigned,unsigned>(eLstCoord[j].first(), eLstCoord[j].second()) );
-		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[mv.EllSelection.at(j)].first(), eLstIDO[mv.EllSelection.at(j)].second()),
-			pair<unsigned,unsigned>(eLstCoord[mv.EllSelection.at(j)].first(), eLstCoord[mv.EllSelection.at(j)].second()) );
+		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[mv.ellSelection.at(j)].first(), eLstIDO[mv.ellSelection.at(j)].second()),
+			pair<unsigned,unsigned>(eLstCoord[mv.ellSelection.at(j)].first(), eLstCoord[mv.ellSelection.at(j)].second()) );
 	  }
 	  
 	  

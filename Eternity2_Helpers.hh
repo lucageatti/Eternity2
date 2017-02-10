@@ -225,12 +225,12 @@ int singleTileCost(IDO ido, Coord crd, const Eternity2_State& st);
 **************************************************************************************************
 *************************************************************************************************/
 
-class Eternity2_LMoveDeltaCostComponent1
+class Eternity2_LMoveDeltaCostComponent
   : public DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_LMove>
 {
 public:
-  Eternity2_LMoveDeltaCostComponent1(const Eternity2_Input & in, Eternity2_CostComponent1& cc) 
-    : DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_LMove>(in,cc,"Eternity2_LMoveDeltaCostComponent1") 
+  Eternity2_LMoveDeltaCostComponent(const Eternity2_Input & in, Eternity2_CostComponent& cc) 
+    : DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_LMove>(in,cc,"Eternity2_LMoveDeltaCostComponent") 
   {}
   int ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const;
 };
@@ -247,5 +247,5 @@ public:
   void FirstMove(const Eternity2_State&,Eternity2_LMove&) const throw(EmptyNeighborhood);  
   bool NextMove(const Eternity2_State&,Eternity2_LMove&) const;   
 protected:
-  vector<vector<unsigned>> EllGeneration(const Eternity2_State&,const Eternity2_LMove&) const;
+  
 };
