@@ -454,10 +454,10 @@ vector<vector<unsigned>> Eternity2_LMove::EllGeneration(const Eternity2_State& s
     spaceR = c-cc-1;
     //spaceU = cr;
     spaceD = r-cr-1;
-    unsigned i1 = std::max(2-spaceL, 0);
+    unsigned i1 = std::max((int)(2-spaceL), 0);
     unsigned j1 = 2;//2 - std::max(2,spaceU);
-    unsigned i2 = std::min(4, 2+spaceR);
-    unsigned j2 = std::min(4,2+spaceD);
+    unsigned i2 = std::min(4, (int)(2+spaceR));
+    unsigned j2 = std::min(4,(int)(2+spaceD));
     
     /* The placement matrix tells us which constraints to put around the 
     * last placed ell in a 5x5 radius.
@@ -475,10 +475,10 @@ vector<vector<unsigned>> Eternity2_LMove::EllGeneration(const Eternity2_State& s
     }
     for(unsigned j=j1; j<=j2; j++){
       for(unsigned i=i1; i<=i2; i++){
-        unsigned constraint = readPlacementMatrix(j,i);
+        unsigned constraint = readPlacementMatrix(j,i,lo);
         partition.at(j).at(i) = constraint;
         // Jump to the first position that allows and ell
-        if(nextPosr == 0 && && nextPosc == 0 && constraint != NO_ELL){ 
+        if(nextPosr == 0 && nextPosc == 0 && constraint != NO_ELL){ 
           nextPosr = 2;
           nextPosc = i;
         }
