@@ -513,16 +513,79 @@ void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, cons
     }
 }
 
+// Checks for color violation, given a 'tileMove' and a cardinal point.
+void checkColor(int& cost, const Eternity2_State& st, tileMove m, CardinalPoint cp)
+{
+    int adj_color;
+    Coord c;
+
+    switch (cp)
+    {
+      case NORTH: 
+          if (m.second.first == 0)
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(m.second.first - 1,m.second.second);
+              adj_color = st.getColor(st.getIDOAt(c),SOUTH);
+          }
+          break;
+
+      case SOUTH: 
+          if (m.second.first + 1 >= st.getHeight())
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(m.second.first + 1,m.second.second);
+              adj_color = st.getColor(st.getIDOAt(c),NORTH);
+          }
+          break;
+
+      case WEST:
+          if (m.second.second == 0)
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(m.second.first,m.second.second - 1);
+              adj_color = st.getColor(st.getIDOAt(c),EAST);
+          }
+          break;
+
+      case EAST: 
+          if (m.second.second + 1 >= st.getWidth())
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(m.second.first,m.second.second + 1);
+              adj_color = st.getColor(st.getIDOAt(c),WEST);
+          }
+          break;
+
+      default:
+          std::cerr << "Invalid Cardinal Point: " << cp;
+    }
+
+    cost += (st.getColor(m.first,cp) != adj_color);
+    cost -= (st.getColor(st.getIDOAt(m.second),cp) != adj_color);
+}
+
+
 // Computes the delta-cost of a TTS move. The method first converts tts moves into
-// simple tile-wise moves, and then calls the 'singleTileCost' method.
-// This will also consider violations inside the same tile streak. At first this may
-// seem wrong, but in the end will promote the best positioning of well formed
-// streaks, since a streak without internal violations will have lower cost.
+// simple tile-wise moves, and then checks all the cardinal points involved (without
+// checking internal violations).
 int ThreeTileStreakMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const
 {
-    int adj_color,i,cost = 0;
-    Coord c;
+    int i,cost = 0;
     vector<tuple<tileMove,tileMove,tileMove,int>> changes = mv.computeSimpleMoves(st);
+
     for (i = 0; i < changes.size(); ++i)
     {
         if(std::get<3>(changes[i]))
@@ -531,229 +594,56 @@ int ThreeTileStreakMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_Stat
 
           ////// Upper tile //////
           // NORTH
-          if (std::get<0>(changes[i]).second.first == 0)
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<0>(changes[i]).second.first - 1,std::get<0>(changes[i]).second.second);
-              adj_color = st.getColor(st.getIDOAt(c),SOUTH);
-          }
-          cost += (st.getColor(std::get<0>(changes[i]).first,NORTH) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),NORTH) != adj_color);
-
+          checkColor(cost, st, std::get<0>(changes[i]), NORTH);
           // WEST
-          if (std::get<0>(changes[i]).second.second == 0)
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<0>(changes[i]).second.first,std::get<0>(changes[i]).second.second - 1);
-              adj_color = st.getColor(st.getIDOAt(c),EAST);
-          }
-          cost += (st.getColor(std::get<0>(changes[i]).first,WEST) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),WEST) != adj_color);
-
+          checkColor(cost, st, std::get<0>(changes[i]), WEST);
           // EAST
-          if (std::get<0>(changes[i]).second.second + 1 >= st.getWidth())
-          {
-              adj_color = 0;
+          checkColor(cost, st, std::get<0>(changes[i]), EAST);
           
-          } else {
-
-              c = make_pair(std::get<0>(changes[i]).second.first,std::get<0>(changes[i]).second.second + 1);
-              adj_color = st.getColor(st.getIDOAt(c),WEST);
-          }
-          cost += (st.getColor(std::get<0>(changes[i]).first,EAST) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),EAST) != adj_color);
-
           ////// Middle tile //////
           // WEST
-          if (std::get<1>(changes[i]).second.second == 0)
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<1>(changes[i]).second.first,std::get<1>(changes[i]).second.second - 1);
-              adj_color = st.getColor(st.getIDOAt(c),EAST);
-          }
-          cost += (st.getColor(std::get<1>(changes[i]).first,WEST) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<1>(changes[i]).second),WEST) != adj_color);
-
+          checkColor(cost, st, std::get<1>(changes[i]), WEST);
           // EAST
-          if (std::get<1>(changes[i]).second.second + 1 >= st.getWidth())
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<1>(changes[i]).second.first,std::get<1>(changes[i]).second.second + 1);
-              adj_color = st.getColor(st.getIDOAt(c),WEST);
-          }
-          cost += (st.getColor(std::get<1>(changes[i]).first,EAST) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<1>(changes[i]).second),EAST) != adj_color);
+          checkColor(cost, st, std::get<1>(changes[i]), EAST);
 
           ////// Lower tile //////
           // WEST
-          if (std::get<2>(changes[i]).second.second == 0)
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<2>(changes[i]).second.first,std::get<2>(changes[i]).second.second - 1);
-              adj_color = st.getColor(st.getIDOAt(c),EAST);
-          }
-          cost += (st.getColor(std::get<2>(changes[i]).first,WEST) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),WEST) != adj_color);
-
+          checkColor(cost, st, std::get<2>(changes[i]), WEST);
           // EAST
-          if (std::get<2>(changes[i]).second.second + 1 >= st.getWidth())
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<2>(changes[i]).second.first,std::get<2>(changes[i]).second.second + 1);
-              adj_color = st.getColor(st.getIDOAt(c),WEST);
-          }
-          cost += (st.getColor(std::get<2>(changes[i]).first,EAST) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),EAST) != adj_color);
-
+          checkColor(cost, st, std::get<2>(changes[i]), EAST);
           // SOUTH
-          if (std::get<2>(changes[i]).second.first + 1 >= st.getHeight())
-          {
-              adj_color = 0;
+          checkColor(cost, st, std::get<2>(changes[i]), SOUTH);
           
-          } else {
-
-              c = make_pair(std::get<2>(changes[i]).second.first + 1,std::get<2>(changes[i]).second.second);
-              adj_color = st.getColor(st.getIDOAt(c),NORTH);
-          }
-          cost += (st.getColor(std::get<2>(changes[i]).first,SOUTH) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),SOUTH) != adj_color);
-
-
         } else {
 
           // Streak horizontally oriented
 
           ////// Left Tile //////
           // NORTH
-          if (std::get<0>(changes[i]).second.first == 0)
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<0>(changes[i]).second.first - 1,std::get<0>(changes[i]).second.second);
-              adj_color = st.getColor(st.getIDOAt(c),SOUTH);
-          }
-          cost += (st.getColor(std::get<0>(changes[i]).first,NORTH) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),NORTH) != adj_color);
-
+          checkColor(cost, st, std::get<0>(changes[i]), NORTH);
           // WEST
-          if (std::get<0>(changes[i]).second.second == 0)
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<0>(changes[i]).second.first,std::get<0>(changes[i]).second.second - 1);
-              adj_color = st.getColor(st.getIDOAt(c),EAST);
-          }
-          cost += (st.getColor(std::get<0>(changes[i]).first,WEST) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),WEST) != adj_color);
-
+          checkColor(cost, st, std::get<0>(changes[i]), WEST);
           // SOUTH
-          if (std::get<0>(changes[i]).second.first + 1 >= st.getHeight())
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<0>(changes[i]).second.first + 1,std::get<0>(changes[i]).second.second);
-              adj_color = st.getColor(st.getIDOAt(c),NORTH);
-          }
-          cost += (st.getColor(std::get<0>(changes[i]).first,SOUTH) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),SOUTH) != adj_color);
-          
+          checkColor(cost, st, std::get<0>(changes[i]), SOUTH);
+                    
           ////// Middle Tile //////
           // NORTH
-          if (std::get<1>(changes[i]).second.first == 0)
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<1>(changes[i]).second.first - 1,std::get<1>(changes[i]).second.second);
-              adj_color = st.getColor(st.getIDOAt(c),SOUTH);
-          }
-          cost += (st.getColor(std::get<1>(changes[i]).first,NORTH) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<1>(changes[i]).second),NORTH) != adj_color);
-
+          checkColor(cost, st, std::get<1>(changes[i]), NORTH);
           // SOUTH
-          if (std::get<1>(changes[i]).second.first + 1 >= st.getHeight())
-          {
-              adj_color = 0;
+          checkColor(cost, st, std::get<1>(changes[i]), SOUTH);
           
-          } else {
-
-              c = make_pair(std::get<1>(changes[i]).second.first + 1,std::get<1>(changes[i]).second.second);
-              adj_color = st.getColor(st.getIDOAt(c),NORTH);
-          }
-          cost += (st.getColor(std::get<1>(changes[i]).first,SOUTH) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<1>(changes[i]).second),SOUTH) != adj_color);
-
           ////// Right Tile //////
           // NORTH
-          if (std::get<2>(changes[i]).second.first == 0)
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<2>(changes[i]).second.first - 1,std::get<2>(changes[i]).second.second);
-              adj_color = st.getColor(st.getIDOAt(c),SOUTH);
-          }
-          cost += (st.getColor(std::get<2>(changes[i]).first,NORTH) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),NORTH) != adj_color);
-
+          checkColor(cost, st, std::get<0>(changes[i]), NORTH);
           // EAST
-          if (std::get<2>(changes[i]).second.second + 1 >= st.getWidth())
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<2>(changes[i]).second.first,std::get<2>(changes[i]).second.second + 1);
-              adj_color = st.getColor(st.getIDOAt(c),WEST);
-          }
-          cost += (st.getColor(std::get<2>(changes[i]).first,EAST) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),EAST) != adj_color);
-
-
+          checkColor(cost, st, std::get<0>(changes[i]), EAST);
           // SOUTH
-          if (std::get<2>(changes[i]).second.first + 1 >= st.getHeight())
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<2>(changes[i]).second.first + 1,std::get<2>(changes[i]).second.second);
-              adj_color = st.getColor(st.getIDOAt(c),NORTH);
-          }
-          cost += (st.getColor(std::get<2>(changes[i]).first,SOUTH) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),SOUTH) != adj_color);
+          checkColor(cost, st, std::get<0>(changes[i]), SOUTH);
         }
     }
 
   return cost;
 }
-
 
 /***************************************************************************
  * Shared general purpose methods
