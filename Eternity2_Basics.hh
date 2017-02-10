@@ -151,12 +151,12 @@ class Eternity2_LMove
   * An example is found below.
   *
   */
-  const unsigned HOLE_UL = 0;
-  const unsigned HOLE_UR = 1;
-  const unsigned HOLE_DR = 2;
-  const unsigned HOLE_DL = 3;
-  const unsigned NO_ELL = 4;
-  const unsigned ANY_ELL = 5; // used in placementMatrix
+  const static unsigned HOLE_UL = 0;
+  const static unsigned HOLE_UR = 1;
+  const static unsigned HOLE_DR = 2;
+  const static unsigned HOLE_DL = 3;
+  const static unsigned NO_ELL = 4;
+  const static unsigned ANY_ELL = 5; // used in placementMatrix
   
   // Read the placement matrix, modifying it depending on the ell considered.
   // TODO explain this as well
@@ -174,10 +174,10 @@ class Eternity2_LMove
   *  |4|0|  =>  |X| |X|
   *             | |X|X|
   */
-  vector<vector<unsigned>> FlatEllMatrix;
+  vector<vector<unsigned>> ellMatrix;
   
   // Which Ls are selected for permutation
-  vector<unsigned> EllSelection;
+  vector<unsigned> ellSelection;
   
   // List of ells in the placement matrix and their coordinates on the board
   // EllList[i]= ( (coordX , coordY) , ellOrientation )
@@ -188,7 +188,9 @@ class Eternity2_LMove
   
   // This matrix tells us if, which and where Ls can be placed around a given L.
   // TODO explain this
-  unsigned placementMatrix[][];
+  // Placement matrix is for HOLE_UL
+  // TODO use constants here (less readable though)
+  constexpr static unsigned placementMatrix[5][5] = {{5,5,2,3,5},{5,2,4,4,3},{2,4,0,4,4},{1,4,4,4,0},{5,1,4,0,5}};
 };
 
 

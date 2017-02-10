@@ -290,35 +290,26 @@ ostream& operator<<(ostream& os, const Eternity2_GenericMove& mv)
 Eternity2_LMove::Eternity2_LMove()
 {
   // Insert the code that initializes the move
-  //flatEllMatrix = vector<unsigned>();
-  flatEllMatrix = vector<vector<unsigned>>();
-  EllSelection = vector<unsigned>();
-  ln = 0;
-  // Placement matrix for HOLE_UL
-  // TODO use constants here (less readable though)
-  unsigned[] r0 = {5,5,2,3,5};
-  unsigned[] r1 = {5,2,4,4,3};
-  unsigned[] r2 = {2,4,0,4,4};
-  unsigned[] r3 = {1,4,4,4,0};
-  unsigned[] r4 = {5,1,4,0,5};
-  placementMatrix = {r0,r1,r2,r3,r4}
+  ellMatrix = vector<vector<unsigned>>();
+  ellSelection = vector<unsigned>();
+  ells = 0;
 }
 
 
 bool operator==(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
 {
   // Insert the code that checks if two moves are identical
-  unsigned n = mv1.flatEllMatrix.size();
-  if(m != mv1.flatEllMatrix.size()) return false;
+  unsigned m = mv1.ellMatrix.size();
+  if(m != mv1.ellMatrix.size()) return false;
   for(unsigned i = 0; i<m; i++){
-	 if(mv1.flatEllMatrix.at(i)!=mv2.flatEllMatrix.at(i)) 
+	 if(mv1.ellMatrix.at(i)!=mv2.ellMatrix.at(i)) 
 		 return false;
   }
   
-  n = mv1.EllSelection.size();
-  if(m != mv1.EllSelection.size()) return false;
+  m = mv1.ellSelection.size();
+  if(m != mv1.ellSelection.size()) return false;
   for(unsigned i = 0; i<m; i++){
-	 if(mv1.EllSelection.at(i)!=mv2.EllSelection.at(i)) 
+	 if(mv1.ellSelection.at(i)!=mv2.ellSelection.at(i)) 
 		 return false;
   }
   return true;
@@ -334,11 +325,11 @@ bool operator<(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
 {
   // Insert the code that checks if one move precedes another one
   // (in any selected order)
-  unsigned n = mv1.flatEllMatrix.size();
-  if(n!=mv2.flatEllMatrix.size())
+  unsigned n = mv1.ellMatrix.size();
+  if(n!=mv2.ellMatrix.size())
 	  throw logic_error("operator< for Eternity2_LMove called on instances with different size!");
-  for(unsigned i=0; i<; i++){
-	if(mv1.flatEllMatrix.at(i)<mv2.flatEllMatrix.at(i)) return true;
+  for(unsigned i=0; i<n; i++){
+	 if(mv1.ellMatrix.at(i)<mv2.ellMatrix.at(i)) return true;
   }
   return false;
 }
@@ -364,30 +355,31 @@ ostream& operator<<(ostream& os, const Eternity2_LMove& mv)
 * computed by modifying it at run-time.
 * This function essentially maps a position on a matrix into the corresponding
 * position in the rotated matrix, and adds something to the result.*/
-unsigned readPlacementMatrix(unsigned row, unsigned column, unsigned ell){
-	unsigned ret = NO_ELL;
-	unsigned rows = sizeof(placementMatrix);
-	unsigned cols = sizeof(placementMatrix[0]);
-	switch(ell){
-		case 0:
-			ret = placementMatrix[row,column];
-			break;
-		case 1:
-			ret = placementMatrix[rows-1-column,row];
-			break;
-		case 2:
-			ret = placementMatrix[rows-1-row,cols-1-column];
-			break;
-		case 3:
-			ret = placementMatrix[column,cols-1-row];
-			break;
-		default:
-			ret = ell;
-			break;
-	}
-	if(ret < NO_ELL) ret+=ell;
-	return ret;
+unsigned Eternity2_LMove::readPlacementMatrix(unsigned row, unsigned column, unsigned ell){
+  unsigned ret = 4; // NO_ELL
+  unsigned rows = sizeof(Eternity2_LMove::placementMatrix);
+  unsigned cols = sizeof(Eternity2_LMove::placementMatrix[0]);
+  switch(ell){
+    case 0:
+      ret = *Eternity2_LMove::placementMatrix[row,column];
+      break;
+    case 1:
+      ret = *Eternity2_LMove::placementMatrix[rows-1-column,row];
+      break;
+    case 2:
+      ret = *Eternity2_LMove::placementMatrix[rows-1-row,cols-1-column];
+      break;
+    case 3:
+      ret = *Eternity2_LMove::placementMatrix[column,cols-1-row];
+      break;
+    default:
+      ret = ell;
+      break;
+  }
+  if(ret < Eternity2_LMove::NO_ELL) ret+=ell;
+  return ret;
 }
+
 
 Eternity2_SingletonMove::Eternity2_SingletonMove() : Eternity2_GenericMove() {
 
