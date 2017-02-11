@@ -65,11 +65,13 @@ public:
   bool FeasibleMove(const Eternity2_State&, const Eternity2_GenericMove&) const;  
   void MakeMove(Eternity2_State&,const Eternity2_GenericMove&) const;
   bool NextMove(const Eternity2_State&,Eternity2_GenericMove&) const;
+  void BestMove(const Eternity2_State&,Eternity2_GenericMove&) const;
   void RandomMove(const Eternity2_State&, Eternity2_GenericMove&) const throw(EmptyNeighborhood){}          
   void FirstMove(const Eternity2_State&,Eternity2_GenericMove&) const throw(EmptyNeighborhood){}
 protected:
   bool incrementOrientation(Eternity2_GenericMove& mv) const;
   bool incrementPermutation(Eternity2_GenericMove& mv) const;
+  vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State&,Eternity2_GenericMove&) const;
 };
 
 
@@ -210,9 +212,19 @@ public:
 
 
 
-
+//Common methods and functions
 vector<unsigned> FisherYatesShuffle(unsigned sz);
 int singleTileCost(IDO ido, Coord crd, const Eternity2_State& st);
+
+//Hungarian Algorithm
+vector<int> hungarianAlgorithm(vector<vector<pair<int,Orientation>>> m);
+bool isPerfectMatching(vector<int> match);
+void findMaxMatch(vector<vector<pair<int,Orientation>>> m, vector<int>& match);
+bool findFreeNode(vector<int> match, vector<bool> s, int& free_node);
+void DFS(vector<bool> s, vector<vector<bool>> a, vector<int> match, int x);
+void DFS_Visit(int x, bool parity, vector<DFSColor>& colors, vector<int>& pi, vector<vector<bool>> a, vector<int> match);
+bool extractAP(vector<int> pi, int x, vector<int> match);
+
 
 
 #endif

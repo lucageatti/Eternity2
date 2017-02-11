@@ -181,6 +181,48 @@ bool GenericMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Eterni
 }
 
 
+
+void GenericMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_GenericMove& mv) const{
+  //creating the graph
+  vector<vector<pair<int,Orientation>>> graph = createGraph(st, mv);
+  // ...
+  //calling the hungarian algorithm
+  vector<int> match = hungarianAlgorithm(graph);
+  //creating the move
+  // ...
+}
+
+
+
+vector<vector<pair<int,Orientation>>> GenericMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st, Eternity2_GenericMove& mv) const{
+  bool stop;
+  pair<int,Orientation> best_weight;
+  vector<Coord> mv_coords = mv.getCoordinates();
+  //declaring the matrix
+  vector<vector<pair<int,Orientation>>> graph = vector<vector<pair<int,Orientation>>>(mv_coords.size());
+  //filling the matrix
+  for(int r = 0; r < graph.size(); ++r){
+    graph[r] = vector<pair<int,Orientation>>(graph.size());
+    IDO old_tile = st.getIDOAt(mv_coords[r]);
+    for(int c = 0; c < graph.size(); ++c){
+      stop = false;
+      old_tile.second = 0;
+      best_weight.first = singleTileCost(old_tile, mv_coords[c], st);
+      for(int i = 1; i < 3; i++){
+        old_tile.second = i;
+        best_weight.first = std::min( singleTileCost(old_tile, mv_coords[c], st), best_weight.first );
+        best_weight.second = i;
+      }
+      graph[r][c] = best_weight;
+    }
+  }
+  return graph;
+}
+
+
+
+
+
 /*
 * Increments the orientation: it makes an increment of a number in base 4.
 */
@@ -879,6 +921,196 @@ vector<unsigned> FisherYatesShuffle(unsigned sz) {
   }
   return hat;
 }
+
+
+
+
+
+/*
+* Implementation of the "Augmenting Path Algorithm"
+*/
+
+vector<int> hungarianAlgorithm(vector<vector<pair<int,Orientation>>> m){
+  //modifing the rows of the matrix
+  int min;
+  for(int i=0; i< m.size(); ++i){
+    min = 0;
+    for(int j=1; j < m.size(); ++j)
+      min = (m[i][j].first < m[i][min].first) ? j : min;
+    for(int j=0; j< m.size(); ++j)
+      m[i][j].first -= m[i][min].first;
+  }
+
+  //modifing the columns of the matrix
+  for(int j=0; j < m.size(); ++j){
+    min = 0;
+    for(int i=0; i < m.size(); ++i)
+      min = (m[i][j].first < m[min][j].first) ? i : min;
+    for(int i=0; i < m.size(); ++i)
+      m[i][j].first -= m[min][j].first;
+  }
+
+  vector<int> match = vector<int>(-1, m.size());
+  findMaxMatch(m, match);
+  while( not isPerfectMatching(match) ){
+    vector<int> zeros = vector<int> (0, 2*m.size());
+    vector<bool> coveredLines = vector<bool>(0, 2*m.size());
+
+    //filling the "zeros" vector
+    for(int r=0; r < m.size(); ++r)
+      for(int c=0; c < m.size(); ++c)
+        zeros[r] = zeros[c+m.size()] += (m[r][c].first == 0);
+
+    //filling the "coveredLines" vector
+    int max_index;
+    for(int i=0; i < match.size(); ++i){
+      if( match[i] != -1 ){
+        max_index = (zeros[i] > zeros[match[i]]) ? i : match[i];
+        coveredLines[max_index] = 1;
+      }
+    }
+
+    //finding the minimum uncovered entry
+    int min_entry = std::numeric_limits<int>::max();
+    for(int r = 0; r < m.size(); ++r)
+      if( not coveredLines[r] )
+        for(int c = 0; c < m.size(); ++c)
+          if( not coveredLines[c + m.size()] )
+            min_entry = std::min(min_entry, m[r][c].first);
+
+    //modifing rows and columns
+    for(int r=0; r < m.size(); ++r){
+      for(int c=0; c < m.size(); ++c){
+        if( not coveredLines[r] )
+          m[r][c].first -= min;
+        if( coveredLines[c + m.size()] )
+          m[r][c].first += min;
+      }
+    }
+
+    match = vector<int>(-1, m.size());
+    findMaxMatch(m, match);
+  } //END_WHILE
+
+  return match;
+}
+
+
+
+
+bool isPerfectMatching(vector<int> match){
+  int i;
+  for(i = 0; i < match.size() && match[i] != -1; ++i);
+  return i == match.size();
+}
+
+
+
+
+void findMaxMatch(vector<vector<pair<int,Orientation>>> m, vector<int>& match){
+  vector<bool> s = vector<bool>(1, m.size());
+  vector<vector<bool>> a = vector<vector<bool>> (m.size());
+  //filling the "a" matrix
+  for(int i=0; i < m.size(); ++i){
+    a[i] = vector<bool>(m.size());
+    for(int j=0; j < m.size(); ++j){
+      a[i][j] = (m[i][j].first == 0) ? 1 : 0;
+    }
+  }
+  int free_node;
+  while( findFreeNode(match, s, free_node) )
+    DFS(s, a, match, free_node);
+}
+
+
+
+bool findFreeNode(vector<int> match, vector<bool> s, int& free_node){
+  for(int i=0; i < match.size(); ++i){
+    if( match[i] == -1  &&  s[i] ){
+      free_node = i;
+      return true;
+    }
+  }
+  return false;
+}
+
+
+
+void DFS(vector<bool> s, vector<vector<bool>> a, vector<int> match, int x){
+  //initializing the colors
+  vector<DFSColor> colors = vector<DFSColor>(2 * match.size(), WHITE);
+  //initializing the precedences
+  vector<int> pi = vector<int>(-1, 2 * match.size());
+
+  DFS_Visit(x, 1, colors, pi, a, match);
+
+  if( not extractAP(pi, x, match) ){
+    s[x] = 0;
+    for(int i=0; i < match.size(); ++i)
+      if( pi[i] != -1 )
+        a[i][pi[i]] = 0;
+    for(int i = match.size(); i < 2 * match.size(); ++i)
+      if( pi[i] != -1 )
+        a[pi[i]][i] = 0;
+  }
+}
+
+
+
+void DFS_Visit(int x, bool parity, vector<DFSColor>& colors, vector<int>& pi, vector<vector<bool>> a, vector<int> match){
+  if(parity){
+    colors[x] = GREY;
+    for(int i=0; i < match.size(); ++i){
+      if( a[x][i]  &&  colors[i+match.size()] == WHITE  &&  match[x] != i ){
+        pi[i+match.size()] = x;
+        DFS_Visit(i, not parity, colors, pi, a, match);
+      }
+    }
+  }else{
+    colors[x+match.size()] = GREY;
+    for(int i=0; i < match.size(); ++i){
+      if( a[i][x]  &&  colors[i] == WHITE  &&  match[i] == x ){
+        pi[i] = x;
+        DFS_Visit(i, not parity, colors, pi, a, match);
+      }
+    }
+  }
+  colors[x] = BLACK;
+}
+
+
+
+bool extractAP(vector<int> pi, int x, vector<int> match){
+  int i;
+  for(i = match.size(); i < 2 * match.size() && ( i == x || pi[i] == -1 ); ++i);
+  if( i == pi.size() ){
+    return false;
+  }else{
+    while( pi[i] != -1 ){
+      match[pi[i]] = i;
+      i = pi[pi[i]];
+    }
+  }
+  return true;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
