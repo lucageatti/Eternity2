@@ -370,7 +370,7 @@ int GenericMoveDeltaCostComponent::deltaSingleTileCost(IDO ido, Coord crd, const
 * Creates a random move: this is done exploiting the "Fisher-Yates Algorithm" for compute a random permutation.
 */
 void SingletonMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_GenericMove& mv) const  throw(EmptyNeighborhood)
-{   
+{
     mv.setCoordinates(st.random_singleton);
     mv.createPermutationVector(st.random_singleton.size());
     
@@ -709,7 +709,7 @@ void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, cons
 // Checks for color violation, given a 'tileMove' and a cardinal point.
 void checkColor(int& cost, const Eternity2_State& st, tileMove m, CardinalPoint cp)
 {
-    int adj_color;
+    int adj_color = 0; // "= 0" to avoid warnings
     Coord c;
 
     switch (cp)
@@ -950,11 +950,11 @@ vector<int> hungarianAlgorithm(vector<vector<pair<int,Orientation>>> m){
       m[i][j].first -= m[min][j].first;
   }
 
-  vector<int> match = vector<int>(-1, m.size());
+  vector<int> match = vector<int>(m.size(), -1);
   findMaxMatch(m, match);
   while( not isPerfectMatching(match) ){
-    vector<int> zeros = vector<int> (0, 2*m.size());
-    vector<bool> coveredLines = vector<bool>(0, 2*m.size());
+    vector<int> zeros = vector<int> (2*m.size(), 0);
+    vector<bool> coveredLines = vector<bool>(2*m.size(), 0);
 
     //filling the "zeros" vector
     for(int r=0; r < m.size(); ++r)
@@ -988,7 +988,7 @@ vector<int> hungarianAlgorithm(vector<vector<pair<int,Orientation>>> m){
       }
     }
 
-    match = vector<int>(-1, m.size());
+    match = vector<int>(m.size(), -1);
     findMaxMatch(m, match);
   } //END_WHILE
 
@@ -1008,7 +1008,7 @@ bool isPerfectMatching(vector<int> match){
 
 
 void findMaxMatch(vector<vector<pair<int,Orientation>>> m, vector<int>& match){
-  vector<bool> s = vector<bool>(1, m.size());
+  vector<bool> s = vector<bool>(m.size(), 1);
   vector<vector<bool>> a = vector<vector<bool>> (m.size());
   //filling the "a" matrix
   for(int i=0; i < m.size(); ++i){
@@ -1040,7 +1040,7 @@ void DFS(vector<bool> s, vector<vector<bool>> a, vector<int> match, int x){
   //initializing the colors
   vector<DFSColor> colors = vector<DFSColor>(2 * match.size(), WHITE);
   //initializing the precedences
-  vector<int> pi = vector<int>(-1, 2 * match.size());
+  vector<int> pi = vector<int>(2 * match.size(), -1);
 
   DFS_Visit(x, 1, colors, pi, a, match);
 

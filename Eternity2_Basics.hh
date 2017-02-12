@@ -18,6 +18,7 @@ public:
   unsigned getWidth() const { return board.at(0).size(); }
   void insertTile(IDO ido, Coord crd);
   Color getColor(IDO ido, CardinalPoint pc) const;
+  void singletonRandomCoords();
   //Coordinates for the moves
   vector<Coord> even_chessboard;
   vector<Coord> odd_chessboard;
@@ -64,7 +65,7 @@ class Eternity2_GenericMove
 class Eternity2_SingletonMove : public Eternity2_GenericMove
 {
   public:
-    Eternity2_SingletonMove();  
+    Eternity2_SingletonMove(); 
 };
 
 

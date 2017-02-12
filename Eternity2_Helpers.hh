@@ -94,9 +94,9 @@ class SingletonMoveNeighborhoodExplorer : public GenericMoveNeighborhoodExplorer
 {
 public:
   SingletonMoveNeighborhoodExplorer(const Eternity2_Input & pin, StateManager<Eternity2_Input,Eternity2_State>& psm)  
-    : GenericMoveNeighborhoodExplorer( pin, psm) {} 
+    : GenericMoveNeighborhoodExplorer( pin, psm) { } 
   void RandomMove(const Eternity2_State&, Eternity2_GenericMove&) const throw(EmptyNeighborhood);          
-  void FirstMove(const Eternity2_State&,Eternity2_GenericMove&) const throw(EmptyNeighborhood);  
+  void FirstMove(const Eternity2_State&,Eternity2_GenericMove&) const throw(EmptyNeighborhood);
 };
 
 

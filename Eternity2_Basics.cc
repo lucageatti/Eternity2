@@ -19,7 +19,7 @@ Eternity2_State::Eternity2_State(const Eternity2_Input &my_in)
     board.at(c) = vector<IDO> (in.getWidth());
   }
 
-  //Setting the coordinates for the Singleton Moves
+  //Setting the coordinates for the Generic Moves (Even-Chessboard and Odd-Chessboard)
   for(unsigned r = 0; r < in.getHeight(); r++){
     for(unsigned c = 0; c < in.getWidth(); c++){
       if( r % 2 == 0  &&  c % 2 == 0 )
@@ -34,6 +34,18 @@ Eternity2_State::Eternity2_State(const Eternity2_Input &my_in)
   }
 
   //Singleton Move
+  singletonRandomCoords();
+
+
+  //ThreeTilesStreak
+  random_tts = vector<pair<Coord,int> >(2);
+  random_tts.at(0) = pair<Coord,int>(pair<unsigned,unsigned>(1,0),1);
+  random_tts.at(1) = pair<Coord,int>(pair<unsigned,unsigned>(1,2),1);
+}
+
+
+
+void Eternity2_State::singletonRandomCoords(){
   vector<vector<bool> > cover = vector<vector<bool> >(in.getHeight());
   int num_free = in.getHeight() * in.getWidth(); //All the cells are free
   for(unsigned r = 0; r < cover.size(); r++){
@@ -76,13 +88,9 @@ Eternity2_State::Eternity2_State(const Eternity2_Input &my_in)
       }
     } while( ! cover.at(rdm_pos_x).at(rdm_pos_y) );
   }
-
-
-  //ThreeTilesStreak
-  random_tts = vector<pair<Coord,int> >(2);
-  random_tts.at(0) = pair<Coord,int>(pair<unsigned,unsigned>(1,0),1);
-  random_tts.at(1) = pair<Coord,int>(pair<unsigned,unsigned>(1,2),1);
 }
+
+
 
 
 /*
@@ -273,7 +281,7 @@ ostream& operator<<(ostream& os, const Eternity2_GenericMove& mv)
 
 
 Eternity2_SingletonMove::Eternity2_SingletonMove() : Eternity2_GenericMove() {
-
+ 
 };
 
 
