@@ -19,6 +19,7 @@ public:
   void insertTile(IDO ido, Coord crd);
   Color getColor(IDO ido, CardinalPoint pc) const;
   void singletonRandomCoords();
+  void ttsRandomCoords();
   //Coordinates for the moves
   vector<Coord> even_chessboard;
   vector<Coord> odd_chessboard;

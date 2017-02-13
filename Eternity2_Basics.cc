@@ -38,9 +38,7 @@ Eternity2_State::Eternity2_State(const Eternity2_Input &my_in)
 
 
   //ThreeTilesStreak
-  random_tts = vector<pair<Coord,int> >(2);
-  random_tts.at(0) = pair<Coord,int>(pair<unsigned,unsigned>(1,0),1);
-  random_tts.at(1) = pair<Coord,int>(pair<unsigned,unsigned>(1,2),1);
+  ttsRandomCoords();
 }
 
 
@@ -89,6 +87,46 @@ void Eternity2_State::singletonRandomCoords(){
     } while( ! cover.at(rdm_pos_x).at(rdm_pos_y) );
   }
 }
+
+void Eternity2_State::ttsRandomCoords(){
+
+  bool guard;
+  int i,j,rnd;
+  vector<vector<bool>> feas_board(in.getHeight(),vector<bool>(in.getWidth(),0));
+  int pseudo_distribution = std::max((unsigned int)2,(in.getWidth() * in.getHeight()) / 6);
+
+  for (i = 0; i < in.getWidth(); ++i)
+  {
+      for ( j = 0; j < in.getHeight(); ++j)
+      {
+          if( ! Random::Int(0,pseudo_distribution-1))
+          {
+              rnd = Random::Int(0,1);
+
+              if (  !feas_board[i][j]
+                 && ((i - rnd) >= 0 && (j + rnd - 1) >= 0 && !feas_board[i - rnd][j + rnd - 1])
+                 && ((i + rnd) < in.getHeight() && (j - rnd + 1) < in.getWidth() && !feas_board[i + rnd][j - rnd + 1])
+                 && ((i + rnd - 1) < 0 || (j - rnd) < 0 || !feas_board[i + rnd - 1][j - rnd])
+                 && ((i - rnd + 1) >= in.getHeight() || (j + rnd) >= in.getWidth() || !feas_board[i - rnd + 1][j + rnd])
+                 && ((i - 2*rnd) < 0 || (j + 2*rnd - 2) < 0 || !feas_board[i - 2*rnd][j + 2*rnd - 2])
+                 && ((i + 2*rnd) >= in.getHeight() || (j - 2*rnd + 2) >= in.getWidth() || !feas_board[i + 2*rnd][j - 2*rnd + 2])
+                 && ((i - 1) < 0 || (j - 1) < 0 || !feas_board[i - 1][j - 1])
+                 && ((i - 1) < 0 || (j + 1) >= in.getWidth() || !feas_board[i - 1][j + 1])
+                 && ((i + 1) >= in.getHeight() || (j - 1) < 0 || !feas_board[i + 1][j - 1])
+                 && ((i + 1) >= in.getHeight() || (j + 1) >= in.getWidth() || !feas_board[i + 1][j + 1]))
+               {
+                    feas_board[i][j] = 1;
+                    feas_board[i - rnd][j + rnd - 1] = 1;
+                    feas_board[i + rnd][j - rnd + 1] = 1;
+                    
+                    random_tts.push_back(make_pair(make_pair( (unsigned int)i, (unsigned int)j ),rnd));
+               }
+          }
+      }
+  }
+
+}
+
 
 
 
