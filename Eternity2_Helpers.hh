@@ -74,6 +74,7 @@ protected:
   vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State&,Eternity2_GenericMove&) const;
   void updateCoords(Eternity2_State& st) const;
   void forceUpdate(const Eternity2_State& st) const;
+  void createMove(Eternity2_GenericMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const;
 };
 
 

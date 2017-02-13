@@ -198,12 +198,20 @@ void GenericMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eterni
   //calling the hungarian algorithm
   vector<int> match = hungarianAlgorithm(graph);
   //creating the move
-  // ...
+  createMove(mv, match, graph);
 }
 
 
 void GenericMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& st) const {
   st.singleton_counter = 0;
+}
+
+
+void GenericMoveNeighborhoodExplorer::createMove(Eternity2_GenericMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const {
+  for(int i = 0; i < match.size(); ++i){
+    mv.setIndex(i, match[i]);
+    mv.setOrientation(i, graph[i][match[i]].second);
+  }
 }
 
 
