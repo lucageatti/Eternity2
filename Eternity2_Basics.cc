@@ -34,16 +34,20 @@ Eternity2_State::Eternity2_State(const Eternity2_Input &my_in)
   }
 
   //Singleton Move
+  singleton_counter = 0;
   singletonRandomCoords();
 
 
   //ThreeTilesStreak
+  tts_counter = 0;
   ttsRandomCoords();
 }
 
 
 
 void Eternity2_State::singletonRandomCoords(){
+  random_singleton = vector<Coord>();
+
   vector<vector<bool> > cover = vector<vector<bool> >(in.getHeight());
   int num_free = in.getHeight() * in.getWidth(); //All the cells are free
   for(unsigned r = 0; r < cover.size(); r++){
@@ -90,7 +94,7 @@ void Eternity2_State::singletonRandomCoords(){
 
 void Eternity2_State::ttsRandomCoords(){
 
-  bool guard;
+  random_tts = vector<pair<Coord,int> >();
   int i,j,rnd;
   vector<vector<bool>> feas_board(in.getHeight(),vector<bool>(in.getWidth(),0));
   int pseudo_distribution = std::max((unsigned int)2,(in.getWidth() * in.getHeight()) / 6);
@@ -308,9 +312,9 @@ ostream& operator<<(ostream& os, const Eternity2_GenericMove& mv)
 {
   os << endl;
   for(unsigned crd = 0; crd < mv.coords.size(); crd++){
-    os << "(" << mv.coords.at(crd).first << "," << mv.coords.at(crd).second << ")   :   ";
-    os << "old position = (" << mv.coords.at( mv.permutation.at(crd).first ).first << "," << mv.coords.at( mv.permutation.at(crd).first ).second << ")";
-    os << "   orientation = " << mv.permutation.at(crd).second << endl;
+    os << "From: (" << mv.coords.at( mv.permutation.at(crd).first ).first << "," << mv.coords.at( mv.permutation.at(crd).first ).second << ")\t";
+    os << "To: (" << mv.coords.at(crd).first << "," << mv.coords.at(crd).second << ")\t";
+    os << "Orientation: " << mv.permutation.at(crd).second << endl;
   }
   return os;
 }
@@ -434,9 +438,12 @@ istream& operator>>(istream& is, Eternity2_ThreeTileStreakMove& mv)
 
 ostream& operator<<(ostream& os, const Eternity2_ThreeTileStreakMove& mv)
 {
+    os << endl;
     for (int i = 0; i < mv.getSize(); ++i)
     {
-        os << i << "<-- <" << mv.getPermutation()[i].first << "," << mv.getPermutation()[i].second << ">" << endl;
+        os << "From: ("  << mv.getCoordinates()[mv.getPermutation()[i].first].first.first << "," << mv.getCoordinates()[mv.getPermutation()[i].first].first.second << ")\t"
+           << "To: " << "(" << mv.getCoordinates()[i].first.first << "," << mv.getCoordinates()[i].first.second << ")\t"
+           << "Dir/Inv: " << ((mv.getPermutation()[i].second) ? "Inverse" : "Direct") << endl;
     }
     return os;
 }

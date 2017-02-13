@@ -153,6 +153,7 @@ bool GenericMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st, co
 */
 void GenericMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_GenericMove& mv) const
 {
+  updateCoords(st);
   vector<Coord> coords = mv.getCoordinates();
   vector<IDO> old_tiles = vector<IDO>(coords.size());
   for(unsigned c = 0; c < coords.size(); c++){
@@ -163,6 +164,13 @@ void GenericMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eterni
     st.insertTile(old_tiles.at(mv.getIndexAt(c)), coords.at(c));
   }
 }  
+
+
+
+void GenericMoveNeighborhoodExplorer::updateCoords(Eternity2_State& st) const {
+  if( st.singleton_counter % 10 == 0 )
+    st.singletonRandomCoords();
+}
 
 
 
@@ -183,6 +191,7 @@ bool GenericMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Eterni
 
 
 void GenericMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_GenericMove& mv) const{
+  forceUpdate(st);
   //creating the graph
   vector<vector<pair<int,Orientation>>> graph = createGraph(st, mv);
   // ...
@@ -192,6 +201,10 @@ void GenericMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eterni
   // ...
 }
 
+
+void GenericMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& st) const {
+  st.singleton_counter = 0;
+}
 
 
 vector<vector<pair<int,Orientation>>> GenericMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st, Eternity2_GenericMove& mv) const{
@@ -380,6 +393,8 @@ void SingletonMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Et
       mv.setIndex(c, rdm_perm.at(c));
       mv.setOrientation(c, Random::Int(0,3));
     }
+
+    st.singleton_counter++;
 } 
 
 
@@ -510,6 +525,7 @@ void OddChessboardMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st,
 // is achieved using Fisher-Yates shuffle algorithm.
 void ThreeTileStreakMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_ThreeTileStreakMove& mv) const throw(EmptyNeighborhood)
 {
+    mv.setCoordinates(st.random_tts);
     int i,r;
     vector<pair<unsigned,int>> perm = vector<pair<unsigned,int>>(st.random_tts.size());
     vector<unsigned> rand_perm = FisherYatesShuffle(st.random_tts.size());
@@ -521,6 +537,8 @@ void ThreeTileStreakMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& 
     }
 
     mv.setPermutation(perm);
+
+    st.tts_counter++;
 } 
 
 
@@ -529,6 +547,7 @@ void ThreeTileStreakMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& 
 // First permutation of the three-tile streaks, corresponding to the sequence 1,2,...,n, with standard orientation (0).
 void ThreeTileStreakMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, Eternity2_ThreeTileStreakMove& mv) const  throw(EmptyNeighborhood)
 {
+    mv.setCoordinates(st.random_tts);
     vector<pair<unsigned,int>> perm = vector<pair<unsigned,int>>(st.random_tts.size());
 
     for (int i = 0; i < st.random_tts.size(); ++i)
@@ -696,6 +715,8 @@ bool ThreeTileStreakMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State
 
 void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const
 {
+    updateCoords(st);
+
     vector<tuple<tileMove,tileMove,tileMove,int>> changes = mv.computeSimpleMoves(st);
 
     for (int i = 0; i < changes.size(); ++i)
@@ -705,6 +726,36 @@ void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, cons
         st.insertTile(std::get<2>(changes[i]).first,std::get<2>(changes[i]).second);
     }
 }
+
+
+
+
+bool ThreeTileStreakMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_ThreeTileStreakMove& mv) const{
+  forceUpdate(st);
+  //creating the graph
+  vector<vector<pair<int,Orientation>>> graph;// = createGraph(st, mv);
+  // ...
+  //calling the hungarian algorithm
+  vector<int> match = hungarianAlgorithm(graph);
+  //creating the move
+  // ...
+  return true;
+}
+
+
+void ThreeTileStreakMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& st) const {
+  st.tts_counter = 0;
+}
+
+
+
+
+
+void ThreeTileStreakMoveNeighborhoodExplorer::updateCoords(Eternity2_State& st) const {
+  if( st.tts_counter % 10 == 0 )
+    st.ttsRandomCoords();
+}
+
 
 // Checks for color violation, given a 'tileMove' and a cardinal point.
 void checkColor(int& cost, const Eternity2_State& st, tileMove m, CardinalPoint cp)
@@ -930,7 +981,7 @@ vector<unsigned> FisherYatesShuffle(unsigned sz) {
 * Implementation of the "Augmenting Path Algorithm"
 */
 
-vector<int> hungarianAlgorithm(vector<vector<pair<int,Orientation>>> m){
+vector<int> hungarianAlgorithm(vector<vector<pair<int,Orientation>>>& m){
   //modifing the rows of the matrix
   int min;
   for(int i=0; i< m.size(); ++i){
@@ -951,7 +1002,8 @@ vector<int> hungarianAlgorithm(vector<vector<pair<int,Orientation>>> m){
   }
 
   vector<int> match = vector<int>(m.size(), -1);
-  findMaxMatch(m, match);
+  vector<int> inverse_match = vector<int>(m.size(), -1);
+  findMaxMatch(m, match, inverse_match);
   while( not isPerfectMatching(match) ){
     vector<int> zeros = vector<int> (2*m.size(), 0);
     vector<bool> coveredLines = vector<bool>(2*m.size(), 0);
@@ -989,7 +1041,7 @@ vector<int> hungarianAlgorithm(vector<vector<pair<int,Orientation>>> m){
     }
 
     match = vector<int>(m.size(), -1);
-    findMaxMatch(m, match);
+    findMaxMatch(m, match, inverse_match);
   } //END_WHILE
 
   return match;
@@ -998,7 +1050,7 @@ vector<int> hungarianAlgorithm(vector<vector<pair<int,Orientation>>> m){
 
 
 
-bool isPerfectMatching(vector<int> match){
+bool isPerfectMatching(vector<int>& match){
   int i;
   for(i = 0; i < match.size() && match[i] != -1; ++i);
   return i == match.size();
@@ -1007,7 +1059,7 @@ bool isPerfectMatching(vector<int> match){
 
 
 
-void findMaxMatch(vector<vector<pair<int,Orientation>>> m, vector<int>& match){
+void findMaxMatch(vector<vector<pair<int,Orientation>>>& m, vector<int>& match, vector<int>& inverse_match){
   vector<bool> s = vector<bool>(m.size(), 1);
   vector<vector<bool>> a = vector<vector<bool>> (m.size());
   //filling the "a" matrix
@@ -1019,12 +1071,12 @@ void findMaxMatch(vector<vector<pair<int,Orientation>>> m, vector<int>& match){
   }
   int free_node;
   while( findFreeNode(match, s, free_node) )
-    DFS(s, a, match, free_node);
+    DFS(s, a, match, inverse_match, free_node);
 }
 
 
 
-bool findFreeNode(vector<int> match, vector<bool> s, int& free_node){
+bool findFreeNode(vector<int>& match, vector<bool>& s, int& free_node){
   for(int i=0; i < match.size(); ++i){
     if( match[i] == -1  &&  s[i] ){
       free_node = i;
@@ -1036,7 +1088,7 @@ bool findFreeNode(vector<int> match, vector<bool> s, int& free_node){
 
 
 
-void DFS(vector<bool> s, vector<vector<bool>> a, vector<int> match, int x){
+void DFS(vector<bool>& s, vector<vector<bool>>& a, vector<int>& match, vector<int>& inverse_match, int x){
   //initializing the colors
   vector<DFSColor> colors = vector<DFSColor>(2 * match.size(), WHITE);
   //initializing the precedences
@@ -1044,7 +1096,7 @@ void DFS(vector<bool> s, vector<vector<bool>> a, vector<int> match, int x){
 
   DFS_Visit(x, 1, colors, pi, a, match);
 
-  if( not extractAP(pi, x, match) ){
+  if( not extractAP(pi, x, match, inverse_match) ){
     s[x] = 0;
     for(int i=0; i < match.size(); ++i)
       if( pi[i] != -1 )
@@ -1057,7 +1109,7 @@ void DFS(vector<bool> s, vector<vector<bool>> a, vector<int> match, int x){
 
 
 
-void DFS_Visit(int x, bool parity, vector<DFSColor>& colors, vector<int>& pi, vector<vector<bool>> a, vector<int> match){
+void DFS_Visit(int x, bool parity, vector<DFSColor>& colors, vector<int>& pi, vector<vector<bool>>& a, vector<int>& match){
   if(parity){
     colors[x] = GREY;
     for(int i=0; i < match.size(); ++i){
@@ -1080,14 +1132,15 @@ void DFS_Visit(int x, bool parity, vector<DFSColor>& colors, vector<int>& pi, ve
 
 
 
-bool extractAP(vector<int> pi, int x, vector<int> match){
+bool extractAP(vector<int>& pi, int x, vector<int>& match, vector<int>& inverse_match){
   int i;
-  for(i = match.size(); i < 2 * match.size() && ( i == x || pi[i] == -1 ); ++i);
+  for(i = match.size(); i < 2 * match.size() && ( inverse_match[i] != -1 || pi[i] == -1 ); ++i);
   if( i == pi.size() ){
     return false;
   }else{
     while( pi[i] != -1 ){
       match[pi[i]] = i;
+      inverse_match[i] = pi[i];
       i = pi[pi[i]];
     }
   }
