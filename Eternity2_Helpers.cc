@@ -1058,18 +1058,32 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
 	  
 	  for(unsigned k = 0; k < 4; k++){
 		if(k != newOrient1){
-			unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(0-rot12,4));
-			unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eSelCoord[map12[i]])+1, get<1>(eSelCoord[map12[i]]))),3);
-			if(c1!=c2) d1++;
-			unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(1-rot12,4));
-			unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eSelCoord[map12[i]]), get<1>(eSelCoord[map12[i]])-1)),3);
-			if(c1!=c2) d1++;
-			unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(2-rot12,4));
-			unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eSelCoord[map12[i]])-1, get<1>(eSelCoord[map12[i]]))),3);
-			if(c1!=c2) d1++;
-			unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(3-rot12,4));
-			unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eSelCoord[map12[i]]), get<1>(eSelCoord[map12[i]])+1)),3);
-			if(c1!=c2) d1++;
+			// DOWN
+			if(k == 2-newOrient1 || k == 3-newOrient1){
+				unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(0-rot12,4));
+				unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eSelCoord[k])+1, get<1>(eSelCoord[k]))),3);
+				if(c1!=c2) d1++;
+			}
+			// LEFT
+			if(k == 1-newOrient1 || k == 3-newOrient1){
+				unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(1-rot12,4));
+				unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eSelCoord[k]), get<1>(eSelCoord[k])-1)),3);
+				if(c1!=c2) d1++;
+			}
+			// UP
+			if(k == 1-newOrient1 || k == 3-newOrient1){
+				unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(2-rot12,4));
+				unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eSelCoord[k])-1, get<1>(eSelCoord[k]))),3);
+				if(c1!=c2) d1++;
+			}
+			
+			// RIGHT
+			if(k == 1-newOrient1 || k == 2-newOrient1){
+				unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(3-rot12,4));
+				unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eSelCoord[k]), get<1>(eSelCoord[k)+1)),3);
+				if(c1!=c2) d1++;
+			}
+			
 		}
 	  }
 	
@@ -1077,18 +1091,30 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
 	  
 	  for(unsigned k = 0; k < 4; k++){
 		if(k != newOrient2){
-			unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(0-rot12,4));
-			unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eLstCoord[map21[i]])+1, get<1>(eLstCoord[map21[i]]))),3);
-			if(c1!=c2) d2++;
-			unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(1-rot12,4));
-			unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eLstCoord[map21[i]]), get<1>(eLstCoord[map21[i]])-1)),3);
-			if(c1!=c2) d2++;
-			unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(2-rot12,4));
-			unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eLstCoord[map21[i]])-1, get<1>(eLstCoord[map21[i]]))),3);
-			if(c1!=c2) d2++;
-			unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(3-rot12,4));
-			unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eLstCoord[map21[i]]), get<1>(eLstCoord[map21[i]])+1)),3);
-			if(c1!=c2) d2++;
+			if(k == 2-newOrient1 || k == 3-newOrient1){
+				unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(0-rot12,4));
+				unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eLstCoord[k])+1, get<1>(eLstCoord[k]))),3);
+				if(c1!=c2) d2++;
+			}
+			
+			if(k == 1-newOrient1 || k == 3-newOrient1){
+				unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(1-rot12,4));
+				unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eLstCoord[k]), get<1>(eLstCoord[k])-1)),3);
+				if(c1!=c2) d2++;
+			}
+			
+			if(k == 1-newOrient1 || k == 3-newOrient1){
+				unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(2-rot12,4));
+				unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eLstCoord[k])-1, get<1>(eLstCoord[k]))),3);
+				if(c1!=c2) d2++;
+			}
+			
+			if(k == 1-newOrient1 || k == 2-newOrient1){
+				unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(3-rot12,4));
+				unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eLstCoord[k]), get<1>(eLstCoord[k])+1)),3);
+				if(c1!=c2) d2++;
+			}
+			
 		}
 	  }
 	  
