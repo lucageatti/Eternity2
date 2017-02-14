@@ -945,7 +945,8 @@ void Eternity2_LMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, E
 	  for(unsigned j=0; j<st.getWidth(); j++){
 		  unsigned ell = mv.ellMatrix.at(i).at(j);
 		  if(ell < mv.NO_ELL)
-		  mv.ellSelection.at(id) = id++;
+		  mv.ellSelection.at(id) = id+1;
+      id++;
 	  }
   }
 }
@@ -993,16 +994,16 @@ bool Eternity2_LMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Et
 }
 
 
-int Eternity2_LMoveDeltaCostComponent1::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const
+int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const
 {
   int cost = 0;
   // Insert the code that computes the delta cost of component 1 for move mv in state st
   
-  //int singleTileCost(IDO ido, Coord crd, const Eternity2_State& st)
   // Same code as MakeMove, but I calculate the deltacost instead of updating the state
+  unsigned rows = st.getHeight();
   unsigned cols = st.getWidth();
   for(unsigned i = 0; i < mv.ellSelection.size() && mv.ellSelection.at(i) > i; i++){ // Avoid duplicate swaps
-	  // Swap ellList(i) with ellSelection(i) on the board
+	// Swap ellList(i) with ellSelection(i) on the board
     unsigned i1 = get<0>(mv.ellList.at(i));
     unsigned j1 = get<1>(mv.ellList.at(i));
     unsigned i2 = get<0>(mv.ellList.at(mv.ellSelection.at(i)));
@@ -1013,62 +1014,86 @@ int Eternity2_LMoveDeltaCostComponent1::ComputeDeltaCost(const Eternity2_State& 
     IDO eSelIDO[]= { st.getIDOAt(pair<unsigned,unsigned>(i2,j2)), st.getIDOAt(pair<unsigned,unsigned>(i2,j2+1)),
     st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2+1)),st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2)) };
 	  // Backup coordinates
-	  pair<unsigned,unsigned>[] eLstCoord = 
+	  pair<unsigned,unsigned> eLstCoord[] = 
 		{ pair<unsigned,unsigned>(i1,j1), pair<unsigned,unsigned>(i1,j1+1), 
 		pair<unsigned,unsigned>(i1+1,j1+1), pair<unsigned,unsigned>(i1+1,j1) };
-	  pair<unsigned,unsigned>[] eSelCoord = 
+	  pair<unsigned,unsigned> eSelCoord[] = 
 		{ pair<unsigned,unsigned>(i2,j2), pair<unsigned,unsigned>(i2,j2+1), 
 		pair<unsigned,unsigned>(i2+1,j2+1), pair<unsigned,unsigned>(i2+1,j2) };
 	  // Calculate the rotation 
-	  int rot12 = mv.ellList.at(mv.ellSelection.at(i)).second() - mv.ellList.at(i).second();
+	  int rot12 = get<2>(mv.ellList.at(mv.ellSelection.at(i))) - get<2>(mv.ellList.at(i));
 	  
 	  // Original cost
 	  for(unsigned j = 0; j < 3; j++){
-		  int d1 = singleTileCost(pair<unsigned,unsigned>(eLstIDO[j].first(), eLstIDO[j].second()),
-			pair<unsigned,unsigned>(eLstCoord[j].first(), eLstCoord[j].second()), st);
-		  int d2 = singleTileCost(pair<unsigned,unsigned>(eSelIDO[j].first(), eSelIDO[j].second()),
-			pair<unsigned,unsigned>(eSelCoord[j].first(), eSelCoord[j].second()), st);
+		  int d1 = singleTileCost(pair<unsigned,unsigned>(get<0>(eLstIDO[j]), get<1>(eLstIDO[j])),
+			pair<unsigned,unsigned>(get<0>(eLstCoord[j]), get<1>(eLstCoord[j])), st);
+		  int d2 = singleTileCost(pair<unsigned,unsigned>(get<0>(eSelIDO[j]), get<1>(eSelIDO[j])),
+			pair<unsigned,unsigned>(get<0>(eSelCoord[j]), get<1>(eSelCoord[j])), st);
 		
 		  cost += d1+d2;
 	  }
-	  // Swap
-	  for(unsigned j = 0; j<3; j++){
-		  int k1 = (j+rot12);
-		  if(k1 < 0) k1 += 4;
-		  k1 = k1 % 4;
-		  int k2 = (j-rot12);
-		  if(k2 < 0) k2 += 4;
-		  k1 = k1 % 4;
-		  
-		  int lido = (eLstIDO[j].second()+rot12);
-		  if(lido < 0) lido += 4;
-		  lido = lido % 4;
-		  int sido = (eSelIDO[j].second()-rot12);
-		  if(sido < 0) sido += 4;
-		  sido = sido % 4;
-		  
-		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[j].first(), lido),
-			pair<unsigned,unsigned>(eSelCoord[k1].first(), eSelCoord[k1].second()) );
-		  st.insertTile( pair<unsigned,unsigned>(eSelIDO[j].first(), sido),
-			pair<unsigned,unsigned>(eLstCoord[k2].first(), eLstCoord[k2].second()) );  
+	  
+    // Now compute the swapped cost
+    // First off map the first L into the second and viceversa
+	  unsigned map12[4];
+	  unsigned map21[4];
+    for (unsigned i = 0; i < 4; ++i)
+    {
+      map12[i] = st.strangeMod(i+rot12,4);
+	  map21[st.strangeMod(i+rot12,4)] = i;
+    }
+    for (int i = 0; i < sizeof(eLstIDO); ++i)
+    {
+      int newOrient1 = st.strangeMod(get<1>(eLstIDO[i]) + rot12,4);
+      int newOrient2 = get<1>(eLstIDO[i]);
+
+      /*eLstIDO[i]=pair<unsigned,unsigned>(get<0>(eLstIDO[i]), lido);
+      eSelIDO[map[i]]=pair<unsigned,unsigned>(get<0>(eSelIDO[map[i]]), sido);*/
+      /*Coord temp = eLstCoord[i];
+      eLstCoord[i]=eSelCoord[map[i]];
+      eSelCoord[map[i]]=temp;*/
+
+      // Now compute the cost
+      int d1 = 0;
+	  
+	  for(unsigned k = 0; k < 4; k++){
+		if(k != newOrient1){
+			unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(0-rot12,4));
+			unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eSelCoord[map12[i]])+1, get<1>(eSelCoord[map12[i]]))),3);
+			if(c1!=c2) d1++;
+			unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(1-rot12,4));
+			unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eSelCoord[map12[i]]), get<1>(eSelCoord[map12[i]])-1)),3);
+			if(c1!=c2) d1++;
+			unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(2-rot12,4));
+			unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eSelCoord[map12[i]])-1, get<1>(eSelCoord[map12[i]]))),3);
+			if(c1!=c2) d1++;
+			unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(3-rot12,4));
+			unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eSelCoord[map12[i]]), get<1>(eSelCoord[map12[i]])+1)),3);
+			if(c1!=c2) d1++;
+		}
 	  }
-	  // Swapped cost
-	  for(unsigned j = 0; j < 3; j++){		  
-		  int d1s = singleTileCost(pair<unsigned,unsigned>(eLstIDO[j].first(), eLstIDO[j].second()),
-			pair<unsigned,unsigned>(eLstCoord[j].first(), eLstCoord[j].second()), st);
-		  int d2s = singleTileCost(pair<unsigned,unsigned>(eSelIDO[j].first(), eSelIDO[j].second()),
-			pair<unsigned,unsigned>(eSelCoord[j].first(), eSelCoord[j].second()), st);
-		  cost -= d1s+d2s;
-	  }
-	  // Undo swap
-	  for(unsigned j = 0; j < 3; j++){
-		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[j].first(), eLstIDO[j].second()),
-			pair<unsigned,unsigned>(eLstCoord[j].first(), eLstCoord[j].second()) );
-		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[mv.ellSelection.at(j)].first(), eLstIDO[mv.ellSelection.at(j)].second()),
-			pair<unsigned,unsigned>(eLstCoord[mv.ellSelection.at(j)].first(), eLstCoord[mv.ellSelection.at(j)].second()) );
+	
+      int d2 = 0;
+	  
+	  for(unsigned k = 0; k < 4; k++){
+		if(k != newOrient2){
+			unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(0-rot12,4));
+			unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eLstCoord[map21[i]])+1, get<1>(eLstCoord[map21[i]]))),3);
+			if(c1!=c2) d2++;
+			unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(1-rot12,4));
+			unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eLstCoord[map21[i]]), get<1>(eLstCoord[map21[i]])-1)),3);
+			if(c1!=c2) d2++;
+			unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(2-rot12,4));
+			unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eLstCoord[map21[i]])-1, get<1>(eLstCoord[map21[i]]))),3);
+			if(c1!=c2) d2++;
+			unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(3-rot12,4));
+			unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eLstCoord[map21[i]]), get<1>(eLstCoord[map21[i]])+1)),3);
+			if(c1!=c2) d2++;
+		}
 	  }
 	  
-	  
+	  cost -= d1+d2;
+    }
   }
   
   return cost;

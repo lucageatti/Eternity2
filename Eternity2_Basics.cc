@@ -355,7 +355,7 @@ ostream& operator<<(ostream& os, const Eternity2_LMove& mv)
 * computed by modifying it at run-time.
 * This function essentially maps a position on a matrix into the corresponding
 * position in the rotated matrix, and adds something to the result.*/
-unsigned Eternity2_LMove::readPlacementMatrix(unsigned row, unsigned column, unsigned ell){
+unsigned readPlacementMatrix(unsigned row, unsigned column, unsigned ell){
   unsigned ret = 4; // NO_ELL
   unsigned rows = sizeof(Eternity2_LMove::placementMatrix);
   unsigned cols = sizeof(Eternity2_LMove::placementMatrix[0]);

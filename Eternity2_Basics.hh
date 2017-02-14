@@ -180,7 +180,7 @@ class Eternity2_LMove
   vector<unsigned> ellSelection;
   
   // List of ells in the placement matrix and their coordinates on the board
-  // EllList[i]= ( (coordX , coordY) , ellOrientation )
+  // EllList[i]= ( coordX , coordY , ellOrientation )
   vector<tuple<unsigned,unsigned,unsigned>> ellList;
   
   // How many ells in the partition
