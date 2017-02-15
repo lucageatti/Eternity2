@@ -41,67 +41,41 @@ protected:
 
 
 /***************************************************************************
- * Generic Move Neighborhood Explorer:
+ * Singleton Move Neighborhood Explorer:
  ***************************************************************************/
-class GenericMoveDeltaCostComponent
-  : public DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_GenericMove>
+class SingletonMoveDeltaCostComponent
+  : public DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_SingletonMove>
 {
 public:
-  GenericMoveDeltaCostComponent(const Eternity2_Input & in, Eternity2_CostComponent& cc) 
-    : DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_GenericMove>(in,cc,"GenericMoveDeltaCostComponent1") 
+  SingletonMoveDeltaCostComponent(const Eternity2_Input & in, Eternity2_CostComponent& cc) 
+    : DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_SingletonMove>(in,cc,"SingletonMoveDeltaCostComponent1") 
   {}
-  int ComputeDeltaCost(const Eternity2_State& st, const Eternity2_GenericMove& mv) const;
+  int ComputeDeltaCost(const Eternity2_State& st, const Eternity2_SingletonMove& mv) const;
 protected:
   int deltaSingleTileCost(IDO ido, Coord crd, const Eternity2_State& st) const;
 };
 
 
-class GenericMoveNeighborhoodExplorer
-  : public NeighborhoodExplorer<Eternity2_Input,Eternity2_State,Eternity2_GenericMove> 
-{
-public:
-  GenericMoveNeighborhoodExplorer(const Eternity2_Input & pin, StateManager<Eternity2_Input,Eternity2_State>& psm)  
-    : NeighborhoodExplorer<Eternity2_Input,Eternity2_State,Eternity2_GenericMove>(pin, psm, "GenericMoveNeighborhoodExplorer") {} 
-  bool FeasibleMove(const Eternity2_State&, const Eternity2_GenericMove&) const;  
-  void MakeMove(Eternity2_State&,const Eternity2_GenericMove&) const;
-  bool NextMove(const Eternity2_State&,Eternity2_GenericMove&) const;
-  void BestMove(const Eternity2_State&,Eternity2_GenericMove&) const;
-  void RandomMove(const Eternity2_State&, Eternity2_GenericMove&) const throw(EmptyNeighborhood){}          
-  void FirstMove(const Eternity2_State&,Eternity2_GenericMove&) const throw(EmptyNeighborhood){}
-protected:
-  bool incrementOrientation(Eternity2_GenericMove& mv) const;
-  bool incrementPermutation(Eternity2_GenericMove& mv) const;
-  vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State&,Eternity2_GenericMove&) const;
-  void updateCoords(Eternity2_State& st) const;
-  void forceUpdate(const Eternity2_State& st) const;
-  void createMove(Eternity2_GenericMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const;
-};
-
-
-
-
-
-/***************************************************************************
- * Singleton-Move Neighborhood Explorer:
- ***************************************************************************/
-
-class SingletonMoveDeltaCostComponent : public GenericMoveDeltaCostComponent
-{
-public:
-  SingletonMoveDeltaCostComponent(const Eternity2_Input & in, Eternity2_CostComponent& cc) 
-    : GenericMoveDeltaCostComponent( in, cc) {}
-};
-
-
-class SingletonMoveNeighborhoodExplorer : public GenericMoveNeighborhoodExplorer
+class SingletonMoveNeighborhoodExplorer
+  : public NeighborhoodExplorer<Eternity2_Input,Eternity2_State,Eternity2_SingletonMove> 
 {
 public:
   SingletonMoveNeighborhoodExplorer(const Eternity2_Input & pin, StateManager<Eternity2_Input,Eternity2_State>& psm)  
-    : GenericMoveNeighborhoodExplorer( pin, psm) { } 
-  void RandomMove(const Eternity2_State&, Eternity2_GenericMove&) const throw(EmptyNeighborhood);          
-  void FirstMove(const Eternity2_State&,Eternity2_GenericMove&) const throw(EmptyNeighborhood);
+    : NeighborhoodExplorer<Eternity2_Input,Eternity2_State,Eternity2_SingletonMove>(pin, psm, "SingletonMoveNeighborhoodExplorer") {} 
+  bool FeasibleMove(const Eternity2_State&, const Eternity2_SingletonMove&) const;  
+  void MakeMove(Eternity2_State&,const Eternity2_SingletonMove&) const;
+  bool NextMove(const Eternity2_State&,Eternity2_SingletonMove&) const;
+  void BestMove(const Eternity2_State&,Eternity2_SingletonMove&) const;
+  void RandomMove(const Eternity2_State&, Eternity2_SingletonMove&) const throw(EmptyNeighborhood);        
+  void FirstMove(const Eternity2_State&,Eternity2_SingletonMove&) const throw(EmptyNeighborhood);
+protected:
+  bool incrementOrientation(Eternity2_SingletonMove& mv) const;
+  bool incrementPermutation(Eternity2_SingletonMove& mv) const;
+  vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State&,Eternity2_SingletonMove&) const;
+  void updateCoords(Eternity2_State& st) const;
+  void forceUpdate(const Eternity2_State& st) const;
+  void createMove(Eternity2_SingletonMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const;
 };
-
 
 
 
@@ -110,23 +84,39 @@ public:
  * Even-chessboard Neighborhood Explorer:
  ***************************************************************************/
 
-class EvenChessboardMoveDeltaCostComponent : public GenericMoveDeltaCostComponent
+class EvenChessboardMoveDeltaCostComponent
+  : public DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_EvenChessboardMove>
 {
 public:
   EvenChessboardMoveDeltaCostComponent(const Eternity2_Input & in, Eternity2_CostComponent& cc) 
-    : GenericMoveDeltaCostComponent( in, cc) {}
+    : DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_EvenChessboardMove>(in,cc,"SingletonMoveDeltaCostComponent1") 
+  {}
+  int ComputeDeltaCost(const Eternity2_State& st, const Eternity2_EvenChessboardMove& mv) const;
+protected:
+  int deltaSingleTileCost(IDO ido, Coord crd, const Eternity2_State& st) const;
 };
 
 
-class EvenChessboardMoveNeighborhoodExplorer : public GenericMoveNeighborhoodExplorer
+class EvenChessboardMoveNeighborhoodExplorer
+  : public NeighborhoodExplorer<Eternity2_Input,Eternity2_State,Eternity2_EvenChessboardMove> 
 {
 public:
   EvenChessboardMoveNeighborhoodExplorer(const Eternity2_Input & pin, StateManager<Eternity2_Input,Eternity2_State>& psm)  
-    : GenericMoveNeighborhoodExplorer( pin, psm) {}
-  void RandomMove(const Eternity2_State&, Eternity2_GenericMove&) const throw(EmptyNeighborhood);          
-  void FirstMove(const Eternity2_State&,Eternity2_GenericMove&) const throw(EmptyNeighborhood);  
+    : NeighborhoodExplorer<Eternity2_Input,Eternity2_State,Eternity2_EvenChessboardMove>(pin, psm, "EvenChessboardMoveNeighborhoodExplorer") {} 
+  bool FeasibleMove(const Eternity2_State&, const Eternity2_EvenChessboardMove&) const;  
+  void MakeMove(Eternity2_State&,const Eternity2_EvenChessboardMove&) const;
+  bool NextMove(const Eternity2_State&,Eternity2_EvenChessboardMove&) const;
+  void BestMove(const Eternity2_State&,Eternity2_EvenChessboardMove&) const;
+  void RandomMove(const Eternity2_State&, Eternity2_EvenChessboardMove&) const throw(EmptyNeighborhood);        
+  void FirstMove(const Eternity2_State&,Eternity2_EvenChessboardMove&) const throw(EmptyNeighborhood);
+protected:
+  bool incrementOrientation(Eternity2_EvenChessboardMove& mv) const;
+  bool incrementPermutation(Eternity2_EvenChessboardMove& mv) const;
+  vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State&,Eternity2_EvenChessboardMove&) const;
+  void updateCoords(Eternity2_State& st) const;
+  void forceUpdate(const Eternity2_State& st) const;
+  void createMove(Eternity2_EvenChessboardMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const;
 };
-
 
 
 
@@ -135,21 +125,38 @@ public:
  * Odd-chessboard Neighborhood Explorer:
  ***************************************************************************/
 
-class OddChessboardMoveDeltaCostComponent : public GenericMoveDeltaCostComponent
+class OddChessboardMoveDeltaCostComponent
+  : public DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_OddChessboardMove>
 {
 public:
   OddChessboardMoveDeltaCostComponent(const Eternity2_Input & in, Eternity2_CostComponent& cc) 
-    : GenericMoveDeltaCostComponent( in, cc) {}
+    : DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_OddChessboardMove>(in,cc,"SingletonMoveDeltaCostComponent1") 
+  {}
+  int ComputeDeltaCost(const Eternity2_State& st, const Eternity2_OddChessboardMove& mv) const;
+protected:
+  int deltaSingleTileCost(IDO ido, Coord crd, const Eternity2_State& st) const;
 };
 
 
-class OddChessboardMoveNeighborhoodExplorer : public GenericMoveNeighborhoodExplorer
+class OddChessboardMoveNeighborhoodExplorer
+  : public NeighborhoodExplorer<Eternity2_Input,Eternity2_State,Eternity2_OddChessboardMove> 
 {
 public:
   OddChessboardMoveNeighborhoodExplorer(const Eternity2_Input & pin, StateManager<Eternity2_Input,Eternity2_State>& psm)  
-    : GenericMoveNeighborhoodExplorer(pin,  psm) {}
-  void RandomMove(const Eternity2_State&, Eternity2_GenericMove&) const throw(EmptyNeighborhood);          
-  void FirstMove(const Eternity2_State&, Eternity2_GenericMove&) const throw(EmptyNeighborhood);  
+    : NeighborhoodExplorer<Eternity2_Input,Eternity2_State,Eternity2_OddChessboardMove>(pin, psm, "OddChessboardMoveNeighborhoodExplorer") {} 
+  bool FeasibleMove(const Eternity2_State&, const Eternity2_OddChessboardMove&) const;  
+  void MakeMove(Eternity2_State&,const Eternity2_OddChessboardMove&) const;
+  bool NextMove(const Eternity2_State&,Eternity2_OddChessboardMove&) const;
+  void BestMove(const Eternity2_State&,Eternity2_OddChessboardMove&) const;
+  void RandomMove(const Eternity2_State&, Eternity2_OddChessboardMove&) const throw(EmptyNeighborhood);        
+  void FirstMove(const Eternity2_State&,Eternity2_OddChessboardMove&) const throw(EmptyNeighborhood);
+protected:
+  bool incrementOrientation(Eternity2_OddChessboardMove& mv) const;
+  bool incrementPermutation(Eternity2_OddChessboardMove& mv) const;
+  vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State&,Eternity2_OddChessboardMove&) const;
+  void updateCoords(Eternity2_State& st) const;
+  void forceUpdate(const Eternity2_State& st) const;
+  void createMove(Eternity2_OddChessboardMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const;
 };
 
 

@@ -142,16 +142,26 @@ void Eternity2_OutputManager::OutputState(const Eternity2_State& st, Eternity2_O
 /*
 * The move is always feasible.
 */
-bool GenericMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st, const Eternity2_GenericMove& mv) const
+bool SingletonMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st, const Eternity2_SingletonMove& mv) const
 {
   return true;
 } 
+
+bool EvenChessboardMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st, const Eternity2_EvenChessboardMove& mv) const
+{
+  return true;
+} 
+
+bool OddChessboardMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st, const Eternity2_OddChessboardMove& mv) const
+{
+  return true;
+}
 
 
 /*
 * Update the state according to the move.
 */
-void GenericMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_GenericMove& mv) const
+void SingletonMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_SingletonMove& mv) const
 {
   updateCoords(st);
   vector<Coord> coords = mv.getCoordinates();
@@ -163,21 +173,92 @@ void GenericMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eterni
     old_tiles.at(mv.getIndexAt(c)).second = mv.getOrientationAt(c);
     st.insertTile(old_tiles.at(mv.getIndexAt(c)), coords.at(c));
   }
-}  
+}
+
+/*
+* Update the state according to the move.
+*/
+void EvenChessboardMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_EvenChessboardMove& mv) const
+{
+  updateCoords(st);
+  vector<Coord> coords = mv.getCoordinates();
+  vector<IDO> old_tiles = vector<IDO>(coords.size());
+  for(unsigned c = 0; c < coords.size(); c++){
+    old_tiles.at(c) = st.getIDOAt(coords.at(c));
+  }
+  for(unsigned c = 0; c < coords.size(); c++){
+    old_tiles.at(mv.getIndexAt(c)).second = mv.getOrientationAt(c);
+    st.insertTile(old_tiles.at(mv.getIndexAt(c)), coords.at(c));
+  }
+} 
+
+/*
+* Update the state according to the move.
+*/
+void OddChessboardMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_OddChessboardMove& mv) const
+{
+  updateCoords(st);
+  vector<Coord> coords = mv.getCoordinates();
+  vector<IDO> old_tiles = vector<IDO>(coords.size());
+  for(unsigned c = 0; c < coords.size(); c++){
+    old_tiles.at(c) = st.getIDOAt(coords.at(c));
+  }
+  for(unsigned c = 0; c < coords.size(); c++){
+    old_tiles.at(mv.getIndexAt(c)).second = mv.getOrientationAt(c);
+    st.insertTile(old_tiles.at(mv.getIndexAt(c)), coords.at(c));
+  }
+} 
 
 
 
-void GenericMoveNeighborhoodExplorer::updateCoords(Eternity2_State& st) const {
+void SingletonMoveNeighborhoodExplorer::updateCoords(Eternity2_State& st) const {
+  if( st.singleton_counter % 10 == 0 )
+    st.singletonRandomCoords();
+}
+
+void EvenChessboardMoveNeighborhoodExplorer::updateCoords(Eternity2_State& st) const {
+  if( st.singleton_counter % 10 == 0 )
+    st.singletonRandomCoords();
+}
+
+void OddChessboardMoveNeighborhoodExplorer::updateCoords(Eternity2_State& st) const {
   if( st.singleton_counter % 10 == 0 )
     st.singletonRandomCoords();
 }
 
 
+/*
+* It computes the next move, computing the next permutation of the indexes 0, 1, ..., N.
+*/
+bool SingletonMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Eternity2_SingletonMove& mv) const
+{
+  while( incrementOrientation(mv) ){
+    return true;
+  }
+  while( incrementPermutation(mv) ){
+    return true;
+  }
+  return false;
+}
 
 /*
 * It computes the next move, computing the next permutation of the indexes 0, 1, ..., N.
 */
-bool GenericMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Eternity2_GenericMove& mv) const
+bool EvenChessboardMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Eternity2_EvenChessboardMove& mv) const
+{
+  while( incrementOrientation(mv) ){
+    return true;
+  }
+  while( incrementPermutation(mv) ){
+    return true;
+  }
+  return false;
+}
+
+/*
+* It computes the next move, computing the next permutation of the indexes 0, 1, ..., N.
+*/
+bool OddChessboardMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Eternity2_OddChessboardMove& mv) const
 {
   while( incrementOrientation(mv) ){
     return true;
@@ -190,7 +271,27 @@ bool GenericMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Eterni
 
 
 
-void GenericMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_GenericMove& mv) const{
+void SingletonMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_SingletonMove& mv) const{
+  forceUpdate(st);
+  //creating the graph
+  vector<vector<pair<int,Orientation>>> graph = createGraph(st, mv);
+  //calling the hungarian algorithm
+  vector<int> match = hungarianAlgorithm(graph);
+  //creating the move
+  createMove(mv, match, graph);
+}
+
+void EvenChessboardMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_EvenChessboardMove& mv) const{
+  forceUpdate(st);
+  //creating the graph
+  vector<vector<pair<int,Orientation>>> graph = createGraph(st, mv);
+  //calling the hungarian algorithm
+  vector<int> match = hungarianAlgorithm(graph);
+  //creating the move
+  createMove(mv, match, graph);
+}
+
+void OddChessboardMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_OddChessboardMove& mv) const{
   forceUpdate(st);
   //creating the graph
   vector<vector<pair<int,Orientation>>> graph = createGraph(st, mv);
@@ -201,12 +302,39 @@ void GenericMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eterni
 }
 
 
-void GenericMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& st) const {
+
+
+
+void SingletonMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& st) const {
+  st.singleton_counter = 0;
+}
+
+void EvenChessboardMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& st) const {
+  st.singleton_counter = 0;
+}
+
+void OddChessboardMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& st) const {
   st.singleton_counter = 0;
 }
 
 
-void GenericMoveNeighborhoodExplorer::createMove(Eternity2_GenericMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const {
+
+
+void SingletonMoveNeighborhoodExplorer::createMove(Eternity2_SingletonMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const {
+  for(int i = 0; i < match.size(); ++i){
+    mv.setIndex(i, match[i]);
+    mv.setOrientation(i, graph[i][match[i]].second);
+  }
+}
+
+void EvenChessboardMoveNeighborhoodExplorer::createMove(Eternity2_EvenChessboardMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const {
+  for(int i = 0; i < match.size(); ++i){
+    mv.setIndex(i, match[i]);
+    mv.setOrientation(i, graph[i][match[i]].second);
+  }
+}
+
+void OddChessboardMoveNeighborhoodExplorer::createMove(Eternity2_OddChessboardMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const {
   for(int i = 0; i < match.size(); ++i){
     mv.setIndex(i, match[i]);
     mv.setOrientation(i, graph[i][match[i]].second);
@@ -214,7 +342,63 @@ void GenericMoveNeighborhoodExplorer::createMove(Eternity2_GenericMove& mv, vect
 }
 
 
-vector<vector<pair<int,Orientation>>> GenericMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st, Eternity2_GenericMove& mv) const{
+
+
+
+
+
+
+vector<vector<pair<int,Orientation>>> SingletonMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st, Eternity2_SingletonMove& mv) const{
+  bool stop;
+  pair<int,Orientation> best_weight;
+  vector<Coord> mv_coords = mv.getCoordinates();
+  //declaring the matrix
+  vector<vector<pair<int,Orientation>>> graph = vector<vector<pair<int,Orientation>>>(mv_coords.size());
+  //filling the matrix
+  for(int r = 0; r < graph.size(); ++r){
+    graph[r] = vector<pair<int,Orientation>>(graph.size());
+    IDO old_tile = st.getIDOAt(mv_coords[r]);
+    for(int c = 0; c < graph.size(); ++c){
+      stop = false;
+      old_tile.second = 0;
+      best_weight.first = singleTileCost(old_tile, mv_coords[c], st);
+      for(int i = 1; i < 3; i++){
+        old_tile.second = i;
+        best_weight.first = std::min( singleTileCost(old_tile, mv_coords[c], st), best_weight.first );
+        best_weight.second = i;
+      }
+      graph[r][c] = best_weight;
+    }
+  }
+  return graph;
+}
+
+vector<vector<pair<int,Orientation>>> EvenChessboardMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st, Eternity2_EvenChessboardMove& mv) const{
+  bool stop;
+  pair<int,Orientation> best_weight;
+  vector<Coord> mv_coords = mv.getCoordinates();
+  //declaring the matrix
+  vector<vector<pair<int,Orientation>>> graph = vector<vector<pair<int,Orientation>>>(mv_coords.size());
+  //filling the matrix
+  for(int r = 0; r < graph.size(); ++r){
+    graph[r] = vector<pair<int,Orientation>>(graph.size());
+    IDO old_tile = st.getIDOAt(mv_coords[r]);
+    for(int c = 0; c < graph.size(); ++c){
+      stop = false;
+      old_tile.second = 0;
+      best_weight.first = singleTileCost(old_tile, mv_coords[c], st);
+      for(int i = 1; i < 3; i++){
+        old_tile.second = i;
+        best_weight.first = std::min( singleTileCost(old_tile, mv_coords[c], st), best_weight.first );
+        best_weight.second = i;
+      }
+      graph[r][c] = best_weight;
+    }
+  }
+  return graph;
+}
+
+vector<vector<pair<int,Orientation>>> OddChessboardMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st, Eternity2_OddChessboardMove& mv) const{
   bool stop;
   pair<int,Orientation> best_weight;
   vector<Coord> mv_coords = mv.getCoordinates();
@@ -243,10 +427,51 @@ vector<vector<pair<int,Orientation>>> GenericMoveNeighborhoodExplorer::createGra
 
 
 
+
+
+
 /*
 * Increments the orientation: it makes an increment of a number in base 4.
 */
-bool GenericMoveNeighborhoodExplorer::incrementOrientation(Eternity2_GenericMove& mv) const {
+bool SingletonMoveNeighborhoodExplorer::incrementOrientation(Eternity2_SingletonMove& mv) const {
+  unsigned c = 0;
+  while( c < mv.getSize() && mv.getOrientationAt(c) == 3 ){
+    c++;
+  }
+  if( c == mv.getSize() )
+    return false;
+  mv.setOrientation(c, mv.getOrientationAt(c)+1);
+  int d = c-1;
+  while(d > -1){
+    mv.setOrientation(d, 0);
+    d--;
+  }
+  return true;
+}
+
+/*
+* Increments the orientation: it makes an increment of a number in base 4.
+*/
+bool EvenChessboardMoveNeighborhoodExplorer::incrementOrientation(Eternity2_EvenChessboardMove& mv) const {
+  unsigned c = 0;
+  while( c < mv.getSize() && mv.getOrientationAt(c) == 3 ){
+    c++;
+  }
+  if( c == mv.getSize() )
+    return false;
+  mv.setOrientation(c, mv.getOrientationAt(c)+1);
+  int d = c-1;
+  while(d > -1){
+    mv.setOrientation(d, 0);
+    d--;
+  }
+  return true;
+}
+
+/*
+* Increments the orientation: it makes an increment of a number in base 4.
+*/
+bool OddChessboardMoveNeighborhoodExplorer::incrementOrientation(Eternity2_OddChessboardMove& mv) const {
   unsigned c = 0;
   while( c < mv.getSize() && mv.getOrientationAt(c) == 3 ){
     c++;
@@ -263,10 +488,15 @@ bool GenericMoveNeighborhoodExplorer::incrementOrientation(Eternity2_GenericMove
 }
 
 
+
+
+
+
+
 /*
 * Increments the permutation. 
 */
-bool GenericMoveNeighborhoodExplorer::incrementPermutation(Eternity2_GenericMove& mv) const {
+bool SingletonMoveNeighborhoodExplorer::incrementPermutation(Eternity2_SingletonMove& mv) const {
   unsigned j = mv.getSize();
   unsigned i = mv.getSize() - 1;
 
@@ -297,9 +527,113 @@ bool GenericMoveNeighborhoodExplorer::incrementPermutation(Eternity2_GenericMove
 
 
 /*
+* Increments the permutation. 
+*/
+bool EvenChessboardMoveNeighborhoodExplorer::incrementPermutation(Eternity2_EvenChessboardMove& mv) const {
+  unsigned j = mv.getSize();
+  unsigned i = mv.getSize() - 1;
+
+  while (i > 0 && mv.getIndexAt(i-1) >= mv.getIndexAt(i)) 
+     i--; 
+  if (i == 0) //All the elements are in decreasing order
+    return false;
+
+  // (i-1) is the first decreasing elements from the end
+  while (mv.getIndexAt(j-1) <= mv.getIndexAt(i-1))
+    j--;
+  mv.swap(i-1, j-1);
+  i++;
+  j = mv.getSize();
+
+  // revert the elements in the tail of the array
+  while (i < j){
+      mv.swap(i-1, j-1);
+      i++;
+      j--;
+  }
+  //setting to 0 all the orientations
+  for(unsigned c = 0; c < mv.getSize(); c++){
+    mv.setOrientation(c,0);
+  }
+  return true;
+}
+
+/*
+* Increments the permutation. 
+*/
+bool OddChessboardMoveNeighborhoodExplorer::incrementPermutation(Eternity2_OddChessboardMove& mv) const {
+  unsigned j = mv.getSize();
+  unsigned i = mv.getSize() - 1;
+
+  while (i > 0 && mv.getIndexAt(i-1) >= mv.getIndexAt(i)) 
+     i--; 
+  if (i == 0) //All the elements are in decreasing order
+    return false;
+
+  // (i-1) is the first decreasing elements from the end
+  while (mv.getIndexAt(j-1) <= mv.getIndexAt(i-1))
+    j--;
+  mv.swap(i-1, j-1);
+  i++;
+  j = mv.getSize();
+
+  // revert the elements in the tail of the array
+  while (i < j){
+      mv.swap(i-1, j-1);
+      i++;
+      j--;
+  }
+  //setting to 0 all the orientations
+  for(unsigned c = 0; c < mv.getSize(); c++){
+    mv.setOrientation(c,0);
+  }
+  return true;
+}
+
+
+
+
+
+
+
+/*
 * Computes the delta-cost of the move "mv" component by component.
 */
-int GenericMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_GenericMove& mv) const
+int SingletonMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_SingletonMove& mv) const
+{
+  int cost = 0;
+  vector<Coord> coords = mv.getCoordinates();
+  for(unsigned c = 0; c < coords.size(); c++){
+    Coord xy = coords.at(c);
+    cost -= deltaSingleTileCost(st.getIDOAt(xy), xy, st); //before
+    
+    IDO new_ido = pair<ID,Orientation>( st.getIDOAt(coords.at(mv.getIndexAt(c))).first, mv.getOrientationAt(c));
+    cost += deltaSingleTileCost(new_ido, xy, st); //after
+  }
+  return cost;
+}
+
+/*
+* Computes the delta-cost of the move "mv" component by component.
+*/
+int EvenChessboardMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_EvenChessboardMove& mv) const
+{
+  int cost = 0;
+  vector<Coord> coords = mv.getCoordinates();
+  for(unsigned c = 0; c < coords.size(); c++){
+    Coord xy = coords.at(c);
+    cost -= deltaSingleTileCost(st.getIDOAt(xy), xy, st); //before
+    
+    IDO new_ido = pair<ID,Orientation>( st.getIDOAt(coords.at(mv.getIndexAt(c))).first, mv.getOrientationAt(c));
+    cost += deltaSingleTileCost(new_ido, xy, st); //after
+  }
+  return cost;
+}
+
+/*
+* Computes the delta-cost of the move "mv" component by component.
+*/
+int OddChessboardMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_OddChessboardMove& mv) const
 {
   int cost = 0;
   vector<Coord> coords = mv.getCoordinates();
@@ -314,10 +648,131 @@ int GenericMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, c
 }
 
 
+
+
+
 /*
 * Computes the cost of a single tile, given its orientation and a state.
 */
-int GenericMoveDeltaCostComponent::deltaSingleTileCost(IDO ido, Coord crd, const Eternity2_State& st) const {
+int SingletonMoveDeltaCostComponent::deltaSingleTileCost(IDO ido, Coord crd, const Eternity2_State& st) const {
+  unsigned cost = 0;
+  unsigned r = crd.first;
+  unsigned c = crd.second;
+  for(unsigned cp = 0; cp < 4; cp++){
+    Color color_crd = st.getColor(ido,cp);
+    //Nord border
+    if(r == 0 && cp == 2){
+      if( color_crd != 0 )
+        cost++;
+    }
+    //Sud border
+    if(r == st.getHeight()-1 && cp == 0){
+      if( color_crd != 0 )
+        cost++;
+    }
+    //Ovest border
+    if(c == 0 && cp == 1){
+      if( color_crd != 0 )
+        cost++;
+    }
+    //Est border
+    if(c == st.getWidth()-1 && cp == 3){
+      if( color_crd != 0 )
+        cost++;
+    }
+        
+    //Inner borders
+    if(r != st.getHeight()-1 && cp == 0){
+      IDO ido_sud = st.getIDOAt( pair<unsigned,unsigned>(r+1,c) );
+      Color color_sud = st.getColor(ido_sud,2);
+      if( color_crd != color_sud )
+        cost++;
+    }
+    else if(c != 0 && cp == 1){
+      IDO ido_ovest = st.getIDOAt( pair<unsigned,unsigned>(r,c-1) );
+      Color color_ovest = st.getColor(ido_ovest,3);
+      if( color_crd != color_ovest )
+        cost++;
+    }
+    else if(r != 0 && cp == 2){
+      IDO ido_nord = st.getIDOAt( pair<unsigned,unsigned>(r-1,c) );
+      Color color_nord = st.getColor(ido_nord,0);
+      if( color_crd != color_nord )
+        cost++;
+    }
+    else if(c != st.getWidth()-1 && cp == 3){
+      IDO ido_est = st.getIDOAt( pair<unsigned,unsigned>(r,c+1) );
+      Color color_est = st.getColor(ido_est,1);
+      if( color_crd != color_est )
+        cost++;
+    }
+  }
+  return cost;
+}
+
+/*
+* Computes the cost of a single tile, given its orientation and a state.
+*/
+int EvenChessboardMoveDeltaCostComponent::deltaSingleTileCost(IDO ido, Coord crd, const Eternity2_State& st) const {
+  unsigned cost = 0;
+  unsigned r = crd.first;
+  unsigned c = crd.second;
+  for(unsigned cp = 0; cp < 4; cp++){
+    Color color_crd = st.getColor(ido,cp);
+    //Nord border
+    if(r == 0 && cp == 2){
+      if( color_crd != 0 )
+        cost++;
+    }
+    //Sud border
+    if(r == st.getHeight()-1 && cp == 0){
+      if( color_crd != 0 )
+        cost++;
+    }
+    //Ovest border
+    if(c == 0 && cp == 1){
+      if( color_crd != 0 )
+        cost++;
+    }
+    //Est border
+    if(c == st.getWidth()-1 && cp == 3){
+      if( color_crd != 0 )
+        cost++;
+    }
+        
+    //Inner borders
+    if(r != st.getHeight()-1 && cp == 0){
+      IDO ido_sud = st.getIDOAt( pair<unsigned,unsigned>(r+1,c) );
+      Color color_sud = st.getColor(ido_sud,2);
+      if( color_crd != color_sud )
+        cost++;
+    }
+    else if(c != 0 && cp == 1){
+      IDO ido_ovest = st.getIDOAt( pair<unsigned,unsigned>(r,c-1) );
+      Color color_ovest = st.getColor(ido_ovest,3);
+      if( color_crd != color_ovest )
+        cost++;
+    }
+    else if(r != 0 && cp == 2){
+      IDO ido_nord = st.getIDOAt( pair<unsigned,unsigned>(r-1,c) );
+      Color color_nord = st.getColor(ido_nord,0);
+      if( color_crd != color_nord )
+        cost++;
+    }
+    else if(c != st.getWidth()-1 && cp == 3){
+      IDO ido_est = st.getIDOAt( pair<unsigned,unsigned>(r,c+1) );
+      Color color_est = st.getColor(ido_est,1);
+      if( color_crd != color_est )
+        cost++;
+    }
+  }
+  return cost;
+}
+
+/*
+* Computes the cost of a single tile, given its orientation and a state.
+*/
+int OddChessboardMoveDeltaCostComponent::deltaSingleTileCost(IDO ido, Coord crd, const Eternity2_State& st) const {
   unsigned cost = 0;
   unsigned r = crd.first;
   unsigned c = crd.second;
@@ -381,7 +836,6 @@ int GenericMoveDeltaCostComponent::deltaSingleTileCost(IDO ido, Coord crd, const
 
 
 
-
 /*****************************************************************************
  * SingletonMove Neighborhood Explorer Methods
  *****************************************************************************/
@@ -389,7 +843,7 @@ int GenericMoveDeltaCostComponent::deltaSingleTileCost(IDO ido, Coord crd, const
 /*
 * Creates a random move: this is done exploiting the "Fisher-Yates Algorithm" for compute a random permutation.
 */
-void SingletonMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_GenericMove& mv) const  throw(EmptyNeighborhood)
+void SingletonMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_SingletonMove& mv) const  throw(EmptyNeighborhood)
 {
     mv.setCoordinates(st.random_singleton);
     mv.createPermutationVector(st.random_singleton.size());
@@ -409,7 +863,7 @@ void SingletonMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Et
 /*
 * It creates the first move.
 */
-void SingletonMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, Eternity2_GenericMove& mv) const  throw(EmptyNeighborhood)
+void SingletonMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, Eternity2_SingletonMove& mv) const  throw(EmptyNeighborhood)
 {
   mv.setCoordinates(st.random_singleton);
   mv.createPermutationVector(st.random_singleton.size());
@@ -437,7 +891,7 @@ void SingletonMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, Ete
 * Creates a random move: this is done exploiting the "Fisher-Yates Algorithm" for compute a random permutation.
 * It modifies the vectors "permutation" and "aux_perm" of the object "mv".
 */
-void EvenChessboardMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_GenericMove& mv) const  throw(EmptyNeighborhood)
+void EvenChessboardMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_EvenChessboardMove& mv) const  throw(EmptyNeighborhood)
 {   
   mv.setCoordinates(st.even_chessboard);
   mv.createPermutationVector(st.even_chessboard.size());
@@ -456,7 +910,7 @@ void EvenChessboardMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& s
 * It creates the first move, choosing from the state "st" the tiles (IDOs) in the coordinates written in the vector "coords".
 * This is the original/first permutation, corresponding to 0, 1, ..., N and all the orientations set to 0.
 */
-void EvenChessboardMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, Eternity2_GenericMove& mv) const  throw(EmptyNeighborhood)
+void EvenChessboardMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, Eternity2_EvenChessboardMove& mv) const  throw(EmptyNeighborhood)
 {
   mv.setCoordinates(st.even_chessboard);
   mv.createPermutationVector(st.even_chessboard.size());
@@ -483,7 +937,7 @@ void EvenChessboardMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st
 * Creates a random move: this is done exploiting the "Fisher-Yates Algorithm" for compute a random permutation.
 * It modifies the vectors "permutation" and "aux_perm" of the object "mv".
 */
-void OddChessboardMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_GenericMove& mv) const  throw(EmptyNeighborhood)
+void OddChessboardMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_OddChessboardMove& mv) const  throw(EmptyNeighborhood)
 {   
   mv.setCoordinates(st.odd_chessboard);
   mv.createPermutationVector(st.odd_chessboard.size());
@@ -502,7 +956,7 @@ void OddChessboardMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st
 * It creates the first move, choosing from the state "st" the tiles (IDOs) in the coordinates written in the vector "coords".
 * This is the original/first permutation, corresponding to 0, 1, ..., N and all the orientations set to 0.
 */
-void OddChessboardMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, Eternity2_GenericMove& mv) const  throw(EmptyNeighborhood)
+void OddChessboardMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, Eternity2_OddChessboardMove& mv) const  throw(EmptyNeighborhood)
 {
   mv.setCoordinates(st.odd_chessboard);
   mv.createPermutationVector(st.odd_chessboard.size());

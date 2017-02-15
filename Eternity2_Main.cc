@@ -49,7 +49,7 @@ int main(int argc, const char* argv[])
   ThreeTileStreakMoveNeighborhoodExplorer tts_nhe(in, Eternity2_sm);
   //3-modal neighborhood explorers:
     // singleton + odd-chessboard + even-chessboard
-    SetUnionNeighborhoodExplorer<Eternity2_Input, Eternity2_State, DefaultCostStructure<int>, decltype(singleton_nhe), decltype(tts_nhe), decltype(odd_chess_nhe)> 
+    SetUnionNeighborhoodExplorer<Eternity2_Input, Eternity2_State, DefaultCostStructure<int>, decltype(singleton_nhe), decltype(even_chess_nhe), decltype(odd_chess_nhe)> 
       seo_nhe(in, Eternity2_sm, "Singleton+Even+Odd", singleton_nhe, even_chess_nhe, odd_chess_nhe, { insert_ratio, (1-insert_ratio)/2 , (1-insert_ratio)/2 });
 
   Eternity2_OutputManager Eternity2_om(in);
@@ -64,16 +64,16 @@ int main(int argc, const char* argv[])
   tts_nhe.AddDeltaCostComponent(tts_move);
   
   // runners
-  HillClimbing<Eternity2_Input, Eternity2_State, Eternity2_GenericMove> Eternity2_hc(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveHillClimbing");
-  SteepestDescent<Eternity2_Input, Eternity2_State, Eternity2_GenericMove> Eternity2_sd(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSteepestDescent");
-  //SimulatedAnnealing<Eternity2_Input, Eternity2_State, Eternity2_GenericMove> Eternity2_sa(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSimulatedAnnealing");
-  SimulatedAnnealing<Eternity2_Input, Eternity2_State, decltype(seo_nhe)::MoveType> Eternity2_sa(in, Eternity2_sm, seo_nhe, "3-modal Move");
+  HillClimbing<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_hc(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveHillClimbing");
+  SteepestDescent<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_sd(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSteepestDescent");
+  //SimulatedAnnealing<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_sa(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSimulatedAnnealing");
+  SimulatedAnnealing<Eternity2_Input, Eternity2_State, decltype(seo_nhe)::MoveType> Eternity2_sa(in, Eternity2_sm, seo_nhe, "SEO_SA");
 
   // tester
   Tester<Eternity2_Input, Eternity2_Output, Eternity2_State> tester(in,Eternity2_sm,Eternity2_om);
-  MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_GenericMove> singleton_move_test(in,Eternity2_sm,Eternity2_om,singleton_nhe, "Singleton Move", tester);
-  MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_GenericMove> even_chessboard_move_test(in,Eternity2_sm,Eternity2_om,even_chess_nhe, "Even Chessboard Move", tester);
-  MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_GenericMove> odd_chessboard_move_test(in,Eternity2_sm,Eternity2_om,odd_chess_nhe, "Odd Chessboard Move", tester);
+  MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_SingletonMove> singleton_move_test(in,Eternity2_sm,Eternity2_om,singleton_nhe, "Singleton Move", tester);
+  MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_EvenChessboardMove> even_chessboard_move_test(in,Eternity2_sm,Eternity2_om,even_chess_nhe, "Even Chessboard Move", tester);
+  MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_OddChessboardMove> odd_chessboard_move_test(in,Eternity2_sm,Eternity2_om,odd_chess_nhe, "Odd Chessboard Move", tester);
   MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_ThreeTileStreakMove> tts_move_test(in,Eternity2_sm,Eternity2_om,tts_nhe, "Three Tiles Streak Move", tester);
   
   SimpleLocalSearch<Eternity2_Input, Eternity2_Output, Eternity2_State> Eternity2_solver(in, Eternity2_sm, Eternity2_om, "Eternity2 solver");
