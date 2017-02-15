@@ -194,7 +194,6 @@ void GenericMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eterni
   forceUpdate(st);
   //creating the graph
   vector<vector<pair<int,Orientation>>> graph = createGraph(st, mv);
-  // ...
   //calling the hungarian algorithm
   vector<int> match = hungarianAlgorithm(graph);
   //creating the move
@@ -723,8 +722,6 @@ bool ThreeTileStreakMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State
 
 void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const
 {
-    updateCoords(st);
-
     vector<tuple<tileMove,tileMove,tileMove,int>> changes = mv.computeSimpleMoves(st);
 
     for (int i = 0; i < changes.size(); ++i)
@@ -733,12 +730,13 @@ void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, cons
         st.insertTile(std::get<1>(changes[i]).first,std::get<1>(changes[i]).second);
         st.insertTile(std::get<2>(changes[i]).first,std::get<2>(changes[i]).second);
     }
+    updateCoords(st);    
 }
 
 
 
 
-bool ThreeTileStreakMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_ThreeTileStreakMove& mv) const{
+void ThreeTileStreakMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_ThreeTileStreakMove& mv) const{
   forceUpdate(st);
   //creating the graph
   vector<vector<pair<int,Orientation>>> graph;// = createGraph(st, mv);
@@ -747,7 +745,6 @@ bool ThreeTileStreakMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st
   vector<int> match = hungarianAlgorithm(graph);
   //creating the move
   // ...
-  return true;
 }
 
 

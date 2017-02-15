@@ -1,4 +1,5 @@
 #include "Eternity2_Helpers.hh"
+#include "easylocal/helpers/multimodalneighborhoodexplorer.hh"
 
 using namespace EasyLocal::Debug;
 
@@ -15,7 +16,9 @@ int main(int argc, const char* argv[])
   Parameter<string> init_state("init_state", "Initial state (to be read from file)", main_parameters);
   Parameter<unsigned> observer("observer", "Attach the observers", main_parameters);
   Parameter<string> output_file("output_file", "Write the output to a file (filename required)", main_parameters);
- 
+  Parameter<double> insert_ratio("insert_ratio", "Ratio of Insert moves", main_parameters);
+  insert_ratio = 0.5;
+
   // 3rd parameter: false = do not check unregistered parameters
   // 4th parameter: true = silent
   CommandLineParameters::Parse(argc, argv, false, true);  
@@ -44,6 +47,10 @@ int main(int argc, const char* argv[])
   EvenChessboardMoveNeighborhoodExplorer even_chess_nhe(in, Eternity2_sm);
   OddChessboardMoveNeighborhoodExplorer odd_chess_nhe(in, Eternity2_sm);
   ThreeTileStreakMoveNeighborhoodExplorer tts_nhe(in, Eternity2_sm);
+  //3-modal neighborhood explorers:
+    // singleton + odd-chessboard + even-chessboard
+    SetUnionNeighborhoodExplorer<Eternity2_Input, Eternity2_State, DefaultCostStructure<int>, decltype(singleton_nhe), decltype(tts_nhe), decltype(odd_chess_nhe)> 
+      seo_nhe(in, Eternity2_sm, "Singleton+Even+Odd", singleton_nhe, even_chess_nhe, odd_chess_nhe, { insert_ratio, (1-insert_ratio)/2 , (1-insert_ratio)/2 });
 
   Eternity2_OutputManager Eternity2_om(in);
   
@@ -59,7 +66,8 @@ int main(int argc, const char* argv[])
   // runners
   HillClimbing<Eternity2_Input, Eternity2_State, Eternity2_GenericMove> Eternity2_hc(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveHillClimbing");
   SteepestDescent<Eternity2_Input, Eternity2_State, Eternity2_GenericMove> Eternity2_sd(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSteepestDescent");
-  SimulatedAnnealing<Eternity2_Input, Eternity2_State, Eternity2_GenericMove> Eternity2_sa(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSimulatedAnnealing");
+  //SimulatedAnnealing<Eternity2_Input, Eternity2_State, Eternity2_GenericMove> Eternity2_sa(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSimulatedAnnealing");
+  SimulatedAnnealing<Eternity2_Input, Eternity2_State, decltype(seo_nhe)::MoveType> Eternity2_sa(in, Eternity2_sm, seo_nhe, "3-modal Move");
 
   // tester
   Tester<Eternity2_Input, Eternity2_Output, Eternity2_State> tester(in,Eternity2_sm,Eternity2_om);

@@ -93,7 +93,7 @@ void Eternity2_State::singletonRandomCoords(){
 }
 
 void Eternity2_State::ttsRandomCoords(){
-
+  
   random_tts = vector<pair<Coord,int> >();
   int i,j,rnd;
   vector<vector<bool>> feas_board(in.getHeight(),vector<bool>(in.getWidth(),0));
@@ -122,13 +122,13 @@ void Eternity2_State::ttsRandomCoords(){
                     feas_board[i][j] = 1;
                     feas_board[i - rnd][j + rnd - 1] = 1;
                     feas_board[i + rnd][j - rnd + 1] = 1;
-                    
+
                     random_tts.push_back(make_pair(make_pair( (unsigned int)i, (unsigned int)j ),rnd));
                }
           }
       }
   }
-
+  
 }
 
 
