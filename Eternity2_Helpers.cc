@@ -153,6 +153,7 @@ bool GenericMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st, co
 */
 void GenericMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_GenericMove& mv) const
 {
+  updateCoords(st);
   vector<Coord> coords = mv.getCoordinates();
   vector<IDO> old_tiles = vector<IDO>(coords.size());
   for(unsigned c = 0; c < coords.size(); c++){
@@ -163,6 +164,13 @@ void GenericMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eterni
     st.insertTile(old_tiles.at(mv.getIndexAt(c)), coords.at(c));
   }
 }  
+
+
+
+void GenericMoveNeighborhoodExplorer::updateCoords(Eternity2_State& st) const {
+  if( st.singleton_counter % 10 == 0 )
+    st.singletonRandomCoords();
+}
 
 
 
@@ -179,6 +187,61 @@ bool GenericMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Eterni
   }
   return false;
 }
+
+
+
+void GenericMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_GenericMove& mv) const{
+  forceUpdate(st);
+  //creating the graph
+  vector<vector<pair<int,Orientation>>> graph = createGraph(st, mv);
+  // ...
+  //calling the hungarian algorithm
+  vector<int> match = hungarianAlgorithm(graph);
+  //creating the move
+  createMove(mv, match, graph);
+}
+
+
+void GenericMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& st) const {
+  st.singleton_counter = 0;
+}
+
+
+void GenericMoveNeighborhoodExplorer::createMove(Eternity2_GenericMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const {
+  for(int i = 0; i < match.size(); ++i){
+    mv.setIndex(i, match[i]);
+    mv.setOrientation(i, graph[i][match[i]].second);
+  }
+}
+
+
+vector<vector<pair<int,Orientation>>> GenericMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st, Eternity2_GenericMove& mv) const{
+  bool stop;
+  pair<int,Orientation> best_weight;
+  vector<Coord> mv_coords = mv.getCoordinates();
+  //declaring the matrix
+  vector<vector<pair<int,Orientation>>> graph = vector<vector<pair<int,Orientation>>>(mv_coords.size());
+  //filling the matrix
+  for(int r = 0; r < graph.size(); ++r){
+    graph[r] = vector<pair<int,Orientation>>(graph.size());
+    IDO old_tile = st.getIDOAt(mv_coords[r]);
+    for(int c = 0; c < graph.size(); ++c){
+      stop = false;
+      old_tile.second = 0;
+      best_weight.first = singleTileCost(old_tile, mv_coords[c], st);
+      for(int i = 1; i < 3; i++){
+        old_tile.second = i;
+        best_weight.first = std::min( singleTileCost(old_tile, mv_coords[c], st), best_weight.first );
+        best_weight.second = i;
+      }
+      graph[r][c] = best_weight;
+    }
+  }
+  return graph;
+}
+
+
+
 
 
 /*
@@ -243,10 +306,70 @@ int GenericMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, c
   vector<Coord> coords = mv.getCoordinates();
   for(unsigned c = 0; c < coords.size(); c++){
     Coord xy = coords.at(c);
-    cost -= singleTileCost(st.getIDOAt(xy), xy, st); //before
+    cost -= deltaSingleTileCost(st.getIDOAt(xy), xy, st); //before
     
     IDO new_ido = pair<ID,Orientation>( st.getIDOAt(coords.at(mv.getIndexAt(c))).first, mv.getOrientationAt(c));
-    cost += singleTileCost(new_ido, xy, st); //after
+    cost += deltaSingleTileCost(new_ido, xy, st); //after
+  }
+  return cost;
+}
+
+
+/*
+* Computes the cost of a single tile, given its orientation and a state.
+*/
+int GenericMoveDeltaCostComponent::deltaSingleTileCost(IDO ido, Coord crd, const Eternity2_State& st) const {
+  unsigned cost = 0;
+  unsigned r = crd.first;
+  unsigned c = crd.second;
+  for(unsigned cp = 0; cp < 4; cp++){
+    Color color_crd = st.getColor(ido,cp);
+    //Nord border
+    if(r == 0 && cp == 2){
+      if( color_crd != 0 )
+        cost++;
+    }
+    //Sud border
+    if(r == st.getHeight()-1 && cp == 0){
+      if( color_crd != 0 )
+        cost++;
+    }
+    //Ovest border
+    if(c == 0 && cp == 1){
+      if( color_crd != 0 )
+        cost++;
+    }
+    //Est border
+    if(c == st.getWidth()-1 && cp == 3){
+      if( color_crd != 0 )
+        cost++;
+    }
+        
+    //Inner borders
+    if(r != st.getHeight()-1 && cp == 0){
+      IDO ido_sud = st.getIDOAt( pair<unsigned,unsigned>(r+1,c) );
+      Color color_sud = st.getColor(ido_sud,2);
+      if( color_crd != color_sud )
+        cost++;
+    }
+    else if(c != 0 && cp == 1){
+      IDO ido_ovest = st.getIDOAt( pair<unsigned,unsigned>(r,c-1) );
+      Color color_ovest = st.getColor(ido_ovest,3);
+      if( color_crd != color_ovest )
+        cost++;
+    }
+    else if(r != 0 && cp == 2){
+      IDO ido_nord = st.getIDOAt( pair<unsigned,unsigned>(r-1,c) );
+      Color color_nord = st.getColor(ido_nord,0);
+      if( color_crd != color_nord )
+        cost++;
+    }
+    else if(c != st.getWidth()-1 && cp == 3){
+      IDO ido_est = st.getIDOAt( pair<unsigned,unsigned>(r,c+1) );
+      Color color_est = st.getColor(ido_est,1);
+      if( color_crd != color_est )
+        cost++;
+    }
   }
   return cost;
 }
@@ -268,7 +391,7 @@ int GenericMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, c
 * Creates a random move: this is done exploiting the "Fisher-Yates Algorithm" for compute a random permutation.
 */
 void SingletonMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_GenericMove& mv) const  throw(EmptyNeighborhood)
-{   
+{
     mv.setCoordinates(st.random_singleton);
     mv.createPermutationVector(st.random_singleton.size());
     
@@ -278,6 +401,8 @@ void SingletonMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Et
       mv.setIndex(c, rdm_perm.at(c));
       mv.setOrientation(c, Random::Int(0,3));
     }
+
+    st.singleton_counter++;
 } 
 
 
@@ -408,6 +533,7 @@ void OddChessboardMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st,
 // is achieved using Fisher-Yates shuffle algorithm.
 void ThreeTileStreakMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_ThreeTileStreakMove& mv) const throw(EmptyNeighborhood)
 {
+    mv.setCoordinates(st.random_tts);
     int i,r;
     vector<pair<unsigned,int>> perm = vector<pair<unsigned,int>>(st.random_tts.size());
     vector<unsigned> rand_perm = FisherYatesShuffle(st.random_tts.size());
@@ -419,6 +545,8 @@ void ThreeTileStreakMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& 
     }
 
     mv.setPermutation(perm);
+
+    st.tts_counter++;
 } 
 
 
@@ -427,6 +555,7 @@ void ThreeTileStreakMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& 
 // First permutation of the three-tile streaks, corresponding to the sequence 1,2,...,n, with standard orientation (0).
 void ThreeTileStreakMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, Eternity2_ThreeTileStreakMove& mv) const  throw(EmptyNeighborhood)
 {
+    mv.setCoordinates(st.random_tts);
     vector<pair<unsigned,int>> perm = vector<pair<unsigned,int>>(st.random_tts.size());
 
     for (int i = 0; i < st.random_tts.size(); ++i)
@@ -500,9 +629,102 @@ bool ThreeTileStreakMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State
 //      |     |     |     |                  |     |     |     |
 //      -------------------                  -------------------
 //         horizontal (0)                       horizontal (0)
+//
+//            -------                              -------
+//            |     |                              |     |
+//            |  1  |                              |  1  |
+//            |     |                              |     |
+//            -------                              -------
+//            |     |          direct (0)          |     |
+//            |  c  |         ----------->         |  c  |
+//            |     |                              |     |
+//            -------                              -------
+//            |     |                              |     |
+//            |  2  |                              |  2  |
+//            |     |                              |     |
+//            -------                              -------
+//          vertical (1)                         vertical (1)
+//
+//            -------                              -------
+//            |     |                              |     |
+//            |  1  |                              |  2  |
+//            |     |                              |     |
+//            -------                              -------
+//            |     |          inverse (1)         |     |
+//            |  c  |         ----------->         |  c  |
+//            |     |                              |     |
+//            -------                              -------
+//            |     |                              |     |
+//            |  2  |                              |  1  |
+//            |     |                              |     |
+//            -------                              -------
+//          vertical (1)                         vertical (1)
+//
+//                                                 -------
+//                                                 |     |
+//                                                 |  1  |
+//                                                 |     |
+//      -------------------                        -------
+//      |     |     |     |    direct (0)          |     |
+//      |  1  |  c  |  2  |   ----------->         |  c  |
+//      |     |     |     |                        |     |
+//      -------------------                        -------
+//                                                 |     |
+//                                                 |  2  |
+//                                                 |     |
+//                                                 -------
+//         horizontal (0)                        vertical (1)
+//
+//                                                 -------
+//                                                 |     |
+//                                                 |  2  |
+//                                                 |     |
+//      -------------------                        -------
+//      |     |     |     |    inverse (1)         |     |
+//      |  1  |  c  |  2  |   ----------->         |  c  |
+//      |     |     |     |                        |     |
+//      -------------------                        -------
+//                                                 |     |
+//                                                 |  1  |
+//                                                 |     |
+//                                                 -------
+//         horizontal (0)                        vertical (1)
+//
+//            -------
+//            |     |
+//            |  1  |
+//            |     |
+//            -------                        -------------------
+//            |     |          direct (0)    |     |     |     |
+//            |  c  |         ----------->   |  1  |  c  |  2  |
+//            |     |                        |     |     |     |
+//            -------                        -------------------
+//            |     |
+//            |  2  |
+//            |     |
+//            -------
+//          vertical (1)                        horizontal (0)
+//
+//            -------
+//            |     |
+//            |  2  |
+//            |     |
+//            -------                        -------------------
+//            |     |          inverse (1)   |     |     |     |
+//            |  c  |         ----------->   |  1  |  c  |  2  |
+//            |     |                        |     |     |     |
+//            -------                        -------------------
+//            |     |
+//            |  1  |
+//            |     |
+//            -------
+//          vertical (1)                        horizontal (0)
+//
 
 void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const
 {
+    updateCoords(st);
+
     vector<tuple<tileMove,tileMove,tileMove,int>> changes = mv.computeSimpleMoves(st);
 
     for (int i = 0; i < changes.size(); ++i)
@@ -513,16 +735,109 @@ void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, cons
     }
 }
 
+
+
+
+bool ThreeTileStreakMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_ThreeTileStreakMove& mv) const{
+  forceUpdate(st);
+  //creating the graph
+  vector<vector<pair<int,Orientation>>> graph;// = createGraph(st, mv);
+  // ...
+  //calling the hungarian algorithm
+  vector<int> match = hungarianAlgorithm(graph);
+  //creating the move
+  // ...
+  return true;
+}
+
+
+void ThreeTileStreakMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& st) const {
+  st.tts_counter = 0;
+}
+
+
+
+
+
+void ThreeTileStreakMoveNeighborhoodExplorer::updateCoords(Eternity2_State& st) const {
+  if( st.tts_counter % 10 == 0 )
+    st.ttsRandomCoords();
+}
+
+
+// Checks for color violation, given a 'tileMove' and a cardinal point.
+void checkColor(int& cost, const Eternity2_State& st, tileMove m, CardinalPoint cp)
+{
+    int adj_color = 0; // "= 0" to avoid warnings
+    Coord c;
+
+    switch (cp)
+    {
+      case NORTH: 
+          if (m.second.first == 0)
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(m.second.first - 1,m.second.second);
+              adj_color = st.getColor(st.getIDOAt(c),SOUTH);
+          }
+          break;
+
+      case SOUTH: 
+          if (m.second.first + 1 >= st.getHeight())
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(m.second.first + 1,m.second.second);
+              adj_color = st.getColor(st.getIDOAt(c),NORTH);
+          }
+          break;
+
+      case WEST:
+          if (m.second.second == 0)
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(m.second.first,m.second.second - 1);
+              adj_color = st.getColor(st.getIDOAt(c),EAST);
+          }
+          break;
+
+      case EAST: 
+          if (m.second.second + 1 >= st.getWidth())
+          {
+              adj_color = 0;
+          
+          } else {
+
+              c = make_pair(m.second.first,m.second.second + 1);
+              adj_color = st.getColor(st.getIDOAt(c),WEST);
+          }
+          break;
+
+      default:
+          std::cerr << "Invalid Cardinal Point: " << cp;
+    }
+
+    cost += (st.getColor(m.first,cp) != adj_color);
+    cost -= (st.getColor(st.getIDOAt(m.second),cp) != adj_color);
+}
+
+
 // Computes the delta-cost of a TTS move. The method first converts tts moves into
-// simple tile-wise moves, and then calls the 'singleTileCost' method.
-// This will also consider violations inside the same tile streak. At first this may
-// seem wrong, but in the end will promote the best positioning of well formed
-// streaks, since a streak without internal violations will have lower cost.
+// simple tile-wise moves, and then checks all the cardinal points involved (without
+// checking internal violations).
 int ThreeTileStreakMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const
 {
-    int adj_color,i,cost = 0;
-    Coord c;
+    int i,cost = 0;
     vector<tuple<tileMove,tileMove,tileMove,int>> changes = mv.computeSimpleMoves(st);
+
     for (i = 0; i < changes.size(); ++i)
     {
         if(std::get<3>(changes[i]))
@@ -531,229 +846,56 @@ int ThreeTileStreakMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_Stat
 
           ////// Upper tile //////
           // NORTH
-          if (std::get<0>(changes[i]).second.first == 0)
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<0>(changes[i]).second.first - 1,std::get<0>(changes[i]).second.second);
-              adj_color = st.getColor(st.getIDOAt(c),SOUTH);
-          }
-          cost += (st.getColor(std::get<0>(changes[i]).first,NORTH) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),NORTH) != adj_color);
-
+          checkColor(cost, st, std::get<0>(changes[i]), NORTH);
           // WEST
-          if (std::get<0>(changes[i]).second.second == 0)
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<0>(changes[i]).second.first,std::get<0>(changes[i]).second.second - 1);
-              adj_color = st.getColor(st.getIDOAt(c),EAST);
-          }
-          cost += (st.getColor(std::get<0>(changes[i]).first,WEST) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),WEST) != adj_color);
-
+          checkColor(cost, st, std::get<0>(changes[i]), WEST);
           // EAST
-          if (std::get<0>(changes[i]).second.second + 1 >= st.getWidth())
-          {
-              adj_color = 0;
+          checkColor(cost, st, std::get<0>(changes[i]), EAST);
           
-          } else {
-
-              c = make_pair(std::get<0>(changes[i]).second.first,std::get<0>(changes[i]).second.second + 1);
-              adj_color = st.getColor(st.getIDOAt(c),WEST);
-          }
-          cost += (st.getColor(std::get<0>(changes[i]).first,EAST) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),EAST) != adj_color);
-
           ////// Middle tile //////
           // WEST
-          if (std::get<1>(changes[i]).second.second == 0)
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<1>(changes[i]).second.first,std::get<1>(changes[i]).second.second - 1);
-              adj_color = st.getColor(st.getIDOAt(c),EAST);
-          }
-          cost += (st.getColor(std::get<1>(changes[i]).first,WEST) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<1>(changes[i]).second),WEST) != adj_color);
-
+          checkColor(cost, st, std::get<1>(changes[i]), WEST);
           // EAST
-          if (std::get<1>(changes[i]).second.second + 1 >= st.getWidth())
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<1>(changes[i]).second.first,std::get<1>(changes[i]).second.second + 1);
-              adj_color = st.getColor(st.getIDOAt(c),WEST);
-          }
-          cost += (st.getColor(std::get<1>(changes[i]).first,EAST) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<1>(changes[i]).second),EAST) != adj_color);
+          checkColor(cost, st, std::get<1>(changes[i]), EAST);
 
           ////// Lower tile //////
           // WEST
-          if (std::get<2>(changes[i]).second.second == 0)
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<2>(changes[i]).second.first,std::get<2>(changes[i]).second.second - 1);
-              adj_color = st.getColor(st.getIDOAt(c),EAST);
-          }
-          cost += (st.getColor(std::get<2>(changes[i]).first,WEST) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),WEST) != adj_color);
-
+          checkColor(cost, st, std::get<2>(changes[i]), WEST);
           // EAST
-          if (std::get<2>(changes[i]).second.second + 1 >= st.getWidth())
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<2>(changes[i]).second.first,std::get<2>(changes[i]).second.second + 1);
-              adj_color = st.getColor(st.getIDOAt(c),WEST);
-          }
-          cost += (st.getColor(std::get<2>(changes[i]).first,EAST) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),EAST) != adj_color);
-
+          checkColor(cost, st, std::get<2>(changes[i]), EAST);
           // SOUTH
-          if (std::get<2>(changes[i]).second.first + 1 >= st.getHeight())
-          {
-              adj_color = 0;
+          checkColor(cost, st, std::get<2>(changes[i]), SOUTH);
           
-          } else {
-
-              c = make_pair(std::get<2>(changes[i]).second.first + 1,std::get<2>(changes[i]).second.second);
-              adj_color = st.getColor(st.getIDOAt(c),NORTH);
-          }
-          cost += (st.getColor(std::get<2>(changes[i]).first,SOUTH) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),SOUTH) != adj_color);
-
-
         } else {
 
           // Streak horizontally oriented
 
           ////// Left Tile //////
           // NORTH
-          if (std::get<0>(changes[i]).second.first == 0)
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<0>(changes[i]).second.first - 1,std::get<0>(changes[i]).second.second);
-              adj_color = st.getColor(st.getIDOAt(c),SOUTH);
-          }
-          cost += (st.getColor(std::get<0>(changes[i]).first,NORTH) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),NORTH) != adj_color);
-
+          checkColor(cost, st, std::get<0>(changes[i]), NORTH);
           // WEST
-          if (std::get<0>(changes[i]).second.second == 0)
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<0>(changes[i]).second.first,std::get<0>(changes[i]).second.second - 1);
-              adj_color = st.getColor(st.getIDOAt(c),EAST);
-          }
-          cost += (st.getColor(std::get<0>(changes[i]).first,WEST) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),WEST) != adj_color);
-
+          checkColor(cost, st, std::get<0>(changes[i]), WEST);
           // SOUTH
-          if (std::get<0>(changes[i]).second.first + 1 >= st.getHeight())
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<0>(changes[i]).second.first + 1,std::get<0>(changes[i]).second.second);
-              adj_color = st.getColor(st.getIDOAt(c),NORTH);
-          }
-          cost += (st.getColor(std::get<0>(changes[i]).first,SOUTH) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<0>(changes[i]).second),SOUTH) != adj_color);
-          
+          checkColor(cost, st, std::get<0>(changes[i]), SOUTH);
+                    
           ////// Middle Tile //////
           // NORTH
-          if (std::get<1>(changes[i]).second.first == 0)
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<1>(changes[i]).second.first - 1,std::get<1>(changes[i]).second.second);
-              adj_color = st.getColor(st.getIDOAt(c),SOUTH);
-          }
-          cost += (st.getColor(std::get<1>(changes[i]).first,NORTH) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<1>(changes[i]).second),NORTH) != adj_color);
-
+          checkColor(cost, st, std::get<1>(changes[i]), NORTH);
           // SOUTH
-          if (std::get<1>(changes[i]).second.first + 1 >= st.getHeight())
-          {
-              adj_color = 0;
+          checkColor(cost, st, std::get<1>(changes[i]), SOUTH);
           
-          } else {
-
-              c = make_pair(std::get<1>(changes[i]).second.first + 1,std::get<1>(changes[i]).second.second);
-              adj_color = st.getColor(st.getIDOAt(c),NORTH);
-          }
-          cost += (st.getColor(std::get<1>(changes[i]).first,SOUTH) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<1>(changes[i]).second),SOUTH) != adj_color);
-
           ////// Right Tile //////
           // NORTH
-          if (std::get<2>(changes[i]).second.first == 0)
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<2>(changes[i]).second.first - 1,std::get<2>(changes[i]).second.second);
-              adj_color = st.getColor(st.getIDOAt(c),SOUTH);
-          }
-          cost += (st.getColor(std::get<2>(changes[i]).first,NORTH) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),NORTH) != adj_color);
-
+          checkColor(cost, st, std::get<0>(changes[i]), NORTH);
           // EAST
-          if (std::get<2>(changes[i]).second.second + 1 >= st.getWidth())
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<2>(changes[i]).second.first,std::get<2>(changes[i]).second.second + 1);
-              adj_color = st.getColor(st.getIDOAt(c),WEST);
-          }
-          cost += (st.getColor(std::get<2>(changes[i]).first,EAST) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),EAST) != adj_color);
-
-
+          checkColor(cost, st, std::get<0>(changes[i]), EAST);
           // SOUTH
-          if (std::get<2>(changes[i]).second.first + 1 >= st.getHeight())
-          {
-              adj_color = 0;
-          
-          } else {
-
-              c = make_pair(std::get<2>(changes[i]).second.first + 1,std::get<2>(changes[i]).second.second);
-              adj_color = st.getColor(st.getIDOAt(c),NORTH);
-          }
-          cost += (st.getColor(std::get<2>(changes[i]).first,SOUTH) != adj_color);
-          cost -= (st.getColor(st.getIDOAt(std::get<2>(changes[i]).second),SOUTH) != adj_color);
+          checkColor(cost, st, std::get<0>(changes[i]), SOUTH);
         }
     }
 
   return cost;
 }
-
 
 /***************************************************************************
  * Shared general purpose methods
@@ -1124,4 +1266,174 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
   
   return cost;
 }
-          
+
+/*
+* Implementation of the "Augmenting Path Algorithm"
+*/
+
+vector<int> hungarianAlgorithm(vector<vector<pair<int,Orientation>>>& m){
+  //modifing the rows of the matrix
+  int min;
+  for(int i=0; i< m.size(); ++i){
+    min = 0;
+    for(int j=1; j < m.size(); ++j)
+      min = (m[i][j].first < m[i][min].first) ? j : min;
+    for(int j=0; j< m.size(); ++j)
+      m[i][j].first -= m[i][min].first;
+  }
+
+  //modifing the columns of the matrix
+  for(int j=0; j < m.size(); ++j){
+    min = 0;
+    for(int i=0; i < m.size(); ++i)
+      min = (m[i][j].first < m[min][j].first) ? i : min;
+    for(int i=0; i < m.size(); ++i)
+      m[i][j].first -= m[min][j].first;
+  }
+
+  vector<int> match = vector<int>(m.size(), -1);
+  vector<int> inverse_match = vector<int>(m.size(), -1);
+  findMaxMatch(m, match, inverse_match);
+  while( not isPerfectMatching(match) ){
+    vector<int> zeros = vector<int> (2*m.size(), 0);
+    vector<bool> coveredLines = vector<bool>(2*m.size(), 0);
+
+    //filling the "zeros" vector
+    for(int r=0; r < m.size(); ++r)
+      for(int c=0; c < m.size(); ++c)
+        zeros[r] = zeros[c+m.size()] += (m[r][c].first == 0);
+
+    //filling the "coveredLines" vector
+    int max_index;
+    for(int i=0; i < match.size(); ++i){
+      if( match[i] != -1 ){
+        max_index = (zeros[i] > zeros[match[i]]) ? i : match[i];
+        coveredLines[max_index] = 1;
+      }
+    }
+
+    //finding the minimum uncovered entry
+    int min_entry = std::numeric_limits<int>::max();
+    for(int r = 0; r < m.size(); ++r)
+      if( not coveredLines[r] )
+        for(int c = 0; c < m.size(); ++c)
+          if( not coveredLines[c + m.size()] )
+            min_entry = std::min(min_entry, m[r][c].first);
+
+    //modifing rows and columns
+    for(int r=0; r < m.size(); ++r){
+      for(int c=0; c < m.size(); ++c){
+        if( not coveredLines[r] )
+          m[r][c].first -= min;
+        if( coveredLines[c + m.size()] )
+          m[r][c].first += min;
+      }
+    }
+
+    match = vector<int>(m.size(), -1);
+    findMaxMatch(m, match, inverse_match);
+  } //END_WHILE
+
+  return match;
+}
+
+
+
+
+bool isPerfectMatching(vector<int>& match){
+  int i;
+  for(i = 0; i < match.size() && match[i] != -1; ++i);
+  return i == match.size();
+}
+
+
+
+
+void findMaxMatch(vector<vector<pair<int,Orientation>>>& m, vector<int>& match, vector<int>& inverse_match){
+  vector<bool> s = vector<bool>(m.size(), 1);
+  vector<vector<bool>> a = vector<vector<bool>> (m.size());
+  //filling the "a" matrix
+  for(int i=0; i < m.size(); ++i){
+    a[i] = vector<bool>(m.size());
+    for(int j=0; j < m.size(); ++j){
+      a[i][j] = (m[i][j].first == 0) ? 1 : 0;
+    }
+  }
+  int free_node;
+  while( findFreeNode(match, s, free_node) )
+    DFS(s, a, match, inverse_match, free_node);
+}
+
+
+
+bool findFreeNode(vector<int>& match, vector<bool>& s, int& free_node){
+  for(int i=0; i < match.size(); ++i){
+    if( match[i] == -1  &&  s[i] ){
+      free_node = i;
+      return true;
+    }
+  }
+  return false;
+}
+
+
+
+void DFS(vector<bool>& s, vector<vector<bool>>& a, vector<int>& match, vector<int>& inverse_match, int x){
+  //initializing the colors
+  vector<DFSColor> colors = vector<DFSColor>(2 * match.size(), WHITE);
+  //initializing the precedences
+  vector<int> pi = vector<int>(2 * match.size(), -1);
+
+  DFS_Visit(x, 1, colors, pi, a, match);
+
+  if( not extractAP(pi, x, match, inverse_match) ){
+    s[x] = 0;
+    for(int i=0; i < match.size(); ++i)
+      if( pi[i] != -1 )
+        a[i][pi[i]] = 0;
+    for(int i = match.size(); i < 2 * match.size(); ++i)
+      if( pi[i] != -1 )
+        a[pi[i]][i] = 0;
+  }
+}
+
+
+
+void DFS_Visit(int x, bool parity, vector<DFSColor>& colors, vector<int>& pi, vector<vector<bool>>& a, vector<int>& match){
+  if(parity){
+    colors[x] = GREY;
+    for(int i=0; i < match.size(); ++i){
+      if( a[x][i]  &&  colors[i+match.size()] == WHITE  &&  match[x] != i ){
+        pi[i+match.size()] = x;
+        DFS_Visit(i, not parity, colors, pi, a, match);
+      }
+    }
+  }else{
+    colors[x+match.size()] = GREY;
+    for(int i=0; i < match.size(); ++i){
+      if( a[i][x]  &&  colors[i] == WHITE  &&  match[i] == x ){
+        pi[i] = x;
+        DFS_Visit(i, not parity, colors, pi, a, match);
+      }
+    }
+  }
+  colors[x] = BLACK;
+}
+
+
+
+bool extractAP(vector<int>& pi, int x, vector<int>& match, vector<int>& inverse_match){
+  int i;
+  for(i = match.size(); i < 2 * match.size() && ( inverse_match[i] != -1 || pi[i] == -1 ); ++i);
+  if( i == pi.size() ){
+    return false;
+  }else{
+    while( pi[i] != -1 ){
+      match[pi[i]] = i;
+      inverse_match[i] = pi[i];
+      i = pi[pi[i]];
+    }
+  }
+  return true;
+}
+

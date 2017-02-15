@@ -19,7 +19,7 @@ Eternity2_State::Eternity2_State(const Eternity2_Input &my_in)
     board.at(c) = vector<IDO> (in.getWidth());
   }
 
-  //Setting the coordinates for the Singleton Moves
+  //Setting the coordinates for the Generic Moves (Even-Chessboard and Odd-Chessboard)
   for(unsigned r = 0; r < in.getHeight(); r++){
     for(unsigned c = 0; c < in.getWidth(); c++){
       if( r % 2 == 0  &&  c % 2 == 0 )
@@ -34,6 +34,20 @@ Eternity2_State::Eternity2_State(const Eternity2_Input &my_in)
   }
 
   //Singleton Move
+  singleton_counter = 0;
+  singletonRandomCoords();
+
+
+  //ThreeTilesStreak
+  tts_counter = 0;
+  ttsRandomCoords();
+}
+
+
+
+void Eternity2_State::singletonRandomCoords(){
+  random_singleton = vector<Coord>();
+
   vector<vector<bool> > cover = vector<vector<bool> >(in.getHeight());
   int num_free = in.getHeight() * in.getWidth(); //All the cells are free
   for(unsigned r = 0; r < cover.size(); r++){
@@ -76,13 +90,49 @@ Eternity2_State::Eternity2_State(const Eternity2_Input &my_in)
       }
     } while( ! cover.at(rdm_pos_x).at(rdm_pos_y) );
   }
-
-
-  //ThreeTilesStreak
-  random_tts = vector<pair<Coord,int> >(2);
-  random_tts.at(0) = pair<Coord,int>(pair<unsigned,unsigned>(1,0),1);
-  random_tts.at(1) = pair<Coord,int>(pair<unsigned,unsigned>(1,2),1);
 }
+
+void Eternity2_State::ttsRandomCoords(){
+
+  random_tts = vector<pair<Coord,int> >();
+  int i,j,rnd;
+  vector<vector<bool>> feas_board(in.getHeight(),vector<bool>(in.getWidth(),0));
+  int pseudo_distribution = std::max((unsigned int)2,(in.getWidth() * in.getHeight()) / 6);
+
+  for (i = 0; i < in.getWidth(); ++i)
+  {
+      for ( j = 0; j < in.getHeight(); ++j)
+      {
+          if( ! Random::Int(0,pseudo_distribution-1))
+          {
+              rnd = Random::Int(0,1);
+
+              if (  !feas_board[i][j]
+                 && ((i - rnd) >= 0 && (j + rnd - 1) >= 0 && !feas_board[i - rnd][j + rnd - 1])
+                 && ((i + rnd) < in.getHeight() && (j - rnd + 1) < in.getWidth() && !feas_board[i + rnd][j - rnd + 1])
+                 && ((i + rnd - 1) < 0 || (j - rnd) < 0 || !feas_board[i + rnd - 1][j - rnd])
+                 && ((i - rnd + 1) >= in.getHeight() || (j + rnd) >= in.getWidth() || !feas_board[i - rnd + 1][j + rnd])
+                 && ((i - 2*rnd) < 0 || (j + 2*rnd - 2) < 0 || !feas_board[i - 2*rnd][j + 2*rnd - 2])
+                 && ((i + 2*rnd) >= in.getHeight() || (j - 2*rnd + 2) >= in.getWidth() || !feas_board[i + 2*rnd][j - 2*rnd + 2])
+                 && ((i - 1) < 0 || (j - 1) < 0 || !feas_board[i - 1][j - 1])
+                 && ((i - 1) < 0 || (j + 1) >= in.getWidth() || !feas_board[i - 1][j + 1])
+                 && ((i + 1) >= in.getHeight() || (j - 1) < 0 || !feas_board[i + 1][j - 1])
+                 && ((i + 1) >= in.getHeight() || (j + 1) >= in.getWidth() || !feas_board[i + 1][j + 1]))
+               {
+                    feas_board[i][j] = 1;
+                    feas_board[i - rnd][j + rnd - 1] = 1;
+                    feas_board[i + rnd][j - rnd + 1] = 1;
+                    
+                    random_tts.push_back(make_pair(make_pair( (unsigned int)i, (unsigned int)j ),rnd));
+               }
+          }
+      }
+  }
+
+}
+
+
+
 
 
 /*
@@ -242,20 +292,29 @@ bool operator<(const Eternity2_GenericMove& mv1, const Eternity2_GenericMove& mv
   return true;
 }
 
+/*
+* Reads a move from file. The syntax of the file is something like this:
+* (2,0) -> (0,1) 0
+* (1,2) -> (1,2) 1
+* (0,1) -> (2,0) 2
+*/
 istream& operator>>(istream& is, Eternity2_GenericMove& mv)
 {
-  // Insert the code that read a move
-  throw logic_error("operator>>(istream& is, Eternity2_GenericMove& mv) not implemented yet");	
+  throw logic_error("operator<(const Eternity2_GenericMove& mv1, const Eternity2_GenericMove& mv2) not implemented yet");
   return is;
 }
 
+
+/*
+* Print of the move.
+*/
 ostream& operator<<(ostream& os, const Eternity2_GenericMove& mv)
 {
   os << endl;
   for(unsigned crd = 0; crd < mv.coords.size(); crd++){
-    os << "(" << mv.coords.at(crd).first << "," << mv.coords.at(crd).second << ")   :   ";
-    os << "old position = (" << mv.coords.at( mv.permutation.at(crd).first ).first << "," << mv.coords.at( mv.permutation.at(crd).first ).second << ")";
-    os << "   orientation = " << mv.permutation.at(crd).second << endl;
+    os << "From: (" << mv.coords.at( mv.permutation.at(crd).first ).first << "," << mv.coords.at( mv.permutation.at(crd).first ).second << ")\t";
+    os << "To: (" << mv.coords.at(crd).first << "," << mv.coords.at(crd).second << ")\t";
+    os << "Orientation: " << mv.permutation.at(crd).second << endl;
   }
   return os;
 }
@@ -507,7 +566,7 @@ vector<vector<unsigned>> Eternity2_LMove::EllGeneration(const Eternity2_State& s
 
 
 Eternity2_SingletonMove::Eternity2_SingletonMove() : Eternity2_GenericMove() {
-
+ 
 };
 
 
@@ -622,9 +681,12 @@ istream& operator>>(istream& is, Eternity2_ThreeTileStreakMove& mv)
 
 ostream& operator<<(ostream& os, const Eternity2_ThreeTileStreakMove& mv)
 {
+    os << endl;
     for (int i = 0; i < mv.getSize(); ++i)
     {
-        os << i << "<-- <" << mv.getPermutation()[i].first << "," << mv.getPermutation()[i].second << ">" << endl;
+        os << "From: ("  << mv.getCoordinates()[mv.getPermutation()[i].first].first.first << "," << mv.getCoordinates()[mv.getPermutation()[i].first].first.second << ")\t"
+           << "To: " << "(" << mv.getCoordinates()[i].first.first << "," << mv.getCoordinates()[i].first.second << ")\t"
+           << "Dir/Inv: " << ((mv.getPermutation()[i].second) ? "Inverse" : "Direct") << endl;
     }
     return os;
 }

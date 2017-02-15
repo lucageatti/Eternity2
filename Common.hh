@@ -16,6 +16,8 @@ typedef int ID;
 
 typedef int Color;
 
+enum DFSColor { WHITE, GREY, BLACK };
+
 typedef int Orientation; // {0..3}
 
 typedef pair<ID,Orientation> IDO;

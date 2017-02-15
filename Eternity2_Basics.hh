@@ -18,11 +18,16 @@ public:
   unsigned getWidth() const { return board.at(0).size(); }
   void insertTile(IDO ido, Coord crd);
   Color getColor(IDO ido, CardinalPoint pc) const;
+  void singletonRandomCoords();
+  void ttsRandomCoords();
   //Coordinates for the moves
   vector<Coord> even_chessboard;
   vector<Coord> odd_chessboard;
   vector<Coord> random_singleton;
   vector<pair<Coord,int> > random_tts;
+  //Moves counters
+  mutable int singleton_counter;
+  mutable int tts_counter;
 protected:
   const Eternity2_Input & in;
   vector<vector<IDO> > board;
@@ -64,7 +69,7 @@ class Eternity2_GenericMove
 class Eternity2_SingletonMove : public Eternity2_GenericMove
 {
   public:
-    Eternity2_SingletonMove();  
+    Eternity2_SingletonMove(); 
 };
 
 
@@ -111,6 +116,9 @@ class Eternity2_ThreeTileStreakMove
     void setTTSPerm(int i, int j) { permutation[i].first = j; }
     void setTTSOrientation(int i, int o) { permutation[i].second = o; }
 
+    vector<pair<Coord,int>> getCoordinates() const { return coords; };
+    void setCoordinates(vector<pair<Coord,int>> new_coords) { coords = new_coords; }
+
     int getSize() const {return permutation.size(); }
 
     vector<tuple<tileMove,tileMove,tileMove,int>> computeSimpleMoves(const Eternity2_State& st) const;
@@ -121,7 +129,7 @@ class Eternity2_ThreeTileStreakMove
     // Needs to be initialized with 'setCoords' public method in 'firstMove'
     // and 'randomMove'. Not too reliable as a parameter, since we can't really
     // tell when it will be initialized.
-    // vector<Coord> coords;
+    vector<pair<Coord,int>> coords;
 
     // Move permutation
     vector<pair<unsigned,int>> permutation;
