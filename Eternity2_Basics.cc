@@ -352,6 +352,19 @@ Eternity2_LMove::Eternity2_LMove()
   ellMatrix = vector<vector<unsigned>>();
   ellSelection = vector<unsigned>();
   ells = 0;
+  unsigned temp[5][5] = {{5,5,2,3,5},{5,2,4,4,3},{2,4,0,4,4},{1,4,4,4,0},{5,1,4,0,5}};
+  for (int i = 0; i < 5; ++i){
+    for (int j = 0; j < 5; ++j)
+    {
+      placementMatrix[i][j]=temp[i][j];
+    }
+  }
+  /*HOLE_UL=0;
+  HOLE_UR=1;
+  HOLE_DR=2;
+  HOLE_DL=3;*/
+  NO_ELL=4;
+  ANY_ELL=5;
 }
 
 
@@ -414,22 +427,22 @@ ostream& operator<<(ostream& os, const Eternity2_LMove& mv)
 * computed by modifying it at run-time.
 * This function essentially maps a position on a matrix into the corresponding
 * position in the rotated matrix, and adds something to the result.*/
-unsigned readPlacementMatrix(unsigned row, unsigned column, unsigned ell){
+unsigned Eternity2_LMove::readPlacementMatrix(unsigned row, unsigned column, unsigned ell){
   unsigned ret = 4; // NO_ELL
   unsigned rows = sizeof(Eternity2_LMove::placementMatrix);
   unsigned cols = sizeof(Eternity2_LMove::placementMatrix[0]);
   switch(ell){
     case 0:
-      ret = *Eternity2_LMove::placementMatrix[row,column];
+      ret = *placementMatrix[row,column];
       break;
     case 1:
-      ret = *Eternity2_LMove::placementMatrix[rows-1-column,row];
+      ret = *placementMatrix[rows-1-column,row];
       break;
     case 2:
-      ret = *Eternity2_LMove::placementMatrix[rows-1-row,cols-1-column];
+      ret = *placementMatrix[rows-1-row,cols-1-column];
       break;
     case 3:
-      ret = *Eternity2_LMove::placementMatrix[column,cols-1-row];
+      ret = *placementMatrix[column,cols-1-row];
       break;
     default:
       ret = ell;

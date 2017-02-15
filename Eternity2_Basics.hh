@@ -159,12 +159,12 @@ class Eternity2_LMove
   * An example is found below.
   *
   */
-  const static unsigned HOLE_UL = 0;
-  const static unsigned HOLE_UR = 1;
-  const static unsigned HOLE_DR = 2;
-  const static unsigned HOLE_DL = 3;
-  const static unsigned NO_ELL = 4;
-  const static unsigned ANY_ELL = 5; // used in placementMatrix
+  /*const unsigned HOLE_UL;
+  const unsigned HOLE_UR;
+  const unsigned HOLE_DR;
+  const unsigned HOLE_DL;*/
+  unsigned NO_ELL/*=4*/;
+  unsigned ANY_ELL/*=5*/; // used in placementMatrix
   
   // Read the placement matrix, modifying it depending on the ell considered.
   // TODO explain this as well
@@ -198,7 +198,7 @@ class Eternity2_LMove
   // TODO explain this
   // Placement matrix is for HOLE_UL
   // TODO use constants here (less readable though)
-  constexpr static unsigned placementMatrix[5][5] = {{5,5,2,3,5},{5,2,4,4,3},{2,4,0,4,4},{1,4,4,4,0},{5,1,4,0,5}};
+  unsigned placementMatrix[5][5];
 
   vector<vector<unsigned>> EllGeneration(const Eternity2_State&/*,const Eternity2_LMove&*/);
 
