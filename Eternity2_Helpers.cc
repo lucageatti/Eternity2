@@ -1169,14 +1169,12 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
         st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1+1)), 
         st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1)) 
     };
-    cout << "ok_1" << endl;
     IDO eSelIDO[]= { 
         st.getIDOAt(pair<unsigned,unsigned>(i2,j2)), 
         st.getIDOAt(pair<unsigned,unsigned>(i2,j2+1)),
         st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2+1)),
         st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2)) 
     };
-    cout << "ok_2" << endl;
 	  // Backup coordinates
 	  Coord eLstCoord[] = { 
         pair<unsigned,unsigned>(i1,j1), 
@@ -1184,17 +1182,14 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
   		  pair<unsigned,unsigned>(i1+1,j1+1), 
         pair<unsigned,unsigned>(i1+1,j1) 
     };
-    cout << "ok_3" << endl;
 	  Coord eSelCoord[] = { 
         pair<unsigned,unsigned>(i2,j2), 
         pair<unsigned,unsigned>(i2,j2+1), 
 		    pair<unsigned,unsigned>(i2+1,j2+1), 
         pair<unsigned,unsigned>(i2+1,j2) 
     };
-    cout << "ok_4" << endl;
 	  // Calculate the rotation 
 	  int rot12 = mv.ellList.at(mv.ellSelection.at(i)).second - mv.ellList.at(i).second;
-	  cout << "ok_5" << endl;
 	  // Original cost
 	  for(unsigned j = 0; j < 3; j++){
 		  int d1 = singleTileCost(eLstIDO[j], eLstCoord[j], st);
@@ -1202,7 +1197,6 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
 		
 		  cost += d1+d2;
 	  }
-    cout << "ok_6" << endl;
 	  
     // Now compute the swapped cost
     // First off map the first L into the second and viceversa
@@ -1213,7 +1207,6 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
       map12[i] = st.strangeMod(i+rot12,4);
       map21[st.strangeMod(i+rot12,4)] = i;
     }
-    cout << "ok_7" << endl;
     for (int i = 0; i < sizeof(eLstIDO); ++i)
     {
       int newOrient1 = st.strangeMod(eLstIDO[i].second + rot12,4);
@@ -1231,67 +1224,96 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
   	  for(unsigned k = 0; k < 4; k++){
     		if(k != newOrient1){
     			// DOWN
-    			if(k == 2-newOrient1 || k == 3-newOrient1){
+    			if(k == st.strangeMod(2-newOrient1,4) || k == st.strangeMod(3-newOrient1,4)){
     				unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)], st.strangeMod(0-rot12,4));
-    				unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first+1, eSelCoord[k].second)),3);
+    				unsigned c2;
+            // Check that we don't go over the border
+            if(eSelCoord[k].first+1 < st.getHeight()){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first+1, eSelCoord[k].second)),2);  
+            } else c2 = 0;
     				if(c1!=c2) d1++;
     			}
           cout << "ooook_1" << endl;
     			// LEFT
-    			if(k == 1-newOrient1 || k == 3-newOrient1){
+    			if(k == st.strangeMod(1-newOrient1,4) || k == st.strangeMod(3-newOrient1,4)){
     				unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(1-rot12,4));
-    				unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first, eSelCoord[k].second-1)),3);
+    				unsigned c2;
+            if(eSelCoord[k].second-1 >= 0){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first, eSelCoord[k].second-1)),3);  
+            } else c2 = 0;
     				if(c1!=c2) d1++;
     			}
           cout << "ooook_2" << endl;
     			// UP
-    			if(k == 1-newOrient1 || k == 3-newOrient1){
+    			if(k == st.strangeMod(1-newOrient1,4) || k == st.strangeMod(3-newOrient1,4)){
     				unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(2-rot12,4));
             cout << "ooook_2.1" << endl;
-    				unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first-1, eSelCoord[k].second)),3);
+    				unsigned c2;
+            if(eSelCoord[k].first-1 >= 0){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first-1, eSelCoord[k].second)),0);  
+            } else c2 = 0;
     				if(c1!=c2) d1++;
     			}
     			cout << "ooook_3" << endl;
     			// RIGHT
-    			if(k == 1-newOrient1 || k == 2-newOrient1){
+    			if(k == st.strangeMod(1-newOrient1,4) || k == st.strangeMod(2-newOrient1,4)){
     				unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(3-rot12,4));
-    				unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first, eSelCoord[k+1].second)),3);
+    				unsigned c2;
+            if(eSelCoord[k].second+1 < st.getWidth()){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first, eSelCoord[k].second+1)),1);  
+            } else c2 = 0;
     				if(c1!=c2) d1++;
     			}
     			cout << "ooook_4" << endl;
     		}
       }
 	
-      int d2 = 0;
+    int d2 = 0;
 	  
 	  for(unsigned k = 0; k < 4; k++){
         if(k != newOrient2){
           // DOWN
-          if(k == 2-newOrient2 || k == 3-newOrient2){
-            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(0-rot12,4));
-            unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first+1, eSelCoord[k].second)),3);
-            if(c1!=c2) d1++;
+          if(k == st.strangeMod(2-newOrient2,4) || k == st.strangeMod(3-newOrient2,4)){
+            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k+rot12,4)], st.strangeMod(0+rot12,4));
+            unsigned c2;
+            // Check that we don't go over the border
+            if(eSelCoord[k].first+1 < st.getHeight()){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first+1, eSelCoord[k].second)),2);  
+            } else c2 = 0;
+            if(c1!=c2) d2++;
           }
+          cout << "ooook_1b" << endl;
           // LEFT
-          if(k == 1-newOrient2 || k == 3-newOrient2){
-            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(1-rot12,4));
-            unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first, eSelCoord[k].second-1)),3);
-            if(c1!=c2) d1++;
+          if(k == st.strangeMod(1-newOrient2,4) || k == st.strangeMod(3-newOrient2,4)){
+            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k+rot12,4)],st.strangeMod(1+rot12,4));
+            unsigned c2;
+            if(eSelCoord[k].second-1 >= 0){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first, eSelCoord[k].second-1)),3);  
+            } else c2 = 0;
+            if(c1!=c2) d2++;
           }
+          cout << "ooook_2b" << endl;
           // UP
-          if(k == 1-newOrient2 || k == 3-newOrient2){
-            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(2-rot12,4));
-            unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first-1, eSelCoord[k].second)),3);
-            if(c1!=c2) d1++;
+          if(k == st.strangeMod(1-newOrient2,4) || k == st.strangeMod(3-newOrient2,4)){
+            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k+rot12,4)],st.strangeMod(2+rot12,4));
+            cout << "ooook_2.1b" << endl;
+            unsigned c2;
+            if(eSelCoord[k].first-1 >= 0){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first-1, eSelCoord[k].second)),0);  
+            } else c2 = 0;
+            if(c1!=c2) d2++;
           }
-          
+          cout << "ooook_3b" << endl;
           // RIGHT
-          if(k == 1-newOrient2 || k == 2-newOrient2){
-            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(3-rot12,4));
-            unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first, eSelCoord[k+1].second)),3);
-            if(c1!=c2) d1++;
+          if(k == st.strangeMod(1-newOrient2,4) || k == st.strangeMod(2-newOrient2,4)){
+            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k+rot12,4)],st.strangeMod(3+rot12,4));
+            unsigned c2;
+            if(eSelCoord[k].second+1 < st.getWidth()){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first, eSelCoord[k].second+1)),1);  
+            } else c2 = 0;
+            if(c1!=c2) d2++;
           }
-          
+          cout << "ooook_4b" << endl;
         }
       }
 	  
