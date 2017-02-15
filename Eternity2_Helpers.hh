@@ -265,7 +265,8 @@ public:
   bool FeasibleMove(const Eternity2_State&, const Eternity2_LMove&) const;  
   void MakeMove(Eternity2_State&,const Eternity2_LMove&) const;             
   void FirstMove(const Eternity2_State&,Eternity2_LMove&) const throw(EmptyNeighborhood);  
-  bool NextMove(const Eternity2_State&,Eternity2_LMove&) const;   
+  bool NextMove(const Eternity2_State&,Eternity2_LMove&) const;
+  void updateCoords(Eternity2_State& st) const;
 protected:
   
 };

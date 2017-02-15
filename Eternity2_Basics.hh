@@ -20,16 +20,20 @@ public:
   Color getColor(IDO ido, CardinalPoint pc) const;
   void singletonRandomCoords();
   void ttsRandomCoords();
+  void LRandomCoords();
   //Coordinates for the moves
   vector<Coord> even_chessboard;
   vector<Coord> odd_chessboard;
   vector<Coord> random_singleton;
-  vector<pair<Coord,int> > random_tts;
+  vector<pair<Coord,int>> random_tts;
+  vector<pair<Coord,int>> random_L;
   //Moves counters
   mutable int singleton_counter;
   mutable int tts_counter;
+  mutable int L_counter;
   int strangeMod(int dividend, int divisor) const;
 protected:
+  bool inRange(int val, bool parity) const;
   const Eternity2_Input & in;
   vector<vector<IDO> > board;
 };
@@ -189,7 +193,7 @@ class Eternity2_LMove
   
   // List of ells in the placement matrix and their coordinates on the board
   // EllList[i]= ( coordX , coordY , ellOrientation )
-  vector<tuple<unsigned,unsigned,unsigned>> ellList;
+  vector<pair<Coord,int>> ellList;
   
   // How many ells in the partition
   unsigned ells;
@@ -200,7 +204,7 @@ class Eternity2_LMove
   // TODO use constants here (less readable though)
   unsigned placementMatrix[5][5];
 
-  vector<vector<unsigned>> EllGeneration(const Eternity2_State&/*,const Eternity2_LMove&*/);
+  void setCoordinates(vector<pair<Coord,int>> newEL) { ellList = newEL; }
 
   //void setElls(unsigned i){ ells = i; }
 };

@@ -37,6 +37,7 @@ int main(int argc, const char* argv[])
   EvenChessboardMoveDeltaCostComponent even_chessboard_move(in, cc1);
   OddChessboardMoveDeltaCostComponent odd_chessboard_move(in, cc1);
   ThreeTileStreakMoveDeltaCostComponent tts_move(in, cc1);
+  Eternity2_LMoveDeltaCostComponent ell_move(in, cc1);
 
   // helpers
   Eternity2_StateManager Eternity2_sm(in);
@@ -44,6 +45,7 @@ int main(int argc, const char* argv[])
   EvenChessboardMoveNeighborhoodExplorer even_chess_nhe(in, Eternity2_sm);
   OddChessboardMoveNeighborhoodExplorer odd_chess_nhe(in, Eternity2_sm);
   ThreeTileStreakMoveNeighborhoodExplorer tts_nhe(in, Eternity2_sm);
+  Eternity2_LMoveNeighborhoodExplorer ell_nhe(in, Eternity2_sm);
 
   Eternity2_OutputManager Eternity2_om(in);
   
@@ -55,6 +57,7 @@ int main(int argc, const char* argv[])
   even_chess_nhe.AddDeltaCostComponent(even_chessboard_move);
   odd_chess_nhe.AddDeltaCostComponent(odd_chessboard_move);
   tts_nhe.AddDeltaCostComponent(tts_move);
+  ell_nhe.AddDeltaCostComponent(ell_move);
   
   // runners
   HillClimbing<Eternity2_Input, Eternity2_State, Eternity2_GenericMove> Eternity2_hc(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveHillClimbing");
@@ -67,7 +70,9 @@ int main(int argc, const char* argv[])
   MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_GenericMove> even_chessboard_move_test(in,Eternity2_sm,Eternity2_om,even_chess_nhe, "Even Chessboard Move", tester);
   MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_GenericMove> odd_chessboard_move_test(in,Eternity2_sm,Eternity2_om,odd_chess_nhe, "Odd Chessboard Move", tester);
   MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_ThreeTileStreakMove> tts_move_test(in,Eternity2_sm,Eternity2_om,tts_nhe, "Three Tiles Streak Move", tester);
+  MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_LMove> l_move_test(in,Eternity2_sm,Eternity2_om,ell_nhe, "L Move", tester);
   
+
   SimpleLocalSearch<Eternity2_Input, Eternity2_Output, Eternity2_State> Eternity2_solver(in, Eternity2_sm, Eternity2_om, "Eternity2 solver");
   if (!CommandLineParameters::Parse(argc, argv, true, false))
     return 1;
