@@ -28,10 +28,10 @@ public:
   //Moves counters
   mutable int singleton_counter;
   mutable int tts_counter;
+  int strangeMod(int dividend, int divisor) const;
 protected:
   const Eternity2_Input & in;
   vector<vector<IDO> > board;
-  int strangeMod(int dividend, int divisor) const;
 };
 
 
