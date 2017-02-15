@@ -1222,7 +1222,7 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
 			// RIGHT
 			if(k == 1-newOrient1 || k == 2-newOrient1){
 				unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(3-rot12,4));
-				unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eSelCoord[k]), get<1>(eSelCoord[k)+1)),3);
+				unsigned c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(get<0>(eSelCoord[k]), get<1>(eSelCoord[k+1]))),3);
 				if(c1!=c2) d1++;
 			}
 			
