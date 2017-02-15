@@ -1274,42 +1274,42 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
         if(k != newOrient2){
           // DOWN
           if(k == st.strangeMod(2-newOrient2,4) || k == st.strangeMod(3-newOrient2,4)){
-            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k+rot12,4)], st.strangeMod(0+rot12,4));
+            unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)], st.strangeMod(0+rot12,4));
             unsigned c2;
             // Check that we don't go over the border
-            if(eSelCoord[k].first+1 < st.getHeight()){
-              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first+1, eSelCoord[k].second)),2);  
+            if(eLstCoord[k].first+1 < st.getHeight()){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first+1, eLstCoord[k].second)),2);  
             } else c2 = 0;
             if(c1!=c2) d2++;
           }
           cout << "ooook_1b" << endl;
           // LEFT
           if(k == st.strangeMod(1-newOrient2,4) || k == st.strangeMod(3-newOrient2,4)){
-            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k+rot12,4)],st.strangeMod(1+rot12,4));
+            unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(1+rot12,4));
             unsigned c2;
-            if(eSelCoord[k].second-1 >= 0){
-              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first, eSelCoord[k].second-1)),3);  
+            if(eLstCoord[k].second-1 >= 0){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first, eLstCoord[k].second-1)),3);  
             } else c2 = 0;
             if(c1!=c2) d2++;
           }
           cout << "ooook_2b" << endl;
           // UP
           if(k == st.strangeMod(1-newOrient2,4) || k == st.strangeMod(3-newOrient2,4)){
-            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k+rot12,4)],st.strangeMod(2+rot12,4));
+            unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(2+rot12,4));
             cout << "ooook_2.1b" << endl;
             unsigned c2;
-            if(eSelCoord[k].first-1 >= 0){
-              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first-1, eSelCoord[k].second)),0);  
+            if(eLstCoord[k].first-1 >= 0){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first-1, eLstCoord[k].second)),0);  
             } else c2 = 0;
             if(c1!=c2) d2++;
           }
           cout << "ooook_3b" << endl;
           // RIGHT
           if(k == st.strangeMod(1-newOrient2,4) || k == st.strangeMod(2-newOrient2,4)){
-            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k+rot12,4)],st.strangeMod(3+rot12,4));
+            unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(3+rot12,4));
             unsigned c2;
-            if(eSelCoord[k].second+1 < st.getWidth()){
-              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first, eSelCoord[k].second+1)),1);  
+            if(eLstCoord[k].second+1 < st.getWidth()){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first, eLstCoord[k].second+1)),1);  
             } else c2 = 0;
             if(c1!=c2) d2++;
           }
