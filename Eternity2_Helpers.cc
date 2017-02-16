@@ -1388,12 +1388,14 @@ int ThreeTileStreakMoveDeltaCostComponent::computeTTSDeltaCost(const Eternity2_S
         
         ////// Right Tile //////
         // NORTH
-        cost += checkColor(st, std::get<0>(single_move), NORTH, delta);
+        cost += checkColor(st, std::get<2>(single_move), NORTH, delta);
         // EAST
-        cost += checkColor(st, std::get<0>(single_move), EAST, delta);
+        cost += checkColor(st, std::get<2>(single_move), EAST, delta);
         // SOUTH
-        cost += checkColor(st, std::get<0>(single_move), SOUTH, delta);
+        cost += checkColor(st, std::get<2>(single_move), SOUTH, delta);
       }
+
+      return cost;
 }
 
 /***************************************************************************
