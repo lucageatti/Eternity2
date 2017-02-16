@@ -1168,20 +1168,19 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
   
   // Same code as MakeMove, but I calculate the deltacost instead of updating the state
   for(unsigned i = 0; i < mv.ellSelection.size() /*&& mv.ellSelection.at(i) > i*/; i++){ // Avoid duplicate swaps
-	// Swap ellList(i) with ellSelection(i) on the board
+	  // Swap ellList(i) with ellSelection(i) on the board
     unsigned i1 = mv.ellList.at(i).first.first;
     unsigned j1 = mv.ellList.at(i).first.second;
     unsigned i2 = mv.ellList.at(mv.ellSelection.at(i)).first.first;
     unsigned j2 = mv.ellList.at(mv.ellSelection.at(i)).first.second;
 
-    // Backup IDOs
+    // Store the IDOs of the single cells
     IDO eLstIDO[]= { 
         st.getIDOAt(pair<unsigned,unsigned>(i1,j1)), 
         st.getIDOAt(pair<unsigned,unsigned>(i1,j1+1)),
         st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1+1)), 
         st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1)) 
     };
-
     IDO eSelIDO[]= { 
         st.getIDOAt(pair<unsigned,unsigned>(i2,j2)), 
         st.getIDOAt(pair<unsigned,unsigned>(i2,j2+1)),
@@ -1189,20 +1188,20 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
         st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2)) 
     };
 
-	  // Backup coordinates
+	  // Store the coordinates of the single cells
 	  Coord eLstCoord[] = { 
         pair<unsigned,unsigned>(i1,j1), 
         pair<unsigned,unsigned>(i1,j1+1), 
   		  pair<unsigned,unsigned>(i1+1,j1+1), 
         pair<unsigned,unsigned>(i1+1,j1) 
     };
-
 	  Coord eSelCoord[] = { 
         pair<unsigned,unsigned>(i2,j2), 
         pair<unsigned,unsigned>(i2,j2+1), 
 		    pair<unsigned,unsigned>(i2+1,j2+1), 
         pair<unsigned,unsigned>(i2+1,j2) 
     };
+
 	  // Calculate the rotation 
 	  int rot12 = mv.ellList.at(mv.ellSelection.at(i)).second - mv.ellList.at(i).second;
 	  // Original cost
@@ -1334,11 +1333,124 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
   return cost;
 }
 
+vector<vector<pair<int,Orientation>>> LMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st, Eternity2_LMove& mv) const{
+  unsigned size = mv.ellSelection.size();
+  vector<vector<pair<int,Orientation>>> graph = vector<vector<pair<int,Orientation>>>(size);
+
+  // Taken from ComputeDeltaCost
+  for (int i = 0; i < size; ++i)
+  {
+    // Store the IDOs of the single cells
+    IDO eLstIDO[]= { 
+        st.getIDOAt(pair<unsigned,unsigned>(i1,j1)), 
+        st.getIDOAt(pair<unsigned,unsigned>(i1,j1+1)),
+        st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1+1)), 
+        st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1)) 
+    };
+    IDO eSelIDO[]= { 
+        st.getIDOAt(pair<unsigned,unsigned>(i2,j2)), 
+        st.getIDOAt(pair<unsigned,unsigned>(i2,j2+1)),
+        st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2+1)),
+        st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2)) 
+    };
+
+    // Store the coordinates of the single cells
+    Coord eLstCoord[] = { 
+        pair<unsigned,unsigned>(i1,j1), 
+        pair<unsigned,unsigned>(i1,j1+1), 
+        pair<unsigned,unsigned>(i1+1,j1+1), 
+        pair<unsigned,unsigned>(i1+1,j1) 
+    };
+    Coord eSelCoord[] = { 
+        pair<unsigned,unsigned>(i2,j2), 
+        pair<unsigned,unsigned>(i2,j2+1), 
+        pair<unsigned,unsigned>(i2+1,j2+1), 
+        pair<unsigned,unsigned>(i2+1,j2) 
+    };
+
+    // Calculate the rotation needed to swap the first L with the second
+    int rot = mv.ellList.at(mv.ellSelection.at(i)).second - mv.ellList.at(i).second;
+
+    // Compute the cost of the swapped L
+    unsigned cost=0;
+    for(unsigned k = 0; k < 4; k++)
+    {      
+      int newOrient = st.strangeMod(eLstIDO[k].second + rot12,4);
+      if(k != newOrient)
+      {
+          // DOWN
+          if(k == st.strangeMod(2-newOrient,4) || k == st.strangeMod(3-newOrient,4)){
+            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)], st.strangeMod(0-rot12,4));
+            unsigned c2;
+            // Check that we don't go over the border
+            if(eSelCoord[k].first+1 < st.getHeight()){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first+1, eSelCoord[k].second)),2);  
+            } else c2 = 0;
+            if(c1!=c2) cost++;
+          }
+          // LEFT
+          if(k == st.strangeMod(1-newOrient,4) || k == st.strangeMod(3-newOrient,4)){
+            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(1-rot12,4));
+            unsigned c2;
+            if(eSelCoord[k].second > 0){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first, eSelCoord[k].second-1)),3);  
+            } else c2 = 0;
+            if(c1!=c2) cost++;
+          }
+          // UP
+          if(k == st.strangeMod(1-newOrient,4) || k == st.strangeMod(3-newOrient,4)){
+            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(2-rot12,4));
+            unsigned c2;
+            if(eSelCoord[k].first > 0){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first-1, eSelCoord[k].second)),0);  
+            } else c2 = 0;
+            if(c1!=c2) cost++;
+          }
+          // RIGHT
+          if(k == st.strangeMod(1-newOrient,4) || k == st.strangeMod(2-newOrient,4)){
+            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(3-rot12,4));
+            unsigned c2;
+            if(eSelCoord[k].second+1 < st.getWidth()){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first, eSelCoord[k].second+1)),1);  
+            } else c2 = 0;
+            if(c1!=c2) cost++;
+          }
+        }
+      }    
+  }
+
+  return graph;
+}
+
+void LMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_LMove& mv) const{
+  forceUpdate(st);
+  //creating the graph
+  vector<vector<pair<int,Orientation>>> graph = createGraph(st, mv);
+  //calling the hungarian algorithm
+  vector<int> match = hungarianAlgorithm(graph);
+  //creating the move
+  createMove(mv, match, graph);
+}
 
 
+void LMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& st) const {
+  st.L_counter = 0;
+}
 
+/*
+           T
+      T TODO
+     TODO  D
+      D D  O
+     TODO
 
-
+*/
+void LMoveNeighborhoodExplorer::createMove(Eternity2_LMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const {
+  for(int i = 0; i < match.size(); ++i){
+    mv.setIndex(i, match[i]);
+    mv.setOrientation(i, graph[i][match[i]].second);
+  }
+}
 
 
 
