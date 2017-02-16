@@ -187,7 +187,7 @@ class ThreeTileStreakMoveNeighborhoodExplorer
     void MakeMove(Eternity2_State&,const Eternity2_ThreeTileStreakMove&) const;             
     void FirstMove(const Eternity2_State&,Eternity2_ThreeTileStreakMove&) const throw(EmptyNeighborhood);  
     bool NextMove(const Eternity2_State&,Eternity2_ThreeTileStreakMove&) const;
-    bool BestMove(const Eternity2_State&,Eternity2_ThreeTileStreakMove&) const;
+    void BestMove(const Eternity2_State&,Eternity2_ThreeTileStreakMove&) const;
 
   protected:
     bool incrementOrientation(Eternity2_ThreeTileStreakMove& mv) const;

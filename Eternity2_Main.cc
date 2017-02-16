@@ -1,4 +1,5 @@
 #include "Eternity2_Helpers.hh"
+#include "easylocal/helpers/multimodalneighborhoodexplorer.hh"
 
 using namespace EasyLocal::Debug;
 
@@ -15,7 +16,9 @@ int main(int argc, const char* argv[])
   Parameter<string> init_state("init_state", "Initial state (to be read from file)", main_parameters);
   Parameter<unsigned> observer("observer", "Attach the observers", main_parameters);
   Parameter<string> output_file("output_file", "Write the output to a file (filename required)", main_parameters);
- 
+  Parameter<double> insert_ratio("insert_ratio", "Ratio of Insert moves", main_parameters);
+  insert_ratio = 0.5;
+
   // 3rd parameter: false = do not check unregistered parameters
   // 4th parameter: true = silent
   CommandLineParameters::Parse(argc, argv, false, true);  
@@ -63,6 +66,7 @@ int main(int argc, const char* argv[])
   HillClimbing<Eternity2_Input, Eternity2_State, Eternity2_GenericMove> Eternity2_hc(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveHillClimbing");
   SteepestDescent<Eternity2_Input, Eternity2_State, Eternity2_GenericMove> Eternity2_sd(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSteepestDescent");
   SimulatedAnnealing<Eternity2_Input, Eternity2_State, Eternity2_GenericMove> Eternity2_sa(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSimulatedAnnealing");
+
 
   // tester
   Tester<Eternity2_Input, Eternity2_Output, Eternity2_State> tester(in,Eternity2_sm,Eternity2_om);
