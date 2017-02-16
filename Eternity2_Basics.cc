@@ -128,7 +128,10 @@ void Eternity2_State::ttsRandomCoords(){
           }
       }
   }
-  
+
+  if (!random_tts.size())
+      random_tts.push_back(make_pair(make_pair(0,1),0));
+
 }
 
 

@@ -1025,7 +1025,7 @@ void ThreeTileStreakMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& 
 {
     mv.setCoordinates(st.random_tts);
     int i,r;
-    vector<pair<unsigned,int>> perm = vector<pair<unsigned,int>>(st.random_tts.size());
+    vector<pair<unsigned,int>> perm(st.random_tts.size());
     vector<unsigned> rand_perm = FisherYatesShuffle(st.random_tts.size());
 
     for (i = 0; i < st.random_tts.size(); ++i)
@@ -1221,14 +1221,14 @@ void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, cons
         st.insertTile(std::get<1>(changes[i]).first,std::get<1>(changes[i]).second);
         st.insertTile(std::get<2>(changes[i]).first,std::get<2>(changes[i]).second);
     }
-    updateCoords(st);    
+
+    updateCoords(st);
 }
 
 
 
 
 void ThreeTileStreakMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_ThreeTileStreakMove& mv) const{
-  forceUpdate(st);
   //creating the graph
   vector<vector<pair<int,Orientation>>> graph;// = createGraph(st, mv);
   // ...
@@ -1236,6 +1236,7 @@ void ThreeTileStreakMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st
   vector<int> match = hungarianAlgorithm(graph);
   //creating the move
   // ...
+  forceUpdate(st);
 }
 
 
@@ -1254,7 +1255,7 @@ void ThreeTileStreakMoveNeighborhoodExplorer::updateCoords(Eternity2_State& st) 
 
 
 // Checks for color violation, given a 'tileMove' and a cardinal point.
-void checkColor(int& cost, const Eternity2_State& st, tileMove m, CardinalPoint cp)
+void checkColor(int& cost, const Eternity2_State& st, tileMove m, CardinalPoint cp, bool delta = true)
 {
     int adj_color = 0; // "= 0" to avoid warnings
     Coord c;
@@ -1314,7 +1315,7 @@ void checkColor(int& cost, const Eternity2_State& st, tileMove m, CardinalPoint 
     }
 
     cost += (st.getColor(m.first,cp) != adj_color);
-    cost -= (st.getColor(st.getIDOAt(m.second),cp) != adj_color);
+    if (delta) cost -= (st.getColor(st.getIDOAt(m.second),cp) != adj_color);
 }
 
 
