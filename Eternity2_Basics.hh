@@ -186,7 +186,7 @@ class Eternity2_LMove
   *  |4|0|  =>  |X| |X|
   *             | |X|X|
   */
-  vector<vector<unsigned>> ellMatrix;
+  //vector<vector<unsigned>> ellMatrix;
   
   // Which Ls are selected for permutation
   vector<unsigned> ellSelection;

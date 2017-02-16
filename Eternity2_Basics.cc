@@ -136,7 +136,7 @@ void Eternity2_State::ttsRandomCoords(){
 
 
 void Eternity2_State::LRandomCoords(){
-  
+  cout << "LRANDOMSIJDOçISAHDAOHSD" << endl;
   random_L = vector<pair<Coord,int> >();
   int i,j,r;
   int wing1_x;
@@ -145,7 +145,7 @@ void Eternity2_State::LRandomCoords(){
   int wing2_y;
   vector<vector<bool>> feas_board(in.getHeight(),vector<bool>(in.getWidth(),0));
   int pseudo_distribution = std::max((unsigned int)2,(in.getWidth() * in.getHeight()) / 6);
-
+  cout << "test 1" << endl;
   for (i = 0; i < in.getWidth(); ++i)
   {
       for ( j = 0; j < in.getHeight(); ++j)
@@ -159,6 +159,8 @@ void Eternity2_State::LRandomCoords(){
 
               wing2_x = (r-1)*strangeMod(r+1,2);
               wing2_y = (r-2)*strangeMod(r,2);
+
+              cout << "test 2" << endl;
 
               if (  !feas_board[i][j]
                  // first wing
@@ -181,15 +183,20 @@ void Eternity2_State::LRandomCoords(){
                 )
                {
                     feas_board[i][j] = 1;
+                    cout << "test 3" << endl;
                     feas_board[i + wing1_x][j + wing1_y] = 1;
+                    cout << "test 4" << endl;
                     feas_board[i + wing2_x][j + wing2_y] = 1;
-                    
+                    cout << "test 5" << endl;
                     random_L.push_back(make_pair(make_pair( (unsigned int)i, (unsigned int)j ),r));
                }
           }
       }
-  }
 
+  }
+  if( random_L.size() < 1 ) random_L.push_back(make_pair(make_pair( (unsigned int)Random::Int(0,getHeight()-2), 
+      (unsigned int)Random::Int(0,getWidth()-2) ), Random::Int(0,3)));
+  cout << "PD" << endl;
 }
 
 
@@ -414,7 +421,7 @@ ostream& operator<<(ostream& os, const Eternity2_GenericMove& mv)
 Eternity2_LMove::Eternity2_LMove()
 {
   // Insert the code that initializes the move
-  ellMatrix = vector<vector<unsigned>>();
+  //ellMatrix = vector<vector<unsigned>>();
   ellSelection = vector<unsigned>();
   ells = 0;
   unsigned temp[5][5] = {{5,5,2,3,5},{5,2,4,4,3},{2,4,0,4,4},{1,4,4,4,0},{5,1,4,0,5}};
@@ -436,10 +443,10 @@ Eternity2_LMove::Eternity2_LMove()
 bool operator==(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
 {
   // Insert the code that checks if two moves are identical
-  unsigned m = mv1.ellMatrix.size();
-  if(m != mv1.ellMatrix.size()) return false;
+  unsigned m = mv1.ellList.size();
+  if(m != mv1.ellList.size()) return false;
   for(unsigned i = 0; i<m; i++){
-	 if(mv1.ellMatrix.at(i)!=mv2.ellMatrix.at(i)) 
+	 if(mv1.ellList.at(i)!=mv2.ellList.at(i)) 
 		 return false;
   }
   
@@ -462,11 +469,14 @@ bool operator<(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
 {
   // Insert the code that checks if one move precedes another one
   // (in any selected order)
-  unsigned n = mv1.ellMatrix.size();
-  if(n!=mv2.ellMatrix.size())
+  unsigned n = mv1.ellList.size();
+  if(n!=mv2.ellList.size())
 	  throw logic_error("operator< for Eternity2_LMove called on instances with different size!");
-  for(unsigned i=0; i<n; i++){
-	 if(mv1.ellMatrix.at(i)<mv2.ellMatrix.at(i)) return true;
+  for(unsigned i=0; i<n; i++)
+  {
+	 if(mv1.ellList.at(i).first.first < mv2.ellList.at(i).first.first ||
+      mv1.ellList.at(i).first.second < mv2.ellList.at(i).first.second ||
+      mv1.ellList.at(i).second < mv2.ellList.at(i).second ) return true;
   }
   return false;
 }
@@ -486,7 +496,7 @@ ostream& operator<<(ostream& os, const Eternity2_LMove& mv)
   {
     os << "From: (<" << mv.ellList.at(i).first.first << "," << mv.ellList.at(i).first.second << 
       ">," << mv.ellList.at(i).second << ")\t";
-    os << "To: (" << mv.ellList.at(mv.ellSelection.at(i)).first.first << "," << 
+    os << "To: (<" << mv.ellList.at(mv.ellSelection.at(i)).first.first << "," << 
       mv.ellList.at(mv.ellSelection.at(i)).first.second << ">," << mv.ellList.at(mv.ellSelection.at(i)).second << ")\t";
     os << endl;
   }
