@@ -481,7 +481,15 @@ istream& operator>>(istream& is, Eternity2_LMove& mv)
 ostream& operator<<(ostream& os, const Eternity2_LMove& mv)
 {
   // Insert the code that writes a move
-  throw logic_error("operator<<(ostream& os, const Eternity2_LMove& mv) not implemented yet");	
+  os << endl;
+  for(unsigned i = 0; i < mv.ellList.size(); i++)
+  {
+    os << "From: (<" << mv.ellList.at(i).first.first << "," << mv.ellList.at(i).first.second << 
+      ">," << mv.ellList.at(i).second << ")\t";
+    os << "To: (" << mv.ellList.at(mv.ellSelection.at(i)).first.first << "," << 
+      mv.ellList.at(mv.ellSelection.at(i)).first.second << ">," << mv.ellList.at(mv.ellSelection.at(i)).second << ")\t";
+    os << endl;
+  }
   return os;
 }
 

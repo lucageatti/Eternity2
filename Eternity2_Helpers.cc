@@ -1022,7 +1022,6 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
 {
   // Insert the code that modifies the state st based on the application of move mv
   //unsigned cols = st.getWidth();
-  cout << "mv.ellSelection.size() = " << mv.ellSelection.size() << endl;
   for(unsigned i = 0; i < mv.ellSelection.size() /*&& mv.ellSelection.at(i) > i*/; i++){
 	  unsigned i1 = mv.ellList.at(i).first.first;
     unsigned j1 = mv.ellList.at(i).first.second;
@@ -1230,7 +1229,6 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
             } else c2 = 0;
     				if(c1!=c2) d1++;
     			}
-          cout << "ooook_1" << endl;
     			// LEFT
     			if(k == st.strangeMod(1-newOrient1,4) || k == st.strangeMod(3-newOrient1,4)){
     				unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(1-rot12,4));
@@ -1240,18 +1238,15 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
             } else c2 = 0;
     				if(c1!=c2) d1++;
     			}
-          cout << "ooook_2" << endl;
     			// UP
     			if(k == st.strangeMod(1-newOrient1,4) || k == st.strangeMod(3-newOrient1,4)){
     				unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(2-rot12,4));
-            cout << "ooook_2.1" << endl;
     				unsigned c2;
             if(eSelCoord[k].first-1 >= 0){
               c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first-1, eSelCoord[k].second)),0);  
             } else c2 = 0;
     				if(c1!=c2) d1++;
     			}
-    			cout << "ooook_3" << endl;
     			// RIGHT
     			if(k == st.strangeMod(1-newOrient1,4) || k == st.strangeMod(2-newOrient1,4)){
     				unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(3-rot12,4));
@@ -1261,7 +1256,6 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
             } else c2 = 0;
     				if(c1!=c2) d1++;
     			}
-    			cout << "ooook_4" << endl;
     		}
       }
 	
@@ -1279,7 +1273,6 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
             } else c2 = 0;
             if(c1!=c2) d2++;
           }
-          cout << "ooook_1b" << endl;
           // LEFT
           if(k == st.strangeMod(1-newOrient2,4) || k == st.strangeMod(3-newOrient2,4)){
             unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(1+rot12,4));
@@ -1289,18 +1282,16 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
             } else c2 = 0;
             if(c1!=c2) d2++;
           }
-          cout << "ooook_2b" << endl;
+
           // UP
           if(k == st.strangeMod(1-newOrient2,4) || k == st.strangeMod(3-newOrient2,4)){
             unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(2+rot12,4));
-            cout << "ooook_2.1b" << endl;
             unsigned c2;
             if(eLstCoord[k].first-1 >= 0){
               c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first-1, eLstCoord[k].second)),0);  
             } else c2 = 0;
             if(c1!=c2) d2++;
           }
-          cout << "ooook_3b" << endl;
           // RIGHT
           if(k == st.strangeMod(1-newOrient2,4) || k == st.strangeMod(2-newOrient2,4)){
             unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(3+rot12,4));
@@ -1310,7 +1301,6 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
             } else c2 = 0;
             if(c1!=c2) d2++;
           }
-          cout << "ooook_4b" << endl;
         }
       }
 	  
