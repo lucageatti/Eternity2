@@ -178,6 +178,7 @@ class ThreeTileStreakMoveDeltaCostComponent
     {}
     
     int ComputeDeltaCost(const Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const;
+    int computeTTSDeltaCost(const Eternity2_State& st, const tuple<tileMove,tileMove,tileMove,int>& single_move, bool delta = true) const;
 };
 
 

@@ -1213,7 +1213,7 @@ bool ThreeTileStreakMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State
 
 void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const
 {
-    vector<tuple<tileMove,tileMove,tileMove,int>> changes = mv.computeSimpleMoves(st);
+    vector<tuple<tileMove,tileMove,tileMove,int>> changes = mv.computeSimpleMoves(st,mv.getPermutation());
 
     for (int i = 0; i < changes.size(); ++i)
     {
@@ -1255,8 +1255,9 @@ void ThreeTileStreakMoveNeighborhoodExplorer::updateCoords(Eternity2_State& st) 
 
 
 // Checks for color violation, given a 'tileMove' and a cardinal point.
-void checkColor(int& cost, const Eternity2_State& st, tileMove m, CardinalPoint cp, bool delta = true)
+int checkColor(const Eternity2_State& st, tileMove m, CardinalPoint cp, bool delta = true)
 {
+    int cost = 0;
     int adj_color = 0; // "= 0" to avoid warnings
     Coord c;
 
@@ -1316,6 +1317,8 @@ void checkColor(int& cost, const Eternity2_State& st, tileMove m, CardinalPoint 
 
     cost += (st.getColor(m.first,cp) != adj_color);
     if (delta) cost -= (st.getColor(st.getIDOAt(m.second),cp) != adj_color);
+
+    return cost;
 }
 
 
@@ -1325,65 +1328,72 @@ void checkColor(int& cost, const Eternity2_State& st, tileMove m, CardinalPoint 
 int ThreeTileStreakMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const
 {
     int i,cost = 0;
-    vector<tuple<tileMove,tileMove,tileMove,int>> changes = mv.computeSimpleMoves(st);
+    vector<tuple<tileMove,tileMove,tileMove,int>> changes = mv.computeSimpleMoves(st,mv.getPermutation());
 
     for (i = 0; i < changes.size(); ++i)
     {
-        if(std::get<3>(changes[i]))
-        {
-          // Streak vertically oriented
-
-          ////// Upper tile //////
-          // NORTH
-          checkColor(cost, st, std::get<0>(changes[i]), NORTH);
-          // WEST
-          checkColor(cost, st, std::get<0>(changes[i]), WEST);
-          // EAST
-          checkColor(cost, st, std::get<0>(changes[i]), EAST);
-          
-          ////// Middle tile //////
-          // WEST
-          checkColor(cost, st, std::get<1>(changes[i]), WEST);
-          // EAST
-          checkColor(cost, st, std::get<1>(changes[i]), EAST);
-
-          ////// Lower tile //////
-          // WEST
-          checkColor(cost, st, std::get<2>(changes[i]), WEST);
-          // EAST
-          checkColor(cost, st, std::get<2>(changes[i]), EAST);
-          // SOUTH
-          checkColor(cost, st, std::get<2>(changes[i]), SOUTH);
-          
-        } else {
-
-          // Streak horizontally oriented
-
-          ////// Left Tile //////
-          // NORTH
-          checkColor(cost, st, std::get<0>(changes[i]), NORTH);
-          // WEST
-          checkColor(cost, st, std::get<0>(changes[i]), WEST);
-          // SOUTH
-          checkColor(cost, st, std::get<0>(changes[i]), SOUTH);
-                    
-          ////// Middle Tile //////
-          // NORTH
-          checkColor(cost, st, std::get<1>(changes[i]), NORTH);
-          // SOUTH
-          checkColor(cost, st, std::get<1>(changes[i]), SOUTH);
-          
-          ////// Right Tile //////
-          // NORTH
-          checkColor(cost, st, std::get<0>(changes[i]), NORTH);
-          // EAST
-          checkColor(cost, st, std::get<0>(changes[i]), EAST);
-          // SOUTH
-          checkColor(cost, st, std::get<0>(changes[i]), SOUTH);
-        }
+        cost += computeTTSDeltaCost(st,changes[i]);
     }
 
   return cost;
+}
+
+int ThreeTileStreakMoveDeltaCostComponent::computeTTSDeltaCost(const Eternity2_State& st, const tuple<tileMove,tileMove,tileMove,int>& single_move, bool delta) const
+{
+    int cost = 0;
+
+    if(std::get<3>(single_move))
+    {
+        // Streak vertically oriented
+
+        ////// Upper tile //////
+        // NORTH
+        cost += checkColor(st, std::get<0>(single_move), NORTH, delta);
+        // WEST
+        cost += checkColor(st, std::get<0>(single_move), WEST, delta);
+        // EAST
+        cost += checkColor(st, std::get<0>(single_move), EAST, delta);
+        
+        ////// Middle tile //////
+        // WEST
+        cost += checkColor(st, std::get<1>(single_move), WEST, delta);
+        // EAST
+        cost += checkColor(st, std::get<1>(single_move), EAST, delta);
+
+        ////// Lower tile //////
+        // WEST
+        cost += checkColor(st, std::get<2>(single_move), WEST, delta);
+        // EAST
+        cost += checkColor(st, std::get<2>(single_move), EAST, delta);
+        // SOUTH
+        cost += checkColor(st, std::get<2>(single_move), SOUTH, delta);
+        
+      } else {
+
+        // Streak horizontally oriented
+
+        ////// Left Tile //////
+        // NORTH
+        cost += checkColor(st, std::get<0>(single_move), NORTH, delta);
+        // WEST
+        cost += checkColor(st, std::get<0>(single_move), WEST, delta);
+        // SOUTH
+        cost += checkColor(st, std::get<0>(single_move), SOUTH, delta);
+                  
+        ////// Middle Tile //////
+        // NORTH
+        cost += checkColor(st, std::get<1>(single_move), NORTH, delta);
+        // SOUTH
+        cost += checkColor(st, std::get<1>(single_move), SOUTH, delta);
+        
+        ////// Right Tile //////
+        // NORTH
+        cost += checkColor(st, std::get<0>(single_move), NORTH, delta);
+        // EAST
+        cost += checkColor(st, std::get<0>(single_move), EAST, delta);
+        // SOUTH
+        cost += checkColor(st, std::get<0>(single_move), SOUTH, delta);
+      }
 }
 
 /***************************************************************************

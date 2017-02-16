@@ -355,34 +355,34 @@ Eternity2_ThreeTileStreakMove::Eternity2_ThreeTileStreakMove()
 }
 
 // Compute simple tile-wise moves from the three tile streak moves.
-vector<tuple<tileMove,tileMove,tileMove,int>> Eternity2_ThreeTileStreakMove::computeSimpleMoves(const Eternity2_State& st) const
+vector<tuple<tileMove,tileMove,tileMove,int>> Eternity2_ThreeTileStreakMove::computeSimpleMoves(const Eternity2_State& st, const vector<pair<unsigned,int>>& perm) const
 {
     vector<tuple<tileMove,tileMove,tileMove,int>> changes;
     Coord from,to;
     int from_dir,to_dir;
 
-    for (int i = 0; i < st.random_tts.size(); ++i)
+    for (int i = 0; i < perm.size(); ++i)
     {
         pair<IDO,Coord> m,m1,m2;
 
-        from = st.random_tts[permutation[i].first].first;
-        from_dir = st.random_tts[permutation[i].first].second;
+        from = st.random_tts[perm[i].first].first;
+        from_dir = st.random_tts[perm[i].first].second;
         to = st.random_tts[i].first;
         to_dir = st.random_tts[i].second;
 
-        m = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*permutation[i].second + 3*from_dir + to_dir) % 4),to);
+        m = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*perm[i].second + 3*from_dir + to_dir) % 4),to);
 
         from = make_pair(from.first - from_dir,from.second + from_dir - 1);
-        to = make_pair(to.first - to_dir + to_dir*2*permutation[i].second,to.second + to_dir - 1 + (1 - to_dir)*2*permutation[i].second);
+        to = make_pair(to.first - to_dir + to_dir*2*perm[i].second,to.second + to_dir - 1 + (1 - to_dir)*2*perm[i].second);
 
-        m1 = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*permutation[i].second + 3*from_dir + to_dir) % 4),to);
+        m1 = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*perm[i].second + 3*from_dir + to_dir) % 4),to);
         
         from = make_pair(from.first + 2*from_dir,from.second + 2 - 2*from_dir);
-        to = make_pair(to.first + 2*to_dir - to_dir*4*permutation[i].second,to.second + 2 - 2*to_dir - (1 - to_dir)*4*permutation[i].second);
+        to = make_pair(to.first + 2*to_dir - to_dir*4*perm[i].second,to.second + 2 - 2*to_dir - (1 - to_dir)*4*perm[i].second);
 
-        m2 = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*permutation[i].second + 3*from_dir + to_dir) % 4),to);
+        m2 = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*perm[i].second + 3*from_dir + to_dir) % 4),to);
 
-        if (permutation[i].second)
+        if (perm[i].second)
         {
           changes.push_back(make_tuple(m2,m,m1,to_dir));
 
