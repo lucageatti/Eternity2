@@ -113,7 +113,6 @@ protected:
   bool incrementOrientation(Eternity2_EvenChessboardMove& mv) const;
   bool incrementPermutation(Eternity2_EvenChessboardMove& mv) const;
   vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State&,Eternity2_EvenChessboardMove&) const;
-  void updateCoords(Eternity2_State& st) const;
   void forceUpdate(const Eternity2_State& st) const;
   void createMove(Eternity2_EvenChessboardMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const;
 };
@@ -154,7 +153,6 @@ protected:
   bool incrementOrientation(Eternity2_OddChessboardMove& mv) const;
   bool incrementPermutation(Eternity2_OddChessboardMove& mv) const;
   vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State&,Eternity2_OddChessboardMove&) const;
-  void updateCoords(Eternity2_State& st) const;
   void forceUpdate(const Eternity2_State& st) const;
   void createMove(Eternity2_OddChessboardMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const;
 };

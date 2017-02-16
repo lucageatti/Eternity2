@@ -48,7 +48,7 @@ int main(int argc, const char* argv[])
   OddChessboardMoveNeighborhoodExplorer odd_chess_nhe(in, Eternity2_sm);
   ThreeTileStreakMoveNeighborhoodExplorer tts_nhe(in, Eternity2_sm);
   //3-modal neighborhood explorers:
-    // singleton + odd-chessboard + even-chessboard
+    // 1. singleton + odd-chessboard + even-chessboard
     SetUnionNeighborhoodExplorer<Eternity2_Input, Eternity2_State, DefaultCostStructure<int>, decltype(singleton_nhe), decltype(even_chess_nhe), decltype(odd_chess_nhe)> 
       seo_nhe(in, Eternity2_sm, "Singleton+Even+Odd", singleton_nhe, even_chess_nhe, odd_chess_nhe, { insert_ratio, (1-insert_ratio)/2 , (1-insert_ratio)/2 });
 
@@ -65,9 +65,10 @@ int main(int argc, const char* argv[])
   
   // runners
   HillClimbing<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_hc(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveHillClimbing");
-  SteepestDescent<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_sd(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSteepestDescent");
+  //SteepestDescent<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_sd(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSteepestDescent");
   //SimulatedAnnealing<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_sa(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSimulatedAnnealing");
   SimulatedAnnealing<Eternity2_Input, Eternity2_State, decltype(seo_nhe)::MoveType> Eternity2_sa(in, Eternity2_sm, seo_nhe, "SEO_SA");
+  SteepestDescent<Eternity2_Input, Eternity2_State, decltype(seo_nhe)::MoveType> Eternity2_sd(in, Eternity2_sm, seo_nhe, "SEO_SD");
 
   // tester
   Tester<Eternity2_Input, Eternity2_Output, Eternity2_State> tester(in,Eternity2_sm,Eternity2_om);
