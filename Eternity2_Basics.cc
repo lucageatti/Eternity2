@@ -136,7 +136,6 @@ void Eternity2_State::ttsRandomCoords(){
 
 
 void Eternity2_State::LRandomCoords(){
-  cout << "LRANDOMSIJDOçISAHDAOHSD" << endl;
   random_L = vector<pair<Coord,int> >();
   int i,j,r;
   int wing1_x;
@@ -145,7 +144,6 @@ void Eternity2_State::LRandomCoords(){
   int wing2_y;
   vector<vector<bool>> feas_board(in.getHeight(),vector<bool>(in.getWidth(),0));
   int pseudo_distribution = std::max((unsigned int)2,(in.getWidth() * in.getHeight()) / 6);
-  cout << "test 1" << endl;
   for (i = 0; i < in.getWidth(); ++i)
   {
       for ( j = 0; j < in.getHeight(); ++j)
@@ -159,8 +157,6 @@ void Eternity2_State::LRandomCoords(){
 
               wing2_x = (r-1)*strangeMod(r+1,2);
               wing2_y = (r-2)*strangeMod(r,2);
-
-              cout << "test 2" << endl;
 
               if (  !feas_board[i][j]
                  // first wing
@@ -183,11 +179,8 @@ void Eternity2_State::LRandomCoords(){
                 )
                {
                     feas_board[i][j] = 1;
-                    cout << "test 3" << endl;
                     feas_board[i + wing1_x][j + wing1_y] = 1;
-                    cout << "test 4" << endl;
                     feas_board[i + wing2_x][j + wing2_y] = 1;
-                    cout << "test 5" << endl;
                     random_L.push_back(make_pair(make_pair( (unsigned int)i, (unsigned int)j ),r));
                }
           }
@@ -196,7 +189,6 @@ void Eternity2_State::LRandomCoords(){
   }
   if( random_L.size() < 1 ) random_L.push_back(make_pair(make_pair( (unsigned int)Random::Int(0,getHeight()-2), 
       (unsigned int)Random::Int(0,getWidth()-2) ), Random::Int(0,3)));
-  cout << "PD" << endl;
 }
 
 

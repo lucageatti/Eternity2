@@ -990,16 +990,13 @@ vector<unsigned> FisherYatesShuffle(unsigned sz) {
 // initial move builder
 void Eternity2_LMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_LMove& mv) const  throw(EmptyNeighborhood)
 {
-  cout << "<RandomMove>" << endl;
+  //cout << "<RandomMove>" << endl;
   // insert the code that writes a random move on mv in state st
   // shuffle partition
   mv.setCoordinates(st.random_L);
-  cout << " st.random_L.size() = " << st.random_L.size() << endl;
-  cout << " mv.ellList.size() = " << mv.ellList.size() << endl;
   mv.ellSelection = FisherYatesShuffle(mv.ellList.size());
-  cout << " mv.ellSelection.size() = " << mv.ellSelection.size() << endl;
   st.L_counter++;
-  cout << "</RandomMove>" << endl;
+  //cout << "</RandomMove>" << endl;
 } 
 
 // check move feasibility
@@ -1029,7 +1026,7 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
 {
   // Insert the code that modifies the state st based on the application of move mv
   //unsigned cols = st.getWidth();
-  cout << "I like to MakeMove it!" << endl;
+  //cout << "I like to MakeMove it!" << endl;
   for(unsigned i = 0; i < mv.ellSelection.size() /*&& mv.ellSelection.at(i) > i*/; i++){
 	  unsigned i1 = mv.ellList.at(i).first.first;
     unsigned j1 = mv.ellList.at(i).first.second;
@@ -1091,7 +1088,7 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
 
 
   updateCoords(st);
-  cout << "!ti evoMekaM ot ekil I" << endl;
+  //cout << "!ti evoMekaM ot ekil I" << endl;
 }  
 
 
@@ -1106,28 +1103,34 @@ void Eternity2_LMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, E
 {
   // Insert the code the generate the first move in the neighborhood and store it in mv
   // The list of ells in the partition is produced.
+  //cout << "<FirstMove>" << endl;
   mv.setCoordinates(st.random_L);
   //unsigned id = 0;
   for(unsigned i=0; i<mv.ellList.size(); i++){
-	  mv.ellSelection[i] = i;
+	  mv.ellSelection.push_back(i);
   }
+  //cout << "</FirstMove>" << endl;
 }
 
 bool Eternity2_LMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Eternity2_LMove& mv) const
 {
+  //cout << "<NextMove>" << endl;
   // Insert the code that generate the move that follows mv in the neighborhood, and writes
   // it back in mv. Return false if mv is already the last move.
   unsigned size = mv.ellSelection.size();
-  unsigned i= size;
+  unsigned i = size;
   // Find the pivot, i.e. the element before the longest non-increasing suffix
-  unsigned pivot=i;
-  while( i>0 && pivot >= size){
+  unsigned pivot = i--;
+  while( i > 0 && pivot >= size){
 	  if(mv.ellSelection.at(i) > mv.ellSelection.at(i-1))
 		  pivot = i-1;
 	  i--;
   }
   
-  if(pivot >= size) return false;
+  if(pivot >= size){
+    //cout << "</FirstMove>" << endl;
+    return false;
+  } 
   
   // Find the rightmost element greater than the pivot
   i = size-1;
@@ -1152,26 +1155,24 @@ bool Eternity2_LMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Et
 	  mv.ellSelection.at(size-i) = temp;
   }
   
+  //cout << "</FirstMove>" << endl;
   return true;
 }
 
 
 int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const
 {
-  cout << "DeltaCost" << endl;
+  //cout << "DeltaCost" << endl;
   int cost = 0;
   // Insert the code that computes the delta cost of component 1 for move mv in state st
   
   // Same code as MakeMove, but I calculate the deltacost instead of updating the state
   for(unsigned i = 0; i < mv.ellSelection.size() /*&& mv.ellSelection.at(i) > i*/; i++){ // Avoid duplicate swaps
-    cout << "dctebbasta" << endl;
 	// Swap ellList(i) with ellSelection(i) on the board
     unsigned i1 = mv.ellList.at(i).first.first;
     unsigned j1 = mv.ellList.at(i).first.second;
     unsigned i2 = mv.ellList.at(mv.ellSelection.at(i)).first.first;
     unsigned j2 = mv.ellList.at(mv.ellSelection.at(i)).first.second;
-
-    cout << "checcojoni" << endl;
 
     // Backup IDOs
     IDO eLstIDO[]= { 
@@ -1181,16 +1182,12 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
         st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1)) 
     };
 
-    cout << "A" << endl;
-
     IDO eSelIDO[]= { 
         st.getIDOAt(pair<unsigned,unsigned>(i2,j2)), 
         st.getIDOAt(pair<unsigned,unsigned>(i2,j2+1)),
         st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2+1)),
         st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2)) 
     };
-
-    cout << "B" << endl;
 
 	  // Backup coordinates
 	  Coord eLstCoord[] = { 
@@ -1199,8 +1196,6 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
   		  pair<unsigned,unsigned>(i1+1,j1+1), 
         pair<unsigned,unsigned>(i1+1,j1) 
     };
-
-    cout << "C" << endl;
 
 	  Coord eSelCoord[] = { 
         pair<unsigned,unsigned>(i2,j2), 
@@ -1212,8 +1207,6 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
 	  int rot12 = mv.ellList.at(mv.ellSelection.at(i)).second - mv.ellList.at(i).second;
 	  // Original cost
 
-    cout << "dct 0" << endl;
-
     for(unsigned j = 0; j < 3; j++)
     {
 		  int d1 = singleTileCost(eLstIDO[j], eLstCoord[j], st);
@@ -1221,8 +1214,6 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
 		
 		  cost += d1+d2;
 	  }
-
-    cout << "dct 00" << endl;
 
     // Now compute the swapped cost
     // First off map the first L into the second and viceversa
@@ -1233,8 +1224,6 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
       map12[i] = st.strangeMod(i+rot12,4);
       map21[st.strangeMod(i+rot12,4)] = i;
     }
-
-    cout << "dct 000" << endl;
 
     for (int i = 0; i < sizeof(eLstIDO); ++i)
     {
@@ -1249,8 +1238,6 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
 
       // Now compute the cost
       int d1 = 0;
-	
-      cout << "dct 1" << endl;
 
   	  for(unsigned k = 0; k < 4; k++){
     		if(k != newOrient1){
@@ -1293,8 +1280,7 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
     			}
     		}
       }
-	
-    cout << "dct 2" << endl;
+
     int d2 = 0;
 	  
 	  for(unsigned k = 0; k < 4; k++){
@@ -1339,13 +1325,12 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
           }
         }
       }
-
-    cout << "dct 3" << endl;  
+ 
 	  cost -= d1+d2;
     }
   }
   
-  cout << "</Deltacost>" << endl;
+  //cout << "</Deltacost>" << endl;
   return cost;
 }
 
