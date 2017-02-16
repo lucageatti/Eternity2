@@ -41,6 +41,10 @@ Eternity2_State::Eternity2_State(const Eternity2_Input &my_in)
   //ThreeTilesStreak
   tts_counter = 0;
   ttsRandomCoords();
+
+  //L-Move
+  L_counter = 0;
+  LRandomCoords();
 }
 
 
@@ -136,6 +140,68 @@ void Eternity2_State::ttsRandomCoords(){
 
 
 
+void Eternity2_State::LRandomCoords(){
+  random_L = vector<pair<Coord,int> >();
+  int i,j,r;
+  int wing1_x;
+  int wing1_y;
+  int wing2_x;
+  int wing2_y;
+  vector<vector<bool>> feas_board(in.getHeight(),vector<bool>(in.getWidth(),0));
+  int pseudo_distribution = std::max((unsigned int)2,(in.getWidth() * in.getHeight()) / 6);
+  for (i = 0; i < in.getWidth(); ++i)
+  {
+      for ( j = 0; j < in.getHeight(); ++j)
+      {
+          if( ! Random::Int(0,pseudo_distribution-1))
+          {
+              r = Random::Int(0,3);
+
+              wing1_x = (r-2)*strangeMod(r,2);
+              wing1_y = (r-1)*strangeMod(r+1,2);
+
+              wing2_x = (r-1)*strangeMod(r+1,2);
+              wing2_y = (r-2)*strangeMod(r,2);
+
+              if (  !feas_board[i][j]
+                 // first wing
+                 && inRange(i+wing1_x,0) && inRange(j+wing1_y,1)
+                 && !feas_board[i+wing1_x][j+wing1_y]
+                 //second wing
+                 && inRange(i+wing2_x,0) && inRange(j-wing2_y,1)
+                 && !feas_board[i+wing2_x][j-wing2_y]
+                 //third wing
+                 && ( !inRange(i-wing1_x,0) || !inRange(j-wing1_y,1) || !feas_board[i-wing1_x][j-wing1_y])
+                 //fourth wing
+                 && ( !inRange(i-wing2_x,0) || !inRange(j-wing2_y,1) || !feas_board[i-wing2_x][j-wing2_y])
+                 //center wing
+                 && ( !feas_board[i+wing1_x+wing2_x][j+wing1_y+wing1_y])
+                 //borders wings
+                 && ( !inRange(i-wing1_x+wing2_x,0) || !inRange(j-wing1_y+wing2_y,1) || !feas_board[i-wing1_x+wing2_x][j-wing1_y+wing2_y])
+                 && ( !inRange(i+wing1_x-wing2_x,0) || !inRange(j+wing1_y-wing2_y,1) || !feas_board[i+wing1_x-wing2_x][j+wing1_y-wing2_y])
+                 && ( !inRange(i+2*wing1_x,0) || !inRange(j+2*wing1_y,1) || !feas_board[i+2*wing1_x][j+2*wing1_y])
+                 && ( !inRange(i+2*wing2_x,0) || !inRange(j+2*wing2_y,1) || !feas_board[i+2*wing2_x][j+2*wing2_y])
+                )
+               {
+                    feas_board[i][j] = 1;
+                    feas_board[i + wing1_x][j + wing1_y] = 1;
+                    feas_board[i + wing2_x][j + wing2_y] = 1;
+                    random_L.push_back(make_pair(make_pair( (unsigned int)i, (unsigned int)j ),r));
+               }
+          }
+      }
+
+  }
+  if( random_L.size() < 1 ) random_L.push_back(make_pair(make_pair( (unsigned int)Random::Int(0,getHeight()-2), 
+      (unsigned int)Random::Int(0,getWidth()-2) ), Random::Int(0,3)));
+}
+
+
+
+bool Eternity2_State::inRange(int val, bool parity) const {
+  return val >= 0 && val < ((parity) ? getWidth() : getHeight()); 
+}
+
 
 
 /*
@@ -227,7 +293,7 @@ ostream& operator<<(ostream& os, const Eternity2_State& st)
 
 
 /**********************************************************************************************
-*    SINGLETON MOVE
+*    GENERIC MOVE
 ***********************************************************************************************/
 
 
@@ -344,7 +410,9 @@ Eternity2_OddChessboardMove::Eternity2_OddChessboardMove() : Eternity2_GenericMo
 
 
 
-
+/**********************************************************************************************
+*    THREE TILE STREAK MOVE
+***********************************************************************************************/
 
 // The Eternity2 Move constructor simply instantiate an unsized vector. To define 
 // a move properly, 'setCoords' method needs to be called. If 'size' is set to -1
@@ -450,6 +518,133 @@ ostream& operator<<(ostream& os, const Eternity2_ThreeTileStreakMove& mv)
     }
     return os;
 }
+
+
+
+
+
+/**********************************************************************************************
+*    L MOVE
+***********************************************************************************************/
+
+
+Eternity2_LMove::Eternity2_LMove()
+{
+  // Insert the code that initializes the move
+  //ellMatrix = vector<vector<unsigned>>();
+  ellSelection = vector<unsigned>();
+  ells = 0;
+  unsigned temp[5][5] = {{5,5,2,3,5},{5,2,4,4,3},{2,4,0,4,4},{1,4,4,4,0},{5,1,4,0,5}};
+  for (int i = 0; i < 5; ++i){
+    for (int j = 0; j < 5; ++j)
+    {
+      placementMatrix[i][j]=temp[i][j];
+    }
+  }
+  /*HOLE_UL=0;
+  HOLE_UR=1;
+  HOLE_DR=2;
+  HOLE_DL=3;*/
+  NO_ELL=4;
+  ANY_ELL=5;
+}
+
+
+bool operator==(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
+{
+  // Insert the code that checks if two moves are identical
+  unsigned m = mv1.ellList.size();
+  if(m != mv1.ellList.size()) return false;
+  for(unsigned i = 0; i<m; i++){
+   if(mv1.ellList.at(i)!=mv2.ellList.at(i)) 
+     return false;
+  }
+  
+  m = mv1.ellSelection.size();
+  if(m != mv1.ellSelection.size()) return false;
+  for(unsigned i = 0; i<m; i++){
+   if(mv1.ellSelection.at(i)!=mv2.ellSelection.at(i)) 
+     return false;
+  }
+  return true;
+}
+
+bool operator!=(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
+{
+  // Insert the code that checks if two moves are different
+  return !(mv1==mv2);
+}
+
+bool operator<(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
+{
+  // Insert the code that checks if one move precedes another one
+  // (in any selected order)
+  unsigned n = mv1.ellList.size();
+  if(n!=mv2.ellList.size())
+    throw logic_error("operator< for Eternity2_LMove called on instances with different size!");
+  for(unsigned i=0; i<n; i++)
+  {
+   if(mv1.ellList.at(i).first.first < mv2.ellList.at(i).first.first ||
+      mv1.ellList.at(i).first.second < mv2.ellList.at(i).first.second ||
+      mv1.ellList.at(i).second < mv2.ellList.at(i).second ) return true;
+  }
+  return false;
+}
+
+istream& operator>>(istream& is, Eternity2_LMove& mv)
+{
+  // Insert the code that read a move
+  throw logic_error("operator>>(istream& is, Eternity2_LMove& cìmv) not implemented yet");  
+  return is;
+}
+
+ostream& operator<<(ostream& os, const Eternity2_LMove& mv)
+{
+  // Insert the code that writes a move
+  os << endl;
+  for(unsigned i = 0; i < mv.ellList.size(); i++)
+  {
+    os << "From: (<" << mv.ellList.at(i).first.first << "," << mv.ellList.at(i).first.second << 
+      ">," << mv.ellList.at(i).second << ")\t";
+    os << "To: (<" << mv.ellList.at(mv.ellSelection.at(i)).first.first << "," << 
+      mv.ellList.at(mv.ellSelection.at(i)).first.second << ">," << mv.ellList.at(mv.ellSelection.at(i)).second << ")\t";
+    os << endl;
+  }
+  return os;
+}
+
+/* Read the placement matrix for a given ell.
+* The placement matrix tells us which ell placements are valid after
+* placing a given ell in a 5x5 area around it. 
+* Only the placement matrix for HOLE_UL is stored; the others are
+* computed by modifying it at run-time.
+* This function essentially maps a position on a matrix into the corresponding
+* position in the rotated matrix, and adds something to the result.*/
+unsigned Eternity2_LMove::readPlacementMatrix(unsigned row, unsigned column, unsigned ell){
+  unsigned ret = 4; // NO_ELL
+  unsigned rows = sizeof(Eternity2_LMove::placementMatrix);
+  unsigned cols = sizeof(Eternity2_LMove::placementMatrix[0]);
+  switch(ell){
+    case 0:
+      ret = placementMatrix[row][column];
+      break;
+    case 1:
+      ret = placementMatrix[rows-1-column][row];
+      break;
+    case 2:
+      ret = placementMatrix[rows-1-row][cols-1-column];
+      break;
+    case 3:
+      ret = placementMatrix[column][cols-1-row];
+      break;
+    default:
+      ret = ell;
+      break;
+  }
+  if(ret < Eternity2_LMove::NO_ELL) ret+=ell;
+  return ret;
+}
+
 
 
 

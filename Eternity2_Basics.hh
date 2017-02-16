@@ -20,18 +20,22 @@ public:
   Color getColor(IDO ido, CardinalPoint pc) const;
   void singletonRandomCoords();
   void ttsRandomCoords();
+  void LRandomCoords();
   //Coordinates for the moves
   vector<Coord> even_chessboard;
   vector<Coord> odd_chessboard;
   vector<Coord> random_singleton;
   vector<pair<Coord,int> > random_tts;
+  vector<pair<Coord,int>> random_L;
   //Moves counters
   mutable int singleton_counter;
   mutable int tts_counter;
+  mutable int L_counter;
+  int strangeMod(int dividend, int divisor) const;
 protected:
   const Eternity2_Input & in;
   vector<vector<IDO> > board;
-  int strangeMod(int dividend, int divisor) const;
+  bool inRange(int val, bool parity) const;
 };
 
 
@@ -133,6 +137,74 @@ class Eternity2_ThreeTileStreakMove
 
     // Move permutation
     vector<pair<unsigned,int>> permutation;
+};
+
+
+
+
+/****************************************
+* L-shaped Move
+******************************************/
+class Eternity2_LMove
+{
+  friend bool operator==(const Eternity2_LMove& m1, const Eternity2_LMove& m2);
+  friend bool operator!=(const Eternity2_LMove& m1, const Eternity2_LMove& m2);
+  friend bool operator<(const Eternity2_LMove& m1, const Eternity2_LMove& m2);
+  friend ostream& operator<<(ostream& os, const Eternity2_LMove& c);
+  friend istream& operator>>(istream& is, Eternity2_LMove& c);
+ public:
+  Eternity2_LMove();
+  
+  /*
+  * Tell where the "hole" in the L-shaped pattern is.
+  * U = up, L = left, ...
+  * An example is found below.
+  *
+  */
+  /*const unsigned HOLE_UL;
+  const unsigned HOLE_UR;
+  const unsigned HOLE_DR;
+  const unsigned HOLE_DL;*/
+  unsigned NO_ELL/*=4*/;
+  unsigned ANY_ELL/*=5*/; // used in placementMatrix
+  
+  // Read the placement matrix, modifying it depending on the ell considered.
+  // TODO explain this as well
+  unsigned readPlacementMatrix(unsigned row, unsigned column, unsigned ell);
+  
+ //protected:
+  /* 
+  * This is a (flattened) matrix representing the (n-1)*(m-1) 2x2 squares, left to right and top to bottom.
+  * n is the number of rows, m is the number of columns.
+  * The number inside each cell represents if there in an L in the square and how it's oriented.
+  *
+  * Example:
+  * 
+  *  |2|4|      |X|X| |
+  *  |4|0|  =>  |X| |X|
+  *             | |X|X|
+  */
+  //vector<vector<unsigned>> ellMatrix;
+  
+  // Which Ls are selected for permutation
+  vector<unsigned> ellSelection;
+  
+  // List of ells in the placement matrix and their coordinates on the board
+  // EllList[i]= ( coordX , coordY , ellOrientation )
+  vector<pair<Coord,int>> ellList;
+  
+  // How many ells in the partition
+  unsigned ells;
+  
+  // This matrix tells us if, which and where Ls can be placed around a given L.
+  // TODO explain this
+  // Placement matrix is for HOLE_UL
+  // TODO use constants here (less readable though)
+  unsigned placementMatrix[5][5];
+
+  void setCoordinates(vector<pair<Coord,int>> newEL) { ellList = newEL; }
+
+  //void setElls(unsigned i){ ells = i; }
 };
 
 #endif

@@ -206,6 +206,35 @@ class ThreeTileStreakMoveNeighborhoodExplorer
 
 
 
+class Eternity2_LMoveDeltaCostComponent
+  : public DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_LMove>
+{
+public:
+  Eternity2_LMoveDeltaCostComponent(const Eternity2_Input & in, Eternity2_CostComponent& cc) 
+    : DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_LMove>(in,cc,"Eternity2_LMoveDeltaCostComponent") 
+  {}
+  int ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const;
+};
+
+class Eternity2_LMoveNeighborhoodExplorer
+  : public NeighborhoodExplorer<Eternity2_Input,Eternity2_State,Eternity2_LMove> 
+{
+public:
+  Eternity2_LMoveNeighborhoodExplorer(const Eternity2_Input & pin, StateManager<Eternity2_Input,Eternity2_State>& psm)  
+    : NeighborhoodExplorer<Eternity2_Input,Eternity2_State,Eternity2_LMove>(pin, psm, "Eternity2_LMoveNeighborhoodExplorer") {} 
+  void RandomMove(const Eternity2_State&, Eternity2_LMove&) const throw(EmptyNeighborhood);          
+  bool FeasibleMove(const Eternity2_State&, const Eternity2_LMove&) const;  
+  void MakeMove(Eternity2_State&,const Eternity2_LMove&) const;             
+  void FirstMove(const Eternity2_State&,Eternity2_LMove&) const throw(EmptyNeighborhood);  
+  bool NextMove(const Eternity2_State&,Eternity2_LMove&) const;
+  void updateCoords(Eternity2_State& st) const;
+protected:
+  
+};
+
+
+
+
 
 
 
