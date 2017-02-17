@@ -55,6 +55,11 @@ int main(int argc, const char* argv[])
     // 1. singleton + odd-chessboard + even-chessboard
     SetUnionNeighborhoodExplorer<Eternity2_Input, Eternity2_State, DefaultCostStructure<int>, decltype(singleton_nhe), decltype(even_chess_nhe), decltype(odd_chess_nhe)> 
       seo_nhe(in, Eternity2_sm, "Singleton+Even+Odd", singleton_nhe, even_chess_nhe, odd_chess_nhe, { insert_ratio, (1-insert_ratio)/2 , (1-insert_ratio)/2 });
+    // 2. singleton + tts + l_move
+    SetUnionNeighborhoodExplorer<Eternity2_Input, Eternity2_State, DefaultCostStructure<int>, decltype(singleton_nhe), decltype(tts_nhe), decltype(ell_nhe)> 
+      stl_nhe(in, Eternity2_sm, "Singleton+TTS", singleton_nhe, tts_nhe, ell_nhe, { 1/3, 1/3, 1/3 });
+      
+
 
   Eternity2_OutputManager Eternity2_om(in);
   
@@ -73,7 +78,8 @@ int main(int argc, const char* argv[])
   HillClimbing<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_hc(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveHillClimbing");
   //SteepestDescent<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_sd(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSteepestDescent");
   //SimulatedAnnealing<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_sa(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSimulatedAnnealing");
-  SimulatedAnnealing<Eternity2_Input, Eternity2_State, decltype(seo_nhe)::MoveType> Eternity2_sa(in, Eternity2_sm, seo_nhe, "SEO_SA");
+  SimulatedAnnealing<Eternity2_Input, Eternity2_State, decltype(seo_nhe)::MoveType> Eternity2_sa(in, Eternity2_sm, seo_nhe, "SEO_SA"); 
+  SimulatedAnnealing<Eternity2_Input, Eternity2_State, decltype(stl_nhe)::MoveType> stl_sa(in, Eternity2_sm, stl_nhe, "STL_SA"); 
   SteepestDescent<Eternity2_Input, Eternity2_State, decltype(seo_nhe)::MoveType> Eternity2_sd(in, Eternity2_sm, seo_nhe, "SEO_SD");
 
   // tester
@@ -100,7 +106,7 @@ int main(int argc, const char* argv[])
 
       if (method == string("SA"))
         {
-          Eternity2_solver.SetRunner(Eternity2_sa);
+          Eternity2_solver.SetRunner(stl_sa);
         }
       else if (method == string("HC"))
         {

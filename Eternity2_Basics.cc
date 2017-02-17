@@ -37,7 +37,6 @@ Eternity2_State::Eternity2_State(const Eternity2_Input &my_in)
   singleton_counter = 0;
   singletonRandomCoords();
 
-
   //ThreeTilesStreak
   tts_counter = 0;
   ttsRandomCoords();
@@ -163,24 +162,44 @@ void Eternity2_State::LRandomCoords(){
               wing2_x = (r-1)*strangeMod(r+1,2);
               wing2_y = (r-2)*strangeMod(r,2);
 
+              bool g1 = !inRange(i-wing1_x,0);
+              bool g2 = !inRange(j-wing1_y,1);
+              bool g3 = !inRange(i-wing2_x,0);
+              bool g4 = !inRange(j-wing2_y,1);
+              bool g5 = !inRange(i-wing1_x+wing2_x,0);
+              bool g6 = !inRange(j-wing1_y+wing2_y,1);
+              bool g7 = !inRange(i+wing1_x-wing2_x,0);
+              bool g8 = !inRange(j+wing1_y-wing2_y,1);
+              bool g9 = !inRange(i+2*wing1_x,0);
+              bool g10 = !inRange(j+2*wing1_y,1);
+              bool g11 = !inRange(i+2*wing2_x,0);
+              bool g12 = !inRange(j+2*wing2_y,1);
+              bool g13 = inRange(i+wing1_x,0);
+              bool g14 = inRange(j+wing1_y,1);
+              bool g15 = inRange(i+wing2_x,0);
+              bool g16 = inRange(j-wing2_y,1);
+
+              bool g17 = !inRange(i+wing1_x+wing2_x,0);
+              bool g18 = !inRange(j+wing1_y+wing1_y,1);
+              
               if (  !feas_board[i][j]
                  // first wing
-                 && inRange(i+wing1_x,0) && inRange(j+wing1_y,1)
+                 && g13 && g14
                  && !feas_board[i+wing1_x][j+wing1_y]
                  //second wing
-                 && inRange(i+wing2_x,0) && inRange(j-wing2_y,1)
+                 && g15 && g16
                  && !feas_board[i+wing2_x][j-wing2_y]
                  //third wing
-                 && ( !inRange(i-wing1_x,0) || !inRange(j-wing1_y,1) || !feas_board[i-wing1_x][j-wing1_y])
+                 && ( g1 || g2 || !feas_board[i-wing1_x][j-wing1_y] )
                  //fourth wing
-                 && ( !inRange(i-wing2_x,0) || !inRange(j-wing2_y,1) || !feas_board[i-wing2_x][j-wing2_y])
+                 && ( g3 || g4 || !feas_board[i-wing2_x][j-wing2_y] )
                  //center wing
-                 && ( !feas_board[i+wing1_x+wing2_x][j+wing1_y+wing1_y])
+                 && ( g17 || g18 || !feas_board[i+wing1_x+wing2_x][j+wing1_y+wing1_y])
                  //borders wings
-                 && ( !inRange(i-wing1_x+wing2_x,0) || !inRange(j-wing1_y+wing2_y,1) || !feas_board[i-wing1_x+wing2_x][j-wing1_y+wing2_y])
-                 && ( !inRange(i+wing1_x-wing2_x,0) || !inRange(j+wing1_y-wing2_y,1) || !feas_board[i+wing1_x-wing2_x][j+wing1_y-wing2_y])
-                 && ( !inRange(i+2*wing1_x,0) || !inRange(j+2*wing1_y,1) || !feas_board[i+2*wing1_x][j+2*wing1_y])
-                 && ( !inRange(i+2*wing2_x,0) || !inRange(j+2*wing2_y,1) || !feas_board[i+2*wing2_x][j+2*wing2_y])
+                 && ( g5 || g6 || !feas_board[i-wing1_x+wing2_x][j-wing1_y+wing2_y])
+                 && ( g7 || g8 || !feas_board[i+wing1_x-wing2_x][j+wing1_y-wing2_y])
+                 && ( g9 || g10 || !feas_board[i+2*wing1_x][j+2*wing1_y])
+                 && ( g11 || g12 || !feas_board[i+2*wing2_x][j+2*wing2_y])
                 )
                {
                     feas_board[i][j] = 1;
@@ -188,6 +207,7 @@ void Eternity2_State::LRandomCoords(){
                     feas_board[i + wing2_x][j + wing2_y] = 1;
                     random_L.push_back(make_pair(make_pair( (unsigned int)i, (unsigned int)j ),r));
                }
+               
           }
       }
 

@@ -1221,7 +1221,6 @@ void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, cons
         st.insertTile(std::get<1>(changes[i]).first,std::get<1>(changes[i]).second);
         st.insertTile(std::get<2>(changes[i]).first,std::get<2>(changes[i]).second);
     }
-
     updateCoords(st);
 }
 
