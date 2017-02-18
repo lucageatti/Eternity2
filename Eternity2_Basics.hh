@@ -121,7 +121,7 @@ class Eternity2_ThreeTileStreakMove
 
     int getSize() const {return permutation.size(); }
 
-    vector<tuple<tileMove,tileMove,tileMove,int>> computeSimpleMoves(const Eternity2_State& st, const vector<pair<unsigned,int>>& perm) const;
+    tuple<tileMove,tileMove,tileMove,int> computeSimpleMove(const Eternity2_State& st, const pair<unsigned,int>& perm, int dest) const;
     void swapPerm(int i, int j);
  
   protected:

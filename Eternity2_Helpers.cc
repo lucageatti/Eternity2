@@ -1213,13 +1213,15 @@ bool ThreeTileStreakMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State
 
 void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const
 {
-    vector<tuple<tileMove,tileMove,tileMove,int>> changes = mv.computeSimpleMoves(st,mv.getPermutation());
+    auto perm = mv.getPermutation();
+    tuple<tileMove,tileMove,tileMove,int> change;
 
-    for (int i = 0; i < changes.size(); ++i)
+    for (int i = 0; i < perm.size(); ++i)
     {
-        st.insertTile(std::get<0>(changes[i]).first,std::get<0>(changes[i]).second);
-        st.insertTile(std::get<1>(changes[i]).first,std::get<1>(changes[i]).second);
-        st.insertTile(std::get<2>(changes[i]).first,std::get<2>(changes[i]).second);
+        change = mv.computeSimpleMove(st,perm[i],i);
+        st.insertTile(std::get<0>(change).first,std::get<0>(change).second);
+        st.insertTile(std::get<1>(change).first,std::get<1>(change).second);
+        st.insertTile(std::get<2>(change).first,std::get<2>(change).second);
     }
 
     updateCoords(st);
@@ -1228,25 +1230,54 @@ void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, cons
 
 
 
-void ThreeTileStreakMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_ThreeTileStreakMove& mv) const{
-  //creating the graph
-  vector<vector<pair<int,Orientation>>> graph;// = createGraph(st, mv);
-  // ...
-  //calling the hungarian algorithm
-  vector<int> match = hungarianAlgorithm(graph);
-  //creating the move
-  // ...
-  forceUpdate(st);
+void ThreeTileStreakMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_ThreeTileStreakMove& mv) const
+{
+    mv.setCoordinates(st.random_tts);
+
+    unsigned i;
+    vector<pair<unsigned,int>> perm(st.random_tts.size());
+
+    // Creating the graph
+    vector<vector<pair<int,Orientation>>> graph = createGraph(st, mv);
+    
+    // Calling the hungarian algorithm
+    vector<int> match = hungarianAlgorithm(graph);
+    
+    // Creating the move
+    for (i = 0; i < match.size(); ++i)
+    {
+      perm[match[i]] = make_pair(i,graph[i][match[i]].second);
+    }
+    mv.setPermutation(perm);
+
+    forceUpdate(st);
+}
+
+vector<vector<pair<int,Orientation>>> ThreeTileStreakMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st ,Eternity2_ThreeTileStreakMove& mv) const
+{
+    int i,j;
+    int cost_0,cost_1;
+    int size = st.random_tts.size();
+    vector<vector<pair<int,Orientation>>> graph(size,vector<pair<int,Orientation>>(size));
+
+    for (i = 0; i < size; ++i)
+    {
+        for (j = 0; j < size; ++j)
+        {
+            cost_0 = computeTTSDeltaCost(st, mv.computeSimpleMove(st, make_pair((unsigned int)i,0), j), false);
+            cost_1 = computeTTSDeltaCost(st, mv.computeSimpleMove(st, make_pair((unsigned int)i,1), j), false);
+            
+            graph[i][j] = (cost_0 < cost_1) ? make_pair(cost_1,1) : make_pair(cost_0,0);
+        }
+    }
+
+    return graph;
 }
 
 
 void ThreeTileStreakMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& st) const {
   st.tts_counter = 0;
 }
-
-
-
-
 
 void ThreeTileStreakMoveNeighborhoodExplorer::updateCoords(Eternity2_State& st) const {
   if( st.tts_counter % 10 == 0 )
@@ -1328,17 +1359,17 @@ int checkColor(const Eternity2_State& st, tileMove m, CardinalPoint cp, bool del
 int ThreeTileStreakMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const
 {
     int i,cost = 0;
-    vector<tuple<tileMove,tileMove,tileMove,int>> changes = mv.computeSimpleMoves(st,mv.getPermutation());
+    vector<pair<unsigned,int>> perm = mv.getPermutation();
 
-    for (i = 0; i < changes.size(); ++i)
+    for (i = 0; i < perm.size(); ++i)
     {
-        cost += computeTTSDeltaCost(st,changes[i]);
+        cost += computeTTSDeltaCost(st,mv.computeSimpleMove(st,perm[i],i));
     }
 
   return cost;
 }
 
-int ThreeTileStreakMoveDeltaCostComponent::computeTTSDeltaCost(const Eternity2_State& st, const tuple<tileMove,tileMove,tileMove,int>& single_move, bool delta) const
+int computeTTSDeltaCost(const Eternity2_State& st, const tuple<tileMove,tileMove,tileMove,int>& single_move, bool delta)
 {
     int cost = 0;
 

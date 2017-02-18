@@ -178,9 +178,9 @@ class ThreeTileStreakMoveDeltaCostComponent
     {}
     
     int ComputeDeltaCost(const Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const;
-    int computeTTSDeltaCost(const Eternity2_State& st, const tuple<tileMove,tileMove,tileMove,int>& single_move, bool delta = true) const;
 };
 
+int computeTTSDeltaCost(const Eternity2_State& st, const tuple<tileMove,tileMove,tileMove,int>& single_move, bool delta = true);
 
 class ThreeTileStreakMoveNeighborhoodExplorer
   : public NeighborhoodExplorer<Eternity2_Input,Eternity2_State,Eternity2_ThreeTileStreakMove> 
@@ -198,6 +198,7 @@ class ThreeTileStreakMoveNeighborhoodExplorer
   protected:
     bool incrementOrientation(Eternity2_ThreeTileStreakMove& mv) const;
     bool incrementPermutation(Eternity2_ThreeTileStreakMove& mv) const;
+    vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State&,Eternity2_ThreeTileStreakMove&) const;
     void updateCoords(Eternity2_State& st) const;
     void forceUpdate(const Eternity2_State& st) const;
 };

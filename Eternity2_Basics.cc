@@ -355,44 +355,38 @@ Eternity2_ThreeTileStreakMove::Eternity2_ThreeTileStreakMove()
 }
 
 // Compute simple tile-wise moves from the three tile streak moves.
-vector<tuple<tileMove,tileMove,tileMove,int>> Eternity2_ThreeTileStreakMove::computeSimpleMoves(const Eternity2_State& st, const vector<pair<unsigned,int>>& perm) const
+tuple<tileMove,tileMove,tileMove,int> Eternity2_ThreeTileStreakMove::computeSimpleMove(const Eternity2_State& st, const pair<unsigned,int>& perm, int dest) const
 {
-    vector<tuple<tileMove,tileMove,tileMove,int>> changes;
     Coord from,to;
     int from_dir,to_dir;
 
-    for (int i = 0; i < perm.size(); ++i)
+    pair<IDO,Coord> m,m1,m2;
+
+    from = st.random_tts[perm.first].first;
+    from_dir = st.random_tts[perm.first].second;
+    to = st.random_tts[dest].first;
+    to_dir = st.random_tts[dest].second;
+
+    m = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*perm.second + 3*from_dir + to_dir) % 4),to);
+
+    from = make_pair(from.first - from_dir,from.second + from_dir - 1);
+    to = make_pair(to.first - to_dir + to_dir*2*perm.second,to.second + to_dir - 1 + (1 - to_dir)*2*perm.second);
+
+    m1 = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*perm.second + 3*from_dir + to_dir) % 4),to);
+    
+    from = make_pair(from.first + 2*from_dir,from.second + 2 - 2*from_dir);
+    to = make_pair(to.first + 2*to_dir - to_dir*4*perm.second,to.second + 2 - 2*to_dir - (1 - to_dir)*4*perm.second);
+
+    m2 = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*perm.second + 3*from_dir + to_dir) % 4),to);
+
+    if (perm.second)
     {
-        pair<IDO,Coord> m,m1,m2;
+      return make_tuple(m2,m,m1,to_dir);
 
-        from = st.random_tts[perm[i].first].first;
-        from_dir = st.random_tts[perm[i].first].second;
-        to = st.random_tts[i].first;
-        to_dir = st.random_tts[i].second;
+    } else {
 
-        m = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*perm[i].second + 3*from_dir + to_dir) % 4),to);
-
-        from = make_pair(from.first - from_dir,from.second + from_dir - 1);
-        to = make_pair(to.first - to_dir + to_dir*2*perm[i].second,to.second + to_dir - 1 + (1 - to_dir)*2*perm[i].second);
-
-        m1 = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*perm[i].second + 3*from_dir + to_dir) % 4),to);
-        
-        from = make_pair(from.first + 2*from_dir,from.second + 2 - 2*from_dir);
-        to = make_pair(to.first + 2*to_dir - to_dir*4*perm[i].second,to.second + 2 - 2*to_dir - (1 - to_dir)*4*perm[i].second);
-
-        m2 = make_pair(make_pair(st.getIDOAt(from).first,(st.getIDOAt(from).second + 2*perm[i].second + 3*from_dir + to_dir) % 4),to);
-
-        if (perm[i].second)
-        {
-          changes.push_back(make_tuple(m2,m,m1,to_dir));
-
-        } else {
-
-          changes.push_back(make_tuple(m1,m,m2,to_dir));
-        }
+      return make_tuple(m1,m,m2,to_dir);
     }
-
-    return changes;
 }
 
 
@@ -441,12 +435,16 @@ istream& operator>>(istream& is, Eternity2_ThreeTileStreakMove& mv)
 
 ostream& operator<<(ostream& os, const Eternity2_ThreeTileStreakMove& mv)
 {
+    auto perm = mv.getPermutation();
+    auto coords = mv.getCoordinates();
     os << endl;
     for (int i = 0; i < mv.getSize(); ++i)
     {
-        os << "From: ("  << mv.getCoordinates()[mv.getPermutation()[i].first].first.first << "," << mv.getCoordinates()[mv.getPermutation()[i].first].first.second << ")\t"
-           << "To: " << "(" << mv.getCoordinates()[i].first.first << "," << mv.getCoordinates()[i].first.second << ")\t"
-           << "Dir/Inv: " << ((mv.getPermutation()[i].second) ? "Inverse" : "Direct") << endl;
+        os << "From: ("  << coords[perm[i].first].first.first << "," << coords[perm[i].first].first.second << ") "
+           << ((coords[perm[i].first].second) ? "Vertical\t" : "Horizontal\t")
+           << "To: " << "(" << coords[i].first.first << "," << coords[i].first.second << ") "
+           << ((coords[i].second) ? "Vertical\t" : "Horizontal\t")
+           << "Dir/Inv: " << ((perm[i].second) ? "Inverse" : "Direct") << endl;
     }
     return os;
 }
