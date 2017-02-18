@@ -1035,12 +1035,8 @@ void ThreeTileStreakMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& 
     }
 
     mv.setPermutation(perm);
-
     st.tts_counter++;
 } 
-
-
-
 
 // First permutation of the three-tile streaks, corresponding to the sequence 1,2,...,n, with standard orientation (0).
 void ThreeTileStreakMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, Eternity2_ThreeTileStreakMove& mv) const  throw(EmptyNeighborhood)
@@ -1054,6 +1050,7 @@ void ThreeTileStreakMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& s
     }
 
     mv.setPermutation(perm);
+    st.tts_counter++;
 }
 
 // Next permutation of the streaks. Orientations are incremented first, then comes the actuall permutation of the tiles
@@ -1243,7 +1240,16 @@ void ThreeTileStreakMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st
 
     // Creating the graph
     vector<vector<pair<int,Orientation>>> graph = createGraph(st, mv);
-    
+    /*
+    for (int i = 0; i < graph.size(); ++i)
+    {
+      for (int j = 0; j < graph[i].size(); ++j)
+      {
+          cout << graph[i][j].first << "\t";
+      }
+      cout << endl;
+    }
+    */
     // Calling the hungarian algorithm
     vector<int> match = hungarianAlgorithm(graph);
     
@@ -1253,7 +1259,7 @@ void ThreeTileStreakMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st
       perm[match[i]] = make_pair(i,graph[i][match[i]].second);
     }
     mv.setPermutation(perm);
-
+    
     forceUpdate(st);
 }
 
@@ -1283,9 +1289,10 @@ void ThreeTileStreakMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State&
   st.tts_counter = 0;
 }
 
-void ThreeTileStreakMoveNeighborhoodExplorer::updateCoords(Eternity2_State& st) const {
-  if( st.tts_counter % 10 == 0 )
-    st.ttsRandomCoords();
+void ThreeTileStreakMoveNeighborhoodExplorer::updateCoords(Eternity2_State& st) const
+{
+    if( !(st.tts_counter %= 10) )
+      st.ttsRandomCoords();
 }
 
 
