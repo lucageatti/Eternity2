@@ -1213,15 +1213,20 @@ bool ThreeTileStreakMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State
 
 void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const
 {
+    int i;
     auto perm = mv.getPermutation();
-    tuple<tileMove,tileMove,tileMove,int> change;
+    vector<tuple<tileMove,tileMove,tileMove,int>> changes(perm.size());
 
-    for (int i = 0; i < perm.size(); ++i)
+    for (i = 0; i < perm.size(); ++i)
     {
-        change = mv.computeSimpleMove(st,perm[i],i);
-        st.insertTile(std::get<0>(change).first,std::get<0>(change).second);
-        st.insertTile(std::get<1>(change).first,std::get<1>(change).second);
-        st.insertTile(std::get<2>(change).first,std::get<2>(change).second);
+        changes[i] = mv.computeSimpleMove(st,perm[i],i);
+    }
+
+    for (i = 0; i < changes.size(); ++i)
+    {
+        st.insertTile(std::get<0>(changes[i]).first,std::get<0>(changes[i]).second);
+        st.insertTile(std::get<1>(changes[i]).first,std::get<1>(changes[i]).second);
+        st.insertTile(std::get<2>(changes[i]).first,std::get<2>(changes[i]).second);
     }
     updateCoords(st);
 }
@@ -1345,6 +1350,7 @@ int checkColor(const Eternity2_State& st, tileMove m, CardinalPoint cp, bool del
           std::cerr << "Invalid Cardinal Point: " << cp;
     }
 
+    //cout << "Checking adjacent color " << adj_color << " with tile color " << st.getColor(m.first,cp) << " (CP: " << cp << ")" << endl;
     cost += (st.getColor(m.first,cp) != adj_color);
     if (delta) cost -= (st.getColor(st.getIDOAt(m.second),cp) != adj_color);
 
