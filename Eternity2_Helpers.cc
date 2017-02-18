@@ -990,13 +990,13 @@ vector<unsigned> FisherYatesShuffle(unsigned sz) {
 // initial move builder
 void Eternity2_LMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_LMove& mv) const  throw(EmptyNeighborhood)
 {
-  //cout << "<RandomMove>" << endl;
+  cout << "<RandomMove>" << endl;
   // insert the code that writes a random move on mv in state st
   // shuffle partition
   mv.setCoordinates(st.random_L);
   mv.ellSelection = FisherYatesShuffle(mv.ellList.size());
   st.L_counter++;
-  //cout << "</RandomMove>" << endl;
+  cout << "</RandomMove>" << endl;
 } 
 
 // check move feasibility
@@ -1025,13 +1025,17 @@ bool Eternity2_LMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st
 void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_LMove& mv) const
 {
   // Insert the code that modifies the state st based on the application of move mv
+  // If ellSelection[i]=j, then I move Lj in place of Li.
+
   //unsigned cols = st.getWidth();
-  //cout << "I like to MakeMove it!" << endl;
-  for(unsigned i = 0; i < mv.ellSelection.size() /*&& mv.ellSelection.at(i) > i*/; i++){
+  cout << "<MakeMove>" << endl;
+  vector<pair<IDO,Coord>> changes;
+  for(unsigned i = 0; i < mv.ellSelection.size(); i++){
+    unsigned from = mv.ellSelection[i];
 	  unsigned i1 = mv.ellList.at(i).first.first;
     unsigned j1 = mv.ellList.at(i).first.second;
-    unsigned i2 = mv.ellList.at(mv.ellSelection.at(i)).first.first;
-    unsigned j2 = mv.ellList.at(mv.ellSelection.at(i)).first.second;
+    unsigned i2 = mv.ellList.at(from).first.first;
+    unsigned j2 = mv.ellList.at(from).first.second;
     // Backup IDOs
     IDO eLstIDO[]= { 
         st.getIDOAt(pair<unsigned,unsigned>(i1,j1)), 
@@ -1058,14 +1062,24 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
         pair<unsigned,unsigned>(i2+1,j2+1), 
         pair<unsigned,unsigned>(i2+1,j2) 
     };
+    cout << "mkmv 1" << endl;
+    // Calculate the rotation  needed to fit ellList[i] in place of ellList[from]
+    // Positive rotation = counter-clockwise rotation of the L
+    int rot = mv.ellList.at(i).second - mv.ellList.at(from).second;
 
-	  // Calculate the rotation needed
-	  // OCCHIO AL MODULO NEGATIVO
-	  int rot12 = mv.ellList.at(mv.ellSelection.at(i)).second - mv.ellList.at(i).second;
-    //int rot21 = mv.ellList.at(i).second() - mv.ellList.at(mv.ellSelection.at(i).first()).second();
+    // First off map the first L into the second 
+    // This means that, for each cell of ellList[i], I store the index of the cell of
+    // ellList[from] that is moved in its place.
+    unsigned map[4];
+    for (unsigned i = 0; i < 4; ++i)
+    {
+      int val = st.strangeMod(i-rot,4);
+      map[i] = (unsigned int)val;
+    }
 
-	  
-	  // Do the swap
+	  cout << "mkmv 2" << endl;
+
+	  // Store the changes needed for the swap
 	  /* Swap Example:
 	   *
 	   *   | |#| = |0|1| --> |#| | = |3|0| 
@@ -1074,21 +1088,26 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
 	   * I do a clockwise rotation of 1 (respectively -1), also rotating each individual cell.
 	   */
 	  for(unsigned j = 0; j<3; j++){
-		  int k1 = st.strangeMod(j+rot12,4);
-		  int k2 = st.strangeMod(j-rot12,4);
-		  
-		  int lido = st.strangeMod(eLstIDO[j].second + rot12, 4);
-		  int sido = st.strangeMod(eSelIDO[j].second - rot12, 4);
-		  
-		  st.insertTile( pair<unsigned,unsigned>(eLstIDO[j].first, lido), eSelCoord[k1] );
-		  st.insertTile( pair<unsigned,unsigned>(eSelIDO[j].first, sido), eLstCoord[k2] );  
+      // Single cell orientation is clockwise
+		  int newRot = st.strangeMod(eSelIDO[map[j]].second-rot,4);
+      
+		  changes.push_back( pair<IDO,Coord>( pair<int,int>(eSelIDO[map[j]].first, newRot), eLstCoord[j] ) );
 	  }
 
   }
 
+  cout << "mkmv 3" << endl;
+
+  // Apply changes
+  for (int i = 0; i < changes.size(); ++i)
+  {
+    st.insertTile( changes[i].first, changes[i].second );
+  }
+
+  cout << "mkmv 4" << endl;
 
   updateCoords(st);
-  //cout << "!ti evoMekaM ot ekil I" << endl;
+  cout << "</MakeMove>" << endl;
 }  
 
 
@@ -1162,7 +1181,7 @@ bool Eternity2_LMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Et
 
 int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const
 {
-  //cout << "DeltaCost" << endl;
+  cout << "DeltaCost" << endl;
   int cost = 0;
   int originalCost = 0;
   int swappedCost = 0;
@@ -1291,7 +1310,7 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
   }
   
   cost = swappedCost - originalCost;
-  //cout << "</Deltacost>" << endl;
+  cout << "</Deltacost>" << endl;
   return cost;
 }
 

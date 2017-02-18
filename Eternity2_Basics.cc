@@ -136,6 +136,7 @@ void Eternity2_State::ttsRandomCoords(){
 
 
 void Eternity2_State::LRandomCoords(){
+  cout << "<LRandomCoords>" << endl;
   random_L = vector<pair<Coord,int> >();
   int i,j,r;
   int wing1_x;
@@ -189,6 +190,7 @@ void Eternity2_State::LRandomCoords(){
   }
   if( random_L.size() < 1 ) random_L.push_back(make_pair(make_pair( (unsigned int)Random::Int(0,getHeight()-2), 
       (unsigned int)Random::Int(0,getWidth()-2) ), Random::Int(0,3)));
+  cout << "</LRandomCoords>" << endl;  
 }
 
 
