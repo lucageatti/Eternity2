@@ -26,3 +26,5 @@ Eternity2_Main.o: Eternity2_Main.cc Eternity2_Helpers.hh Eternity2_Basics.hh Ete
 clean:
 	rm -f $(OBJECT_FILES) Eternity2
 
+test: Eternity2
+	./Eternity2 --main::instance "./instances/pieces_03x03.txt" --main::seed 0

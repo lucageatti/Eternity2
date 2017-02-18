@@ -42,7 +42,6 @@ int main(int argc, const char* argv[])
   ThreeTileStreakMoveDeltaCostComponent tts_move(in, cc1);
   Eternity2_LMoveDeltaCostComponent ell_move(in, cc1);
 
-
   // helpers
   Eternity2_StateManager Eternity2_sm(in);
   SingletonMoveNeighborhoodExplorer singleton_nhe(in, Eternity2_sm);
@@ -59,8 +58,6 @@ int main(int argc, const char* argv[])
     SetUnionNeighborhoodExplorer<Eternity2_Input, Eternity2_State, DefaultCostStructure<int>, decltype(singleton_nhe), decltype(tts_nhe), decltype(ell_nhe)> 
       stl_nhe(in, Eternity2_sm, "Singleton+TTS", singleton_nhe, tts_nhe, ell_nhe, { 1/3, 1/3, 1/3 });
       
-
-
   Eternity2_OutputManager Eternity2_om(in);
   
   // All cost components must be added to the state manager
@@ -71,8 +68,7 @@ int main(int argc, const char* argv[])
   even_chess_nhe.AddDeltaCostComponent(even_chessboard_move);
   odd_chess_nhe.AddDeltaCostComponent(odd_chessboard_move);
   tts_nhe.AddDeltaCostComponent(tts_move);
-  ell_nhe.AddDeltaCostComponent(ell_move);
-  
+  ell_nhe.AddDeltaCostComponent(ell_move);  
   
   // runners
   HillClimbing<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_hc(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveHillClimbing");
@@ -90,6 +86,7 @@ int main(int argc, const char* argv[])
   MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_ThreeTileStreakMove> tts_move_test(in,Eternity2_sm,Eternity2_om,tts_nhe, "Three Tiles Streak Move", tester);
   MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_LMove> l_move_test(in,Eternity2_sm,Eternity2_om,ell_nhe, "L Move", tester);
   
+
   SimpleLocalSearch<Eternity2_Input, Eternity2_Output, Eternity2_State> Eternity2_solver(in, Eternity2_sm, Eternity2_om, "Eternity2 solver");
   if (!CommandLineParameters::Parse(argc, argv, true, false))
     return 1;

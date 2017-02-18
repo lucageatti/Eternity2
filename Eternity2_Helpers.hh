@@ -206,6 +206,13 @@ class ThreeTileStreakMoveNeighborhoodExplorer
 
 
 
+/**************************************************************************************************
+***************************************************************************************************
+* L Move
+*
+* @author Elia
+**************************************************************************************************
+*************************************************************************************************/
 
 class Eternity2_LMoveDeltaCostComponent
   : public DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_LMove>
@@ -228,13 +235,13 @@ public:
   void MakeMove(Eternity2_State&,const Eternity2_LMove&) const;             
   void FirstMove(const Eternity2_State&,Eternity2_LMove&) const throw(EmptyNeighborhood);  
   bool NextMove(const Eternity2_State&,Eternity2_LMove&) const;
-  void updateCoords(Eternity2_State& st) const;
+  void BestMove(const Eternity2_State& st, Eternity2_LMove& mv) const;
 protected:
-  
+  vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State&, Eternity2_LMove&) const;
+  void updateCoords(Eternity2_State& st) const;
+  void forceUpdate(const Eternity2_State& st) const;
+  void createMove(Eternity2_LMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const;
 };
-
-
-
 
 
 
@@ -270,3 +277,5 @@ bool extractAP(vector<int>& pi, int x, vector<int>& match, vector<int>& inverse_
 
 
 #endif
+
+
