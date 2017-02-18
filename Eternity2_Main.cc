@@ -40,6 +40,8 @@ int main(int argc, const char* argv[])
   EvenChessboardMoveDeltaCostComponent even_chessboard_move(in, cc1);
   OddChessboardMoveDeltaCostComponent odd_chessboard_move(in, cc1);
   ThreeTileStreakMoveDeltaCostComponent tts_move(in, cc1);
+  Eternity2_LMoveDeltaCostComponent ell_move(in, cc1);
+
 
   // helpers
   Eternity2_StateManager Eternity2_sm(in);
@@ -47,10 +49,17 @@ int main(int argc, const char* argv[])
   EvenChessboardMoveNeighborhoodExplorer even_chess_nhe(in, Eternity2_sm);
   OddChessboardMoveNeighborhoodExplorer odd_chess_nhe(in, Eternity2_sm);
   ThreeTileStreakMoveNeighborhoodExplorer tts_nhe(in, Eternity2_sm);
+  Eternity2_LMoveNeighborhoodExplorer ell_nhe(in, Eternity2_sm);
+
   //3-modal neighborhood explorers:
     // 1. singleton + odd-chessboard + even-chessboard
     SetUnionNeighborhoodExplorer<Eternity2_Input, Eternity2_State, DefaultCostStructure<int>, decltype(singleton_nhe), decltype(even_chess_nhe), decltype(odd_chess_nhe)> 
       seo_nhe(in, Eternity2_sm, "Singleton+Even+Odd", singleton_nhe, even_chess_nhe, odd_chess_nhe, { insert_ratio, (1-insert_ratio)/2 , (1-insert_ratio)/2 });
+    // 2. singleton + tts + l_move
+    SetUnionNeighborhoodExplorer<Eternity2_Input, Eternity2_State, DefaultCostStructure<int>, decltype(singleton_nhe), decltype(tts_nhe), decltype(ell_nhe)> 
+      stl_nhe(in, Eternity2_sm, "Singleton+TTS", singleton_nhe, tts_nhe, ell_nhe, { 1/3, 1/3, 1/3 });
+      
+
 
   Eternity2_OutputManager Eternity2_om(in);
   
@@ -62,12 +71,15 @@ int main(int argc, const char* argv[])
   even_chess_nhe.AddDeltaCostComponent(even_chessboard_move);
   odd_chess_nhe.AddDeltaCostComponent(odd_chessboard_move);
   tts_nhe.AddDeltaCostComponent(tts_move);
+  ell_nhe.AddDeltaCostComponent(ell_move);
+  
   
   // runners
   HillClimbing<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_hc(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveHillClimbing");
   //SteepestDescent<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_sd(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSteepestDescent");
   //SimulatedAnnealing<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_sa(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSimulatedAnnealing");
-  SimulatedAnnealing<Eternity2_Input, Eternity2_State, decltype(seo_nhe)::MoveType> Eternity2_sa(in, Eternity2_sm, seo_nhe, "SEO_SA");
+  SimulatedAnnealing<Eternity2_Input, Eternity2_State, decltype(seo_nhe)::MoveType> Eternity2_sa(in, Eternity2_sm, seo_nhe, "SEO_SA"); 
+  SimulatedAnnealing<Eternity2_Input, Eternity2_State, decltype(stl_nhe)::MoveType> stl_sa(in, Eternity2_sm, stl_nhe, "STL_SA"); 
   SteepestDescent<Eternity2_Input, Eternity2_State, decltype(seo_nhe)::MoveType> Eternity2_sd(in, Eternity2_sm, seo_nhe, "SEO_SD");
 
   // tester
@@ -76,6 +88,7 @@ int main(int argc, const char* argv[])
   MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_EvenChessboardMove> even_chessboard_move_test(in,Eternity2_sm,Eternity2_om,even_chess_nhe, "Even Chessboard Move", tester);
   MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_OddChessboardMove> odd_chessboard_move_test(in,Eternity2_sm,Eternity2_om,odd_chess_nhe, "Odd Chessboard Move", tester);
   MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_ThreeTileStreakMove> tts_move_test(in,Eternity2_sm,Eternity2_om,tts_nhe, "Three Tiles Streak Move", tester);
+  MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_LMove> l_move_test(in,Eternity2_sm,Eternity2_om,ell_nhe, "L Move", tester);
   
   SimpleLocalSearch<Eternity2_Input, Eternity2_Output, Eternity2_State> Eternity2_solver(in, Eternity2_sm, Eternity2_om, "Eternity2 solver");
   if (!CommandLineParameters::Parse(argc, argv, true, false))
@@ -93,7 +106,7 @@ int main(int argc, const char* argv[])
 
       if (method == string("SA"))
         {
-          Eternity2_solver.SetRunner(Eternity2_sa);
+          Eternity2_solver.SetRunner(stl_sa);
         }
       else if (method == string("HC"))
         {

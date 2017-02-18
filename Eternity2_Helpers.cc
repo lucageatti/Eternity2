@@ -1223,7 +1223,6 @@ void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, cons
         st.insertTile(std::get<1>(change).first,std::get<1>(change).second);
         st.insertTile(std::get<2>(change).first,std::get<2>(change).second);
     }
-
     updateCoords(st);
 }
 
@@ -1428,6 +1427,386 @@ int computeTTSDeltaCost(const Eternity2_State& st, const tuple<tileMove,tileMove
 
       return cost;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/***************************************************************************
+ * ThreeTileStreak Delta Cost Component:
+ ***************************************************************************/
+
+int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const
+{
+  //cout << "DeltaCost" << endl;
+  int cost = 0;
+  // Insert the code that computes the delta cost of component 1 for move mv in state st
+  
+  // Same code as MakeMove, but I calculate the deltacost instead of updating the state
+  for(unsigned i = 0; i < mv.ellSelection.size() /*&& mv.ellSelection.at(i) > i*/; i++){ // Avoid duplicate swaps
+  // Swap ellList(i) with ellSelection(i) on the board
+    unsigned i1 = mv.ellList.at(i).first.first;
+    unsigned j1 = mv.ellList.at(i).first.second;
+    unsigned i2 = mv.ellList.at(mv.ellSelection.at(i)).first.first;
+    unsigned j2 = mv.ellList.at(mv.ellSelection.at(i)).first.second;
+
+    // Backup IDOs
+    IDO eLstIDO[]= { 
+        st.getIDOAt(pair<unsigned,unsigned>(i1,j1)), 
+        st.getIDOAt(pair<unsigned,unsigned>(i1,j1+1)),
+        st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1+1)), 
+        st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1)) 
+    };
+
+    IDO eSelIDO[]= { 
+        st.getIDOAt(pair<unsigned,unsigned>(i2,j2)), 
+        st.getIDOAt(pair<unsigned,unsigned>(i2,j2+1)),
+        st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2+1)),
+        st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2)) 
+    };
+
+    // Backup coordinates
+    Coord eLstCoord[] = { 
+        pair<unsigned,unsigned>(i1,j1), 
+        pair<unsigned,unsigned>(i1,j1+1), 
+        pair<unsigned,unsigned>(i1+1,j1+1), 
+        pair<unsigned,unsigned>(i1+1,j1) 
+    };
+
+    Coord eSelCoord[] = { 
+        pair<unsigned,unsigned>(i2,j2), 
+        pair<unsigned,unsigned>(i2,j2+1), 
+        pair<unsigned,unsigned>(i2+1,j2+1), 
+        pair<unsigned,unsigned>(i2+1,j2) 
+    };
+    // Calculate the rotation 
+    int rot12 = mv.ellList.at(mv.ellSelection.at(i)).second - mv.ellList.at(i).second;
+    // Original cost
+
+    for(unsigned j = 0; j < 3; j++)
+    {
+      int d1 = singleTileCost(eLstIDO[j], eLstCoord[j], st);
+      int d2 = singleTileCost(eSelIDO[j], eSelCoord[j], st);
+    
+      cost += d1+d2;
+    }
+
+    // Now compute the swapped cost
+    // First off map the first L into the second and viceversa
+    unsigned map12[4];
+    unsigned map21[4];
+    for (unsigned i = 0; i < 4; ++i)
+    {
+      map12[i] = st.strangeMod(i+rot12,4);
+      map21[st.strangeMod(i+rot12,4)] = i;
+    }
+
+    for (int i = 0; i < sizeof(eLstIDO); ++i)
+    {
+      int newOrient1 = st.strangeMod(eLstIDO[i].second + rot12,4);
+      int newOrient2 = eLstIDO[i].second;
+
+      /*eLstIDO[i]=pair<unsigned,unsigned>(get<0>(eLstIDO[i]), lido);
+      eSelIDO[map[i]]=pair<unsigned,unsigned>(get<0>(eSelIDO[map[i]]), sido);*/
+      /*Coord temp = eLstCoord[i];
+      eLstCoord[i]=eSelCoord[map[i]];
+      eSelCoord[map[i]]=temp;*/
+
+      // Now compute the cost
+      int d1 = 0;
+
+      for(unsigned k = 0; k < 4; k++){
+        if(k != newOrient1){
+          // DOWN
+          if(k == st.strangeMod(2-newOrient1,4) || k == st.strangeMod(3-newOrient1,4)){
+            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)], st.strangeMod(0-rot12,4));
+            unsigned c2;
+            // Check that we don't go over the border
+            if(eSelCoord[k].first+1 < st.getHeight()){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first+1, eSelCoord[k].second)),2);  
+            } else c2 = 0;
+            if(c1!=c2) d1++;
+          }
+          // LEFT
+          if(k == st.strangeMod(1-newOrient1,4) || k == st.strangeMod(3-newOrient1,4)){
+            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(1-rot12,4));
+            unsigned c2;
+            if(eSelCoord[k].second > 0){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first, eSelCoord[k].second-1)),3);  
+            } else c2 = 0;
+            if(c1!=c2) d1++;
+          }
+          // UP
+          if(k == st.strangeMod(1-newOrient1,4) || k == st.strangeMod(3-newOrient1,4)){
+            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(2-rot12,4));
+            unsigned c2;
+            if(eSelCoord[k].first > 0){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first-1, eSelCoord[k].second)),0);  
+            } else c2 = 0;
+            if(c1!=c2) d1++;
+          }
+          // RIGHT
+          if(k == st.strangeMod(1-newOrient1,4) || k == st.strangeMod(2-newOrient1,4)){
+            unsigned c1 = st.getColor(eLstIDO[st.strangeMod(k-rot12,4)],st.strangeMod(3-rot12,4));
+            unsigned c2;
+            if(eSelCoord[k].second+1 < st.getWidth()){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eSelCoord[k].first, eSelCoord[k].second+1)),1);  
+            } else c2 = 0;
+            if(c1!=c2) d1++;
+          }
+        }
+      }
+
+    int d2 = 0;
+    
+    for(unsigned k = 0; k < 4; k++){
+        if(k != newOrient2){
+          // DOWN
+          if(k == st.strangeMod(2-newOrient2,4) || k == st.strangeMod(3-newOrient2,4)){
+            unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)], st.strangeMod(0+rot12,4));
+            unsigned c2;
+            // Check that we don't go over the border
+            if(eLstCoord[k].first+1 < st.getHeight()){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first+1, eLstCoord[k].second)),2);  
+            } else c2 = 0;
+            if(c1!=c2) d2++;
+          }
+          // LEFT
+          if(k == st.strangeMod(1-newOrient2,4) || k == st.strangeMod(3-newOrient2,4)){
+            unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(1+rot12,4));
+            unsigned c2;
+            if(eLstCoord[k].second > 0){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first, eLstCoord[k].second-1)),3);  
+            } else c2 = 0;
+            if(c1!=c2) d2++;
+          }
+
+          // UP
+          if(k == st.strangeMod(1-newOrient2,4) || k == st.strangeMod(3-newOrient2,4)){
+            unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(2+rot12,4));
+            unsigned c2;
+            if(eLstCoord[k].first > 0){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first-1, eLstCoord[k].second)),0);  
+            } else c2 = 0;
+            if(c1!=c2) d2++;
+          }
+          // RIGHT
+          if(k == st.strangeMod(1-newOrient2,4) || k == st.strangeMod(2-newOrient2,4)){
+            unsigned c1 = st.getColor(eSelIDO[st.strangeMod(k+rot12,4)],st.strangeMod(3+rot12,4));
+            unsigned c2;
+            if(eLstCoord[k].second+1 < st.getWidth()){
+              c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first, eLstCoord[k].second+1)),1);  
+            } else c2 = 0;
+            if(c1!=c2) d2++;
+          }
+        }
+      }
+ 
+    cost -= d1+d2;
+    }
+  }
+  
+  //cout << "</Deltacost>" << endl;
+  return cost;
+}
+
+
+
+
+
+/***************************************************************************
+ * ThreeTileStreak Move Neighborhood Explorer:
+ ***************************************************************************/
+
+
+// initial move builder
+void Eternity2_LMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_LMove& mv) const  throw(EmptyNeighborhood)
+{
+  //cout << "<RandomMove>" << endl;
+  // insert the code that writes a random move on mv in state st
+  // shuffle partition
+  mv.setCoordinates(st.random_L);
+  mv.ellSelection = FisherYatesShuffle(mv.ellList.size());
+  st.L_counter++;
+  //cout << "</RandomMove>" << endl;
+} 
+
+// check move feasibility
+bool Eternity2_LMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st, const Eternity2_LMove& mv) const
+{
+  // Insert the code that check is move mv is legal in state st 
+  // (return true if legal, false otherwise)
+  
+  //if(mv.ellSelection.size() < 2) return false;
+
+  // Check that elements are not repeated
+  vector<unsigned> temp = vector<unsigned>(mv.ellSelection.size());
+  for(unsigned i = 0; i < temp.size(); i++){
+    unsigned sel = mv.ellSelection.at(i);
+    if(temp.at(sel) != 0){
+      return false;
+    }
+    temp.at(sel) = sel;
+  }
+  
+  // Maybe we should check that the generated L-partition is good. (but not here)
+  return true;
+} 
+
+// update the state according to the move 
+void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_LMove& mv) const
+{
+  // Insert the code that modifies the state st based on the application of move mv
+  //unsigned cols = st.getWidth();
+  //cout << "I like to MakeMove it!" << endl;
+  for(unsigned i = 0; i < mv.ellSelection.size() /*&& mv.ellSelection.at(i) > i*/; i++){
+    unsigned i1 = mv.ellList.at(i).first.first;
+    unsigned j1 = mv.ellList.at(i).first.second;
+    unsigned i2 = mv.ellList.at(mv.ellSelection.at(i)).first.first;
+    unsigned j2 = mv.ellList.at(mv.ellSelection.at(i)).first.second;
+    // Backup IDOs
+    IDO eLstIDO[]= { 
+        st.getIDOAt(pair<unsigned,unsigned>(i1,j1)), 
+        st.getIDOAt(pair<unsigned,unsigned>(i1,j1+1)),
+        st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1+1)), 
+        st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1)) 
+    };
+    IDO eSelIDO[]= { 
+        st.getIDOAt(pair<unsigned,unsigned>(i2,j2)), 
+        st.getIDOAt(pair<unsigned,unsigned>(i2,j2+1)),
+        st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2+1)),
+        st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2)) 
+    };
+    // Backup coordinates
+    Coord eLstCoord[] = { 
+        pair<unsigned,unsigned>(i1,j1), 
+        pair<unsigned,unsigned>(i1,j1+1), 
+        pair<unsigned,unsigned>(i1+1,j1+1), 
+        pair<unsigned,unsigned>(i1+1,j1) 
+    };
+    Coord eSelCoord[] = { 
+        pair<unsigned,unsigned>(i2,j2), 
+        pair<unsigned,unsigned>(i2,j2+1), 
+        pair<unsigned,unsigned>(i2+1,j2+1), 
+        pair<unsigned,unsigned>(i2+1,j2) 
+    };
+
+    // Calculate the rotation needed
+    // OCCHIO AL MODULO NEGATIVO
+    int rot12 = mv.ellList.at(mv.ellSelection.at(i)).second - mv.ellList.at(i).second;
+    //int rot21 = mv.ellList.at(i).second() - mv.ellList.at(mv.ellSelection.at(i).first()).second();
+
+    
+    // Do the swap
+    /* Swap Example:
+     *
+     *   | |#| = |0|1| --> |#| | = |3|0| 
+     *   |#|#| = |3|2| --> |#|#| = |2|1|
+     *
+     * I do a clockwise rotation of 1 (respectively -1), also rotating each individual cell.
+     */
+    for(unsigned j = 0; j<3; j++){
+      int k1 = st.strangeMod(j+rot12,4);
+      int k2 = st.strangeMod(j-rot12,4);
+      
+      int lido = st.strangeMod(eLstIDO[j].second + rot12, 4);
+      int sido = st.strangeMod(eSelIDO[j].second - rot12, 4);
+      
+      st.insertTile( pair<unsigned,unsigned>(eLstIDO[j].first, lido), eSelCoord[k1] );
+      st.insertTile( pair<unsigned,unsigned>(eSelIDO[j].first, sido), eLstCoord[k2] );  
+    }
+
+  }
+
+
+  updateCoords(st);
+  //cout << "!ti evoMekaM ot ekil I" << endl;
+}  
+
+
+void Eternity2_LMoveNeighborhoodExplorer::updateCoords(Eternity2_State& st) const {
+  if( st.L_counter % 10 == 0 )
+    st.LRandomCoords();
+}
+
+
+
+void Eternity2_LMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, Eternity2_LMove& mv) const  throw(EmptyNeighborhood)
+{
+  // Insert the code the generate the first move in the neighborhood and store it in mv
+  // The list of ells in the partition is produced.
+  //cout << "<FirstMove>" << endl;
+  mv.setCoordinates(st.random_L);
+  //unsigned id = 0;
+  for(unsigned i=0; i<mv.ellList.size(); i++){
+    mv.ellSelection.push_back(i);
+  }
+  //cout << "</FirstMove>" << endl;
+}
+
+bool Eternity2_LMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Eternity2_LMove& mv) const
+{
+  //cout << "<NextMove>" << endl;
+  // Insert the code that generate the move that follows mv in the neighborhood, and writes
+  // it back in mv. Return false if mv is already the last move.
+  unsigned size = mv.ellSelection.size();
+  unsigned i = size;
+  // Find the pivot, i.e. the element before the longest non-increasing suffix
+  unsigned pivot = i--;
+  while( i > 0 && pivot >= size){
+    if(mv.ellSelection.at(i) > mv.ellSelection.at(i-1))
+      pivot = i-1;
+    i--;
+  }
+  
+  if(pivot >= size){
+    //cout << "</FirstMove>" << endl;
+    return false;
+  } 
+  
+  // Find the rightmost element greater than the pivot
+  i = size-1;
+  unsigned succ = size;
+  while(i > pivot && succ >= size){
+    if(mv.ellSelection.at(i) > mv.ellSelection.at(pivot))
+      succ = i;
+    i--;
+  }
+  
+  //if(succ >= size) return false;
+  
+  // Exchange the pivot with the successor
+  unsigned temp = mv.ellSelection.at(succ);
+  mv.ellSelection.at(succ) = mv.ellSelection.at(pivot);
+  mv.ellSelection.at(pivot) = temp;
+  
+  // Invert the suffix delimited by the pivot
+  for(i = 1; i <= (size-pivot)/2; i++){
+    temp = mv.ellSelection.at(pivot + i);
+    mv.ellSelection.at(pivot+i) = mv.ellSelection.at(size-i);
+    mv.ellSelection.at(size-i) = temp;
+  }
+  
+  //cout << "</FirstMove>" << endl;
+  return true;
+}
+
+
+
+
+
+
+
+
 
 /***************************************************************************
  * Shared general purpose methods
