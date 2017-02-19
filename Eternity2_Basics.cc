@@ -106,7 +106,7 @@ void Eternity2_State::ttsRandomCoords(){
   {
       for ( j = 0; j < in.getHeight(); ++j)
       {
-          if( ! Random::Int(0,pseudo_distribution-1))
+          if( ! Random::Int(0,1))
           {
               rnd = Random::Int(0,1);
 

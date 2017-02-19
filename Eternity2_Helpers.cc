@@ -1239,26 +1239,30 @@ void ThreeTileStreakMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st
     vector<pair<unsigned,int>> perm(st.random_tts.size());
 
     // Creating the graph
+    cout << "Creating the graph..." << endl;
     vector<vector<pair<int,Orientation>>> graph = createGraph(st, mv);
-    /*
+    
     for (int i = 0; i < graph.size(); ++i)
     {
       for (int j = 0; j < graph[i].size(); ++j)
       {
-          cout << graph[i][j].first << "\t";
+          cout << "<" << graph[i][j].first << "," << graph[i][j].second << ">" << "\t";
       }
       cout << endl;
     }
-    */
+    
     // Calling the hungarian algorithm
+    cout << "Calling the hungarian algorithm..." << endl;
     vector<int> match = hungarianAlgorithm(graph);
     
     // Creating the move
+    cout << "Creating the move..." << endl;
     for (i = 0; i < match.size(); ++i)
     {
       perm[match[i]] = make_pair(i,graph[i][match[i]].second);
     }
     mv.setPermutation(perm);
+    cout << mv << endl;
     
     forceUpdate(st);
 }
@@ -1277,7 +1281,7 @@ vector<vector<pair<int,Orientation>>> ThreeTileStreakMoveNeighborhoodExplorer::c
             cost_0 = computeTTSDeltaCost(st, mv.computeSimpleMove(st, make_pair((unsigned int)i,0), j), false);
             cost_1 = computeTTSDeltaCost(st, mv.computeSimpleMove(st, make_pair((unsigned int)i,1), j), false);
             
-            graph[i][j] = (cost_0 < cost_1) ? make_pair(cost_1,1) : make_pair(cost_0,0);
+            graph[i][j] = (cost_0 < cost_1) ? make_pair(cost_0,0) : make_pair(cost_1,1);
         }
     }
 
@@ -1455,7 +1459,7 @@ int computeTTSDeltaCost(const Eternity2_State& st, const tuple<tileMove,tileMove
 
 
 /***************************************************************************
- * ThreeTileStreak Delta Cost Component:
+ * LMove Delta Cost Component:
  ***************************************************************************/
 
 int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const
@@ -1631,14 +1635,6 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
   //cout << "</Deltacost>" << endl;
   return cost;
 }
-
-
-
-
-
-/***************************************************************************
- * ThreeTileStreak Move Neighborhood Explorer:
- ***************************************************************************/
 
 
 // initial move builder
@@ -1913,82 +1909,139 @@ vector<unsigned> FisherYatesShuffle(unsigned sz) {
 * Implementation of the "Augmenting Path Algorithm"
 */
 
-vector<int> hungarianAlgorithm(vector<vector<pair<int,Orientation>>>& m){
+vector<int> hungarianAlgorithm(vector<vector<pair<int,Orientation>>>& m)
+{  
   //modifing the rows of the matrix
-  int min;
-  for(int i=0; i< m.size(); ++i){
-    min = 0;
-    for(int j=1; j < m.size(); ++j)
-      min = (m[i][j].first < m[i][min].first) ? j : min;
-    for(int j=0; j< m.size(); ++j)
-      m[i][j].first -= m[i][min].first;
+  int min,i,j;
+  for(i=0; i < m.size(); ++i)
+  {
+      min = 0;
+
+      for(j=1; j < m.size(); ++j)
+        min = (m[i][j].first < m[i][min].first) ? j : min;
+
+      min = m[i][min].first;
+
+      for(j=0; j < m.size(); ++j)
+        m[i][j].first -= min;
   }
 
   //modifing the columns of the matrix
-  for(int j=0; j < m.size(); ++j){
-    min = 0;
-    for(int i=0; i < m.size(); ++i)
-      min = (m[i][j].first < m[min][j].first) ? i : min;
-    for(int i=0; i < m.size(); ++i)
-      m[i][j].first -= m[min][j].first;
+  for(j=0; j < m.size(); ++j)
+  {
+      min = 0;
+      
+      for(i=0; i < m.size(); ++i)
+        min = (m[i][j].first < m[min][j].first) ? i : min;
+
+      min = m[min][j].first;
+
+      for(i=0; i < m.size(); ++i)
+        m[i][j].first -= min;
   }
 
   vector<int> match = vector<int>(m.size(), -1);
   vector<int> inverse_match = vector<int>(m.size(), -1);
+  
   findMaxMatch(m, match, inverse_match);
-  while( not isPerfectMatching(match) ){
-    vector<int> zeros = vector<int> (2*m.size(), 0);
-    vector<bool> coveredLines = vector<bool>(2*m.size(), 0);
 
-    //filling the "zeros" vector
-    for(int r=0; r < m.size(); ++r)
-      for(int c=0; c < m.size(); ++c)
-        zeros[r] = zeros[c+m.size()] += (m[r][c].first == 0);
+  while( not isPerfectMatching(match) )
+  {
+      vector<bool> coveredLines = vector<bool>(2*m.size(), 0);
 
-    //filling the "coveredLines" vector
-    int max_index;
-    for(int i=0; i < match.size(); ++i){
-      if( match[i] != -1 ){
-        max_index = (zeros[i] > zeros[match[i]]) ? i : match[i];
-        coveredLines[max_index] = 1;
-      }
-    }
+      // Converting maximum matching 'match' into minimum vertex cover
+      // using Konig's theorem.
+      maxMatch2minCover(m, match, coveredLines);
 
-    //finding the minimum uncovered entry
-    int min_entry = std::numeric_limits<int>::max();
-    for(int r = 0; r < m.size(); ++r)
-      if( not coveredLines[r] )
-        for(int c = 0; c < m.size(); ++c)
-          if( not coveredLines[c + m.size()] )
-            min_entry = std::min(min_entry, m[r][c].first);
-
-    //modifing rows and columns
-    for(int r=0; r < m.size(); ++r){
-      for(int c=0; c < m.size(); ++c){
+      //finding the minimum uncovered entry
+      int min_entry = std::numeric_limits<int>::max();
+      for(int r = 0; r < m.size(); ++r)
         if( not coveredLines[r] )
-          m[r][c].first -= min;
-        if( coveredLines[c + m.size()] )
-          m[r][c].first += min;
-      }
-    }
+          for(int c = 0; c < m.size(); ++c)
+            if( not coveredLines[c + m.size()] )
+              min_entry = std::min(min_entry, m[r][c].first);
 
-    match = vector<int>(m.size(), -1);
-    findMaxMatch(m, match, inverse_match);
+      //modifing rows and columns
+      for(int r=0; r < m.size(); ++r){
+        for(int c=0; c < m.size(); ++c){
+          if( not coveredLines[r] )
+            m[r][c].first -= min_entry;
+          if( coveredLines[c + m.size()] )
+            m[r][c].first += min_entry;
+        }
+      }
+
+      match = vector<int>(m.size(), -1);
+      inverse_match = vector<int>(m.size(), -1);
+
+      findMaxMatch(m, match, inverse_match);
+
   } //END_WHILE
 
   return match;
 }
 
+// Implementation of Konig's theorem.
+void maxMatch2minCover(vector<vector<pair<int,Orientation>>>& m, vector<int>& match, vector<bool>& coveredLines)
+{
+    int i;
+    vector<bool> z(2*m.size(),0);
+    vector<DFSColor> colors(2*m.size(), WHITE);
 
+    for (i = 0; i < m.size(); ++i)
+    {
+        if( match[i] == -1 && colors[i] == WHITE)
+        {
+            AlternatingPaths(m,i,colors,match,z,1);
+        }
+    }
 
+    for (i = 0; i < m.size(); ++i)
+    {
+        coveredLines[i] = not z[i];
+    }
+
+    for (i = m.size(); i < 2*m.size(); ++i)
+    {
+        coveredLines[i] = z[i];
+    }
+}
+
+void AlternatingPaths(vector<vector<pair<int,Orientation>>>& m, int x, vector<DFSColor>& colors, vector<int>& match, vector<bool>& z, bool parity)
+{
+  if(parity)
+  {
+      z[x] = 1;
+      colors[x] = GREY;
+    
+      for(int i=0; i < match.size(); ++i)
+      {
+          if( m[x][i].first == 0  &&  colors[i+match.size()] == WHITE  &&  match[x] != i )
+            AlternatingPaths(m, i, colors, match, z, not parity);
+      }
+
+      colors[x] = BLACK;
+
+  } else {
+
+      z[x+match.size()] = 1;
+      colors[x+match.size()] = GREY;
+    
+      for(int i=0; i < match.size(); ++i)
+      {
+          if( m[i][x].first == 0  &&  colors[i] == WHITE  &&  match[i] == x )
+            AlternatingPaths(m, i, colors, match, z, not parity);
+      }
+
+      colors[x+match.size()] = BLACK;
+  }
+}
 
 bool isPerfectMatching(vector<int>& match){
   int i;
   for(i = 0; i < match.size() && match[i] != -1; ++i);
-  return i == match.size();
+  return (i == match.size());
 }
-
-
 
 
 void findMaxMatch(vector<vector<pair<int,Orientation>>>& m, vector<int>& match, vector<int>& inverse_match){
@@ -2020,7 +2073,8 @@ bool findFreeNode(vector<int>& match, vector<bool>& s, int& free_node){
 
 
 
-void DFS(vector<bool>& s, vector<vector<bool>>& a, vector<int>& match, vector<int>& inverse_match, int x){
+void DFS(vector<bool>& s, vector<vector<bool>>& a, vector<int>& match, vector<int>& inverse_match, int x)
+{
   //initializing the colors
   vector<DFSColor> colors = vector<DFSColor>(2 * match.size(), WHITE);
   //initializing the precedences
@@ -2028,7 +2082,8 @@ void DFS(vector<bool>& s, vector<vector<bool>>& a, vector<int>& match, vector<in
 
   DFS_Visit(x, 1, colors, pi, a, match);
 
-  if( not extractAP(pi, x, match, inverse_match) ){
+  if( not extractAP(pi, x, match, inverse_match) )
+  {
     s[x] = 0;
     for(int i=0; i < match.size(); ++i)
       if( pi[i] != -1 )
@@ -2041,41 +2096,62 @@ void DFS(vector<bool>& s, vector<vector<bool>>& a, vector<int>& match, vector<in
 
 
 
-void DFS_Visit(int x, bool parity, vector<DFSColor>& colors, vector<int>& pi, vector<vector<bool>>& a, vector<int>& match){
-  if(parity){
-    colors[x] = GREY;
-    for(int i=0; i < match.size(); ++i){
-      if( a[x][i]  &&  colors[i+match.size()] == WHITE  &&  match[x] != i ){
-        pi[i+match.size()] = x;
-        DFS_Visit(i, not parity, colors, pi, a, match);
+void DFS_Visit(int x, bool parity, vector<DFSColor>& colors, vector<int>& pi, vector<vector<bool>>& a, vector<int>& match)
+{
+  if(parity)
+  {
+      colors[x] = GREY;
+    
+      for(int i=0; i < match.size(); ++i)
+      {
+          if( a[x][i]  &&  colors[i+match.size()] == WHITE  &&  match[x] != i )
+          {
+              pi[i+match.size()] = x;
+              DFS_Visit(i, not parity, colors, pi, a, match);
+          }
       }
-    }
-  }else{
-    colors[x+match.size()] = GREY;
-    for(int i=0; i < match.size(); ++i){
-      if( a[i][x]  &&  colors[i] == WHITE  &&  match[i] == x ){
-        pi[i] = x;
-        DFS_Visit(i, not parity, colors, pi, a, match);
+
+      colors[x] = BLACK;
+
+  } else {
+
+      colors[x+match.size()] = GREY;
+    
+      for(int i=0; i < match.size(); ++i)
+      {
+          if( a[i][x]  &&  colors[i] == WHITE  &&  match[i] == x )
+          {
+              pi[i] = x+match.size();
+              DFS_Visit(i, not parity, colors, pi, a, match);
+          }
       }
-    }
+
+      colors[x+match.size()] = BLACK;
   }
-  colors[x] = BLACK;
 }
 
 
 
-bool extractAP(vector<int>& pi, int x, vector<int>& match, vector<int>& inverse_match){
+bool extractAP(vector<int>& pi, int x, vector<int>& match, vector<int>& inverse_match)
+{
   int i;
-  for(i = match.size(); i < 2 * match.size() && ( inverse_match[i] != -1 || pi[i] == -1 ); ++i);
-  if( i == pi.size() ){
-    return false;
-  }else{
-    while( pi[i] != -1 ){
-      match[pi[i]] = i;
-      inverse_match[i] = pi[i];
+
+  for(i = match.size(); i < 2 * match.size() && ( inverse_match[i-match.size()] != -1 || pi[i] == -1 ); ++i);
+
+  if( i == pi.size() )
+  {
+      return false;
+  
+  } else {
+
+    while( i > -1 && pi[i] != -1)
+    {
+      match[pi[i]] = i-match.size();
+      inverse_match[i-match.size()] = pi[i];
       i = pi[pi[i]];
     }
   }
+  
   return true;
 }
 

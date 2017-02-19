@@ -260,6 +260,8 @@ int singleTileCost(IDO ido, Coord crd, const Eternity2_State& st);
 
 //Hungarian Algorithm
 vector<int> hungarianAlgorithm(vector<vector<pair<int,Orientation>>>& m);
+void maxMatch2minCover(vector<vector<pair<int,Orientation>>>& m, vector<int>& match, vector<bool>& coveredLines);
+void AlternatingPaths(vector<vector<pair<int,Orientation>>>& m, int x, vector<DFSColor>& colors, vector<int>& match, vector<bool>& z, bool parity);
 bool isPerfectMatching(vector<int>& match);
 void findMaxMatch(vector<vector<pair<int,Orientation>>>& m, vector<int>& match, vector<int>& inverse_match);
 bool findFreeNode(vector<int>& match, vector<bool>& s, int& free_node);
