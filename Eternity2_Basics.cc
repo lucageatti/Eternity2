@@ -137,7 +137,9 @@ void Eternity2_State::ttsRandomCoords(){
 
 }
 
-
+bool Eternity2_State::inRange(int val, bool parity) const {
+  return val >= 0 && val < ((parity) ? getWidth() : getHeight()); 
+}
 
 void Eternity2_State::LRandomCoords(){
   random_L = vector<pair<Coord,int> >();
@@ -215,13 +217,6 @@ void Eternity2_State::LRandomCoords(){
   if( random_L.size() < 1 ) random_L.push_back(make_pair(make_pair( (unsigned int)Random::Int(0,getHeight()-2), 
       (unsigned int)Random::Int(0,getWidth()-2) ), Random::Int(0,3)));
 }
-
-
-
-bool Eternity2_State::inRange(int val, bool parity) const {
-  return val >= 0 && val < ((parity) ? getWidth() : getHeight()); 
-}
-
 
 
 /*
@@ -409,6 +404,153 @@ ostream& operator<<(ostream& os, const Eternity2_GenericMove& mv)
 }
 
 
+/**************************************************************************************************************************
+***************************************************************************************************************************
+***************************************************************************************************************************
+*
+* L-shaped Move
+*
+* @author Elia
+*
+*		                                 @@@
+*		######                          @   @
+*		######                          @   @
+*		######                           ### 
+*		######                           ###                   
+*		######                           @ @                   
+*		######                          @   @                  
+*		######                         @     @                
+*		######                        @       @              
+*		######                        @       @               
+*		##################            @       @               
+*		##################             @     @                  
+*		##################              @@@@@
+*
+*
+***************************************************************************************************************************
+***************************************************************************************************************************
+***************************************************************************************************************************/
+Eternity2_LMove::Eternity2_LMove()
+{
+  // Insert the code that initializes the move
+  //ellMatrix = vector<vector<unsigned>>();
+  ellSelection = vector<unsigned>();
+  ells = 0;
+  unsigned temp[5][5] = {{5,5,2,3,5},{5,2,4,4,3},{2,4,0,4,4},{1,4,4,4,0},{5,1,4,0,5}};
+  for (int i = 0; i < 5; ++i){
+    for (int j = 0; j < 5; ++j)
+    {
+      placementMatrix[i][j]=temp[i][j];
+    }
+  }
+  /*HOLE_UL=0;
+  HOLE_UR=1;
+  HOLE_DR=2;
+  HOLE_DL=3;*/
+  NO_ELL=4;
+  ANY_ELL=5;
+}
+
+
+bool operator==(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
+{
+  // Insert the code that checks if two moves are identical
+  unsigned m = mv1.ellList.size();
+  if(m != mv1.ellList.size()) return false;
+  for(unsigned i = 0; i<m; i++){
+	 if(mv1.ellList.at(i)!=mv2.ellList.at(i)) 
+		 return false;
+  }
+  
+  m = mv1.ellSelection.size();
+  if(m != mv1.ellSelection.size()) return false;
+  for(unsigned i = 0; i<m; i++){
+	 if(mv1.ellSelection.at(i)!=mv2.ellSelection.at(i)) 
+		 return false;
+  }
+  return true;
+}
+
+bool operator!=(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
+{
+  // Insert the code that checks if two moves are different
+  return !(mv1==mv2);
+}
+
+bool operator<(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
+{
+  // Insert the code that checks if one move precedes another one
+  // (in any selected order)
+  unsigned n = mv1.ellList.size();
+  if(n!=mv2.ellList.size())
+	  throw logic_error("operator< for Eternity2_LMove called on instances with different size!");
+  for(unsigned i=0; i<n; i++)
+  {
+	 if(mv1.ellList.at(i).first.first < mv2.ellList.at(i).first.first ||
+      mv1.ellList.at(i).first.second < mv2.ellList.at(i).first.second ||
+      mv1.ellList.at(i).second < mv2.ellList.at(i).second ) return true;
+  }
+  return false;
+}
+
+istream& operator>>(istream& is, Eternity2_LMove& mv)
+{
+  // Insert the code that read a move
+  throw logic_error("operator>>(istream& is, Eternity2_LMove& cìmv) not implemented yet");	
+  return is;
+}
+
+ostream& operator<<(ostream& os, const Eternity2_LMove& mv)
+{
+  // Insert the code that writes a move
+  os << endl;
+  for(unsigned i = 0; i < mv.ellList.size(); i++)
+  {
+    os << "From: (<" << mv.ellList.at(i).first.first << "," << mv.ellList.at(i).first.second << 
+      ">," << mv.ellList.at(i).second << ")\t";
+    os << "To: (<" << mv.ellList.at(mv.ellSelection.at(i)).first.first << "," << 
+      mv.ellList.at(mv.ellSelection.at(i)).first.second << ">," << mv.ellList.at(mv.ellSelection.at(i)).second << ")\t";
+    os << endl;
+  }
+  return os;
+}
+
+/* Read the placement matrix for a given ell.
+* The placement matrix tells us which ell placements are valid after
+* placing a given ell in a 5x5 area around it. 
+* Only the placement matrix for HOLE_UL is stored; the others are
+* computed by modifying it at run-time.
+* This function essentially maps a position on a matrix into the corresponding
+* position in the rotated matrix, and adds something to the result.*/
+unsigned Eternity2_LMove::readPlacementMatrix(unsigned row, unsigned column, unsigned ell){
+  unsigned ret = 4; // NO_ELL
+  unsigned rows = sizeof(Eternity2_LMove::placementMatrix);
+  unsigned cols = sizeof(Eternity2_LMove::placementMatrix[0]);
+  switch(ell){
+    case 0:
+      ret = placementMatrix[row][column];
+      break;
+    case 1:
+      ret = placementMatrix[rows-1-column][row];
+      break;
+    case 2:
+      ret = placementMatrix[rows-1-row][cols-1-column];
+      break;
+    case 3:
+      ret = placementMatrix[column][cols-1-row];
+      break;
+    default:
+      ret = ell;
+      break;
+  }
+  if(ret < Eternity2_LMove::NO_ELL) ret+=ell;
+  return ret;
+}
+
+
+
+
+
 
 
 Eternity2_SingletonMove::Eternity2_SingletonMove() : Eternity2_GenericMove() {
@@ -535,132 +677,6 @@ ostream& operator<<(ostream& os, const Eternity2_ThreeTileStreakMove& mv)
            << "Dir/Inv: " << ((perm[i].second) ? "Inverse" : "Direct") << endl;
     }
     return os;
-}
-
-
-
-
-
-/**********************************************************************************************
-*    L MOVE
-***********************************************************************************************/
-
-
-Eternity2_LMove::Eternity2_LMove()
-{
-  // Insert the code that initializes the move
-  //ellMatrix = vector<vector<unsigned>>();
-  ellSelection = vector<unsigned>();
-  ells = 0;
-  unsigned temp[5][5] = {{5,5,2,3,5},{5,2,4,4,3},{2,4,0,4,4},{1,4,4,4,0},{5,1,4,0,5}};
-  for (int i = 0; i < 5; ++i){
-    for (int j = 0; j < 5; ++j)
-    {
-      placementMatrix[i][j]=temp[i][j];
-    }
-  }
-  /*HOLE_UL=0;
-  HOLE_UR=1;
-  HOLE_DR=2;
-  HOLE_DL=3;*/
-  NO_ELL=4;
-  ANY_ELL=5;
-}
-
-
-bool operator==(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
-{
-  // Insert the code that checks if two moves are identical
-  unsigned m = mv1.ellList.size();
-  if(m != mv1.ellList.size()) return false;
-  for(unsigned i = 0; i<m; i++){
-   if(mv1.ellList.at(i)!=mv2.ellList.at(i)) 
-     return false;
-  }
-  
-  m = mv1.ellSelection.size();
-  if(m != mv1.ellSelection.size()) return false;
-  for(unsigned i = 0; i<m; i++){
-   if(mv1.ellSelection.at(i)!=mv2.ellSelection.at(i)) 
-     return false;
-  }
-  return true;
-}
-
-bool operator!=(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
-{
-  // Insert the code that checks if two moves are different
-  return !(mv1==mv2);
-}
-
-bool operator<(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
-{
-  // Insert the code that checks if one move precedes another one
-  // (in any selected order)
-  unsigned n = mv1.ellList.size();
-  if(n!=mv2.ellList.size())
-    throw logic_error("operator< for Eternity2_LMove called on instances with different size!");
-  for(unsigned i=0; i<n; i++)
-  {
-   if(mv1.ellList.at(i).first.first < mv2.ellList.at(i).first.first ||
-      mv1.ellList.at(i).first.second < mv2.ellList.at(i).first.second ||
-      mv1.ellList.at(i).second < mv2.ellList.at(i).second ) return true;
-  }
-  return false;
-}
-
-istream& operator>>(istream& is, Eternity2_LMove& mv)
-{
-  // Insert the code that read a move
-  throw logic_error("operator>>(istream& is, Eternity2_LMove& cìmv) not implemented yet");  
-  return is;
-}
-
-ostream& operator<<(ostream& os, const Eternity2_LMove& mv)
-{
-  // Insert the code that writes a move
-  os << endl;
-  for(unsigned i = 0; i < mv.ellList.size(); i++)
-  {
-    os << "From: (<" << mv.ellList.at(i).first.first << "," << mv.ellList.at(i).first.second << 
-      ">," << mv.ellList.at(i).second << ")\t";
-    os << "To: (<" << mv.ellList.at(mv.ellSelection.at(i)).first.first << "," << 
-      mv.ellList.at(mv.ellSelection.at(i)).first.second << ">," << mv.ellList.at(mv.ellSelection.at(i)).second << ")\t";
-    os << endl;
-  }
-  return os;
-}
-
-/* Read the placement matrix for a given ell.
-* The placement matrix tells us which ell placements are valid after
-* placing a given ell in a 5x5 area around it. 
-* Only the placement matrix for HOLE_UL is stored; the others are
-* computed by modifying it at run-time.
-* This function essentially maps a position on a matrix into the corresponding
-* position in the rotated matrix, and adds something to the result.*/
-unsigned Eternity2_LMove::readPlacementMatrix(unsigned row, unsigned column, unsigned ell){
-  unsigned ret = 4; // NO_ELL
-  unsigned rows = sizeof(Eternity2_LMove::placementMatrix);
-  unsigned cols = sizeof(Eternity2_LMove::placementMatrix[0]);
-  switch(ell){
-    case 0:
-      ret = placementMatrix[row][column];
-      break;
-    case 1:
-      ret = placementMatrix[rows-1-column][row];
-      break;
-    case 2:
-      ret = placementMatrix[rows-1-row][cols-1-column];
-      break;
-    case 3:
-      ret = placementMatrix[column][cols-1-row];
-      break;
-    default:
-      ret = ell;
-      break;
-  }
-  if(ret < Eternity2_LMove::NO_ELL) ret+=ell;
-  return ret;
 }
 
 

@@ -25,7 +25,7 @@ public:
   vector<Coord> even_chessboard;
   vector<Coord> odd_chessboard;
   vector<Coord> random_singleton;
-  vector<pair<Coord,int> > random_tts;
+  vector<pair<Coord,int>> random_tts;
   vector<pair<Coord,int>> random_L;
   //Moves counters
   mutable int singleton_counter;
@@ -140,10 +140,12 @@ class Eternity2_ThreeTileStreakMove
 };
 
 
-
-
 /****************************************
+*
 * L-shaped Move
+*
+* @author Elia
+*
 ******************************************/
 class Eternity2_LMove
 {
