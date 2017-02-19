@@ -1,0 +1,123 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%%% Custom sty file %%%
+%%%%%%%%%%%%%%%%%%%%%%%
+
+%% Creates a custom style package.
+%% Import this file with "\usepackage" and full path to the file.
+\ProvidesPackage{custom_style}
+
+\pagestyle{headings}
+\setlength{\parskip}{1ex plus 0.5ex minus 0.2ex}
+
+\usepackage[]{microtype}
+    \DeclareRobustCommand{\univsc}[1]{\Large\textsc{\textls[75]{#1}}}
+    \DeclareRobustCommand{\dipsc}[1]{\normalsize\textsc{\textls[75]{#1}}}
+    \DeclareRobustCommand{\titlesc}[1]{\linespread{1.2}\Large{\textls[50]{\uppercase{#1}}\linespread{1}}}
+    \DeclareRobustCommand{\subtitlesc}[1]{\large\textsc{\textls[50]{#1}}}
+    \DeclareRobustCommand{\namesc}[1]{\large\textsc{\textls[35]{#1}}} 
+
+%% Provides hyphenation patterns for different languages
+\usepackage[UKenglish]{babel}
+
+\usepackage[utf8]{inputenc}
+
+\usepackage[hidelinks]{hyperref}
+%% Adds "\noindent" command to avoid new paragraph indentation.
+\usepackage{indentfirst}
+%% Allows to set different kinds of enumerations in "enumerate" environment.
+\usepackage{enumerate}
+
+\newcommand{\hyphen}{\mbox{-}\nobreak\hspace{0.1em}}
+\newcommand{\hard}{\hyphen hard}
+\newcommand{\hardness}{\hyphen hardness}
+\newcommand{\complete}{\hyphen complete}
+\newcommand{\completeness}{\hyphen completeness}
+
+\renewcommand{\P}{\mathbf{P}}
+\newcommand{\NP}{\mathbf{NP}}
+\newcommand{\coNP}{\mathbf{coNP}}
+
+\newcommand{\dlp}{$\text{DLP}$}
+\newcommand{\dlpa}{$\text{DLP}^\mathcal{A}$}
+\newcommand{\norm}[1]{\parallel\hspace{-2pt}#1\hspace{-2pt}\parallel}
+\newcommand{\lp}[2]{LP$^{\{#1\}}_{\{#2\}}$}
+\newcommand{\Tp}[1]{\mathbb{T}_\mathcal{P}^{#1}}
+\newcommand{\T}[2]{\mathbb{T}_{\mathcal{P}_{#1}}^{#2}}
+\newcommand{\FP}[1]{\text{FP}_\mathcal{P}^{#1}}
+\newcommand{\FM}[1]{\text{FM}_\mathcal{P}^{#1}}
+
+\newcommand{\mk}{^\bullet}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{mathrsfs}
+\usepackage{mathtools}
+\usepackage{amsthm}
+    \theoremstyle{definition}
+        \newtheorem{dummy}{Dummy}[section]
+        \newtheorem{teo}{Theorem}
+        \newtheorem{defin}[dummy]{Definition}
+        \newtheorem{prop}[dummy]{Proposition}
+        \newtheorem{lem}[dummy]{Lemma}
+        \newtheorem{es}{Esample}
+
+\usepackage{graphicx}
+%\usepackage{bussproofs}
+\usepackage{varwidth}
+\usepackage{tikz}
+    \usetikzlibrary{decorations.pathreplacing,shapes}
+
+    \newcommand\twoheadmapsto{%
+        \hspace*{3pt}%
+            \begin{tikzpicture}%
+                \draw (0,0.06) -- (0,-0.06);%
+                \draw[arrows = {->>}] (0,0) -- (0.5,0);%
+            \end{tikzpicture}%
+        \hspace*{3pt}}
+
+    \newcommand\twoheadlongrightarrow{%
+        \hspace*{2pt}%
+            \begin{tikzpicture}%
+                \draw (0,0) -- (0,0);%
+                \draw [arrows = {->>}] (0,0.06) -- (0.5,0.06);%
+            \end{tikzpicture}%
+        \hspace*{2pt}}
+
+\usepackage{centernot}
+
+%\newenvironment{mathprooftree}
+%  {\varwidth{.9\textwidth}\centering\leavevmode}
+%  {\DisplayProof\endvarwidth}
+
+%% Servono??? %%
+
+\usepackage{cancel}
+\usepackage{relsize}
+\usepackage{setspace}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{etoolbox}
+\usepackage{tikz}
+    \usetikzlibrary{decorations.pathreplacing,shapes}
+\usepackage{tocbibind}
+\usepackage{suffix}
+\usepackage{ebproof}
+\usepackage{xfrac}
+%   \makeatletter
+%   \def\bflabel#1{{\textbf{\textsf{#1}}\hfill}}
+%   \renewenvironment{AC@deflist}[1]
+%   {\ifAC@nolist
+%   \else
+%   \begin{list}{}
+%   {\settowidth{\labelwidth}{\textbf{\textsf{#1}}}
+%   \setlength{\leftmargin}{\labelwidth}
+%   \addtolength{\leftmargin}{\labelsep}
+%   \renewcommand{\makelabel}{\bflabel}}
+%   \fi}
+%   {\ifAC@nolist
+%   \else
+%   \end{list}
+%   \fi}
+%   \makeatother

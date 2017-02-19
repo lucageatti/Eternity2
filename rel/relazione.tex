@@ -1,0 +1,45 @@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[a4paper,titlepage]{article}
+\usepackage{./custom_style}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+    \input{./tex/title.tex}
+
+    \clearpage\thispagestyle{empty}\mbox{}\clearpage
+
+    \pagenumbering{roman}
+
+    \newpage
+    \tableofcontents
+    \pagebreak
+
+    \clearpage\thispagestyle{empty}\mbox{}\clearpage
+
+    \pagenumbering{arabic}
+
+    \input{./tex/intro.tex}
+
+    \pagebreak
+
+    \input{./tex/sec2.tex} % Overview
+    \input{./tex/sec3.tex} % Singleton Move
+    \input{./tex/sec4.tex} % L-Move
+    \input{./tex/sec5.tex} % TTS Move
+    \input{./tex/sec6.tex} % Test
+    \input{./tex/sec7.tex} % Conclusions
+
+
+    %\pagebreak
+    %\appendix
+    %\input{./tex/app.tex}
+
+    %\pagebreak
+
+    %\input{./tex/bib.bib}
+
+\end{document}
