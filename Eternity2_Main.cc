@@ -1,6 +1,7 @@
 #include "Eternity2_Helpers.hh"
 #include "easylocal/helpers/multimodalneighborhoodexplorer.hh"
 
+
 using namespace EasyLocal::Debug;
 
 int main(int argc, const char* argv[])
@@ -88,7 +89,8 @@ int main(int argc, const char* argv[])
   MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_LMove> l_move_test(in,Eternity2_sm,Eternity2_om,ell_nhe, "L Move", tester);
   
 
-  SimpleLocalSearch<Eternity2_Input, Eternity2_Output, Eternity2_State> Eternity2_solver(in, Eternity2_sm, Eternity2_om, "Eternity2 solver");
+  SimpleLocalSearch<Eternity2_Input, Eternity2_Output, Eternity2_State> simple_solver(in, Eternity2_sm, Eternity2_om, "simple solver");
+  //MultiStartSearch<Eternity2_Input, Eternity2_Output, Eternity2_State> multi_start_solver(in, Eternity2_sm, Eternity2_om, "multi start solver");
   if (!CommandLineParameters::Parse(argc, argv, true, false))
     return 1;
 
@@ -104,25 +106,25 @@ int main(int argc, const char* argv[])
 
       if (method == string("SEO-SA"))
         {
-          Eternity2_solver.SetRunner(seo_sa);
+          simple_solver.SetRunner(seo_sa);
         }
       else if (method == string("STL-SA"))
         {
-          Eternity2_solver.SetRunner(stl_sa);
+          simple_solver.SetRunner(stl_sa);
         }
       else if (method == string("SEO-SD"))
         {
-          Eternity2_solver.SetRunner(seo_sd);
+          simple_solver.SetRunner(seo_sd);
         }
       else if (method == string("STL-SD"))
         {
-          Eternity2_solver.SetRunner(stl_sd);
+          simple_solver.SetRunner(stl_sd);
         }
       else
         {
-          Eternity2_solver.SetRunner(Eternity2_hc);
+          simple_solver.SetRunner(Eternity2_hc);
         }
-      auto result = Eternity2_solver.Solve();
+      auto result = simple_solver.Solve();
 	  // result is a tuple: 0: solutio, 1: number of violations, 2: total cost, 3: computing time
       Eternity2_Output out = result.output;
       if (output_file.IsSet())

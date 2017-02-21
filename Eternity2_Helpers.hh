@@ -106,7 +106,7 @@ public:
   bool FeasibleMove(const Eternity2_State&, const Eternity2_EvenChessboardMove&) const;  
   void MakeMove(Eternity2_State&,const Eternity2_EvenChessboardMove&) const;
   bool NextMove(const Eternity2_State&,Eternity2_EvenChessboardMove&) const;
-  void BestMove(const Eternity2_State&,Eternity2_EvenChessboardMove&) const;
+  EvaluatedMove<Eternity2_EvenChessboardMove, DefaultCostStructure<int>> SelectBest(const Eternity2_State& st, size_t& explored, const MoveAcceptor& AcceptMove, const std::vector<double>& weights) const throw (EmptyNeighborhood);
   void RandomMove(const Eternity2_State&, Eternity2_EvenChessboardMove&) const throw(EmptyNeighborhood);        
   void FirstMove(const Eternity2_State&,Eternity2_EvenChessboardMove&) const throw(EmptyNeighborhood);
 protected:
@@ -114,7 +114,7 @@ protected:
   bool incrementPermutation(Eternity2_EvenChessboardMove& mv) const;
   vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State&,Eternity2_EvenChessboardMove&) const;
   void forceUpdate(const Eternity2_State& st) const;
-  void createMove(Eternity2_EvenChessboardMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const;
+  void createMove(Eternity2_EvenChessboardMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>>& graph) const;
 };
 
 
@@ -146,7 +146,7 @@ public:
   bool FeasibleMove(const Eternity2_State&, const Eternity2_OddChessboardMove&) const;  
   void MakeMove(Eternity2_State&,const Eternity2_OddChessboardMove&) const;
   bool NextMove(const Eternity2_State&,Eternity2_OddChessboardMove&) const;
-  void BestMove(const Eternity2_State&,Eternity2_OddChessboardMove&) const;
+  EvaluatedMove<Eternity2_OddChessboardMove, DefaultCostStructure<int>> SelectBest(const Eternity2_State& st, size_t& explored, const MoveAcceptor& AcceptMove, const std::vector<double>& weights) const throw (EmptyNeighborhood);
   void RandomMove(const Eternity2_State&, Eternity2_OddChessboardMove&) const throw(EmptyNeighborhood);        
   void FirstMove(const Eternity2_State&,Eternity2_OddChessboardMove&) const throw(EmptyNeighborhood);
 protected:
@@ -154,7 +154,7 @@ protected:
   bool incrementPermutation(Eternity2_OddChessboardMove& mv) const;
   vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State&,Eternity2_OddChessboardMove&) const;
   void forceUpdate(const Eternity2_State& st) const;
-  void createMove(Eternity2_OddChessboardMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const;
+  void createMove(Eternity2_OddChessboardMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>>& graph) const;
 };
 
 

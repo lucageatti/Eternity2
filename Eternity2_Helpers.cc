@@ -547,15 +547,15 @@ bool EvenChessboardMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State&
 void EvenChessboardMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_EvenChessboardMove& mv) const
 {
   vector<Coord> coords = mv.getCoordinates();
-  vector<IDO> old_tiles = vector<IDO>(coords.size());
+  vector<tileMove> changes = vector<tileMove>(coords.size());
   for(unsigned c = 0; c < coords.size(); c++){
-    old_tiles.at(c) = st.getIDOAt(coords.at(c));
+    changes[c] = make_pair(make_pair(st.getIDOAt( coords[mv.getIndexAt(c)] ).first , mv.getOrientationAt(c)) , coords[c]);
   }
-  for(unsigned c = 0; c < coords.size(); c++){
-    old_tiles.at(mv.getIndexAt(c)).second = mv.getOrientationAt(c);
-    st.insertTile(old_tiles.at(mv.getIndexAt(c)), coords.at(c));
+  for(unsigned c = 0; c < changes.size(); c++){
+    st.insertTile(changes[c].first, changes[c].second);
   }
 }
+
 
 
 /*
@@ -574,16 +574,23 @@ bool EvenChessboardMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st,
 
 
 /*
-* 
+* It exploits the "Hungarian Algorithm" to compute the perfect matching and to create the best move.
 */
-void EvenChessboardMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_EvenChessboardMove& mv) const{
+EvaluatedMove<Eternity2_EvenChessboardMove, DefaultCostStructure<int>> EvenChessboardMoveNeighborhoodExplorer::SelectBest(const Eternity2_State& st, size_t& explored, const MoveAcceptor& AcceptMove, const std::vector<double>& weights) const throw (EmptyNeighborhood){
+  //Creation of the move
+  Eternity2_EvenChessboardMove mv = Eternity2_EvenChessboardMove();
+  mv.setCoordinates(st.even_chessboard);
+  //forcing the update
   forceUpdate(st);
   //creating the graph
   vector<vector<pair<int,Orientation>>> graph = createGraph(st, mv);
+
   //calling the hungarian algorithm
   vector<int> match = hungarianAlgorithm(graph);
   //creating the move
   createMove(mv, match, graph);
+  //Creation of Evaluated Move
+  return EvaluatedMove<Eternity2_EvenChessboardMove, DefaultCostStructure<int>>(mv, DefaultCostStructure<int>());
 }
 
 
@@ -712,12 +719,13 @@ void EvenChessboardMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& 
 
 
 /*
-* 
+*
 */
-void EvenChessboardMoveNeighborhoodExplorer::createMove(Eternity2_EvenChessboardMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const {
+void EvenChessboardMoveNeighborhoodExplorer::createMove(Eternity2_EvenChessboardMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>>& graph) const {
+  mv.createPermutationVector(match.size());
   for(int i = 0; i < match.size(); ++i){
-    mv.setIndex(i, match[i]);
-    mv.setOrientation(i, graph[i][match[i]].second);
+    mv.setIndex(match[i], i);
+    mv.setOrientation(match[i], graph[i][match[i]].second);
   }
 }
 
@@ -838,15 +846,14 @@ bool OddChessboardMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& 
 void OddChessboardMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_OddChessboardMove& mv) const
 {
   vector<Coord> coords = mv.getCoordinates();
-  vector<IDO> old_tiles = vector<IDO>(coords.size());
+  vector<tileMove> changes = vector<tileMove>(coords.size());
   for(unsigned c = 0; c < coords.size(); c++){
-    old_tiles.at(c) = st.getIDOAt(coords.at(c));
+    changes[c] = make_pair(make_pair(st.getIDOAt( coords[mv.getIndexAt(c)] ).first , mv.getOrientationAt(c)) , coords[c]);
   }
-  for(unsigned c = 0; c < coords.size(); c++){
-    old_tiles.at(mv.getIndexAt(c)).second = mv.getOrientationAt(c);
-    st.insertTile(old_tiles.at(mv.getIndexAt(c)), coords.at(c));
+  for(unsigned c = 0; c < changes.size(); c++){
+    st.insertTile(changes[c].first, changes[c].second);
   }
-} 
+}
 
 
 /*
@@ -865,16 +872,23 @@ bool OddChessboardMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, 
 
 
 /*
-* 
+* It exploits the "Hungarian Algorithm" to compute the perfect matching and to create the best move.
 */
-void OddChessboardMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_OddChessboardMove& mv) const{
+EvaluatedMove<Eternity2_OddChessboardMove, DefaultCostStructure<int>> OddChessboardMoveNeighborhoodExplorer::SelectBest(const Eternity2_State& st, size_t& explored, const MoveAcceptor& AcceptMove, const std::vector<double>& weights) const throw (EmptyNeighborhood){
+  //Creation of the move
+  Eternity2_OddChessboardMove mv = Eternity2_OddChessboardMove();
+  mv.setCoordinates(st.odd_chessboard);
+  //forcing the update
   forceUpdate(st);
   //creating the graph
   vector<vector<pair<int,Orientation>>> graph = createGraph(st, mv);
+
   //calling the hungarian algorithm
   vector<int> match = hungarianAlgorithm(graph);
   //creating the move
   createMove(mv, match, graph);
+  //Creation of Evaluated Move
+  return EvaluatedMove<Eternity2_OddChessboardMove, DefaultCostStructure<int>>(mv, DefaultCostStructure<int>());
 }
 
 
@@ -1003,12 +1017,13 @@ void OddChessboardMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& s
 
 
 /*
-* 
+*
 */
-void OddChessboardMoveNeighborhoodExplorer::createMove(Eternity2_OddChessboardMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const {
+void OddChessboardMoveNeighborhoodExplorer::createMove(Eternity2_OddChessboardMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>>& graph) const {
+  mv.createPermutationVector(match.size());
   for(int i = 0; i < match.size(); ++i){
-    mv.setIndex(i, match[i]);
-    mv.setOrientation(i, graph[i][match[i]].second);
+    mv.setIndex(match[i], i);
+    mv.setOrientation(match[i], graph[i][match[i]].second);
   }
 }
 
