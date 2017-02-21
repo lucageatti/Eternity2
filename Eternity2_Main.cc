@@ -53,8 +53,7 @@ int main(int argc, const char* argv[])
 
   //3-modal neighborhood explorers:
     // 1. singleton + odd-chessboard + even-chessboard
-    SetUnionNeighborhoodExplorer<Eternity2_Input, Eternity2_State, DefaultCostStructure<int>, decltype(singleton_nhe), decltype(even_chess_nhe), decltype(odd_chess_nhe)> 
-      seo_nhe(in, Eternity2_sm, "Singleton+Even+Odd", singleton_nhe, even_chess_nhe, odd_chess_nhe, { insert_ratio, (1-insert_ratio)/2 , (1-insert_ratio)/2 });
+    SEONeighborhoodExplorer seo_nhe(in, Eternity2_sm, singleton_nhe, even_chess_nhe, odd_chess_nhe, insert_ratio, (1-insert_ratio)/2 , (1-insert_ratio)/2);
     // 2. singleton + tts + l_move
     SetUnionNeighborhoodExplorer<Eternity2_Input, Eternity2_State, DefaultCostStructure<int>, decltype(singleton_nhe), decltype(tts_nhe), decltype(ell_nhe)> 
       stl_nhe(in, Eternity2_sm, "Singleton+TTS+LMove", singleton_nhe, tts_nhe, ell_nhe, { 2/3, 1/6, 1/6 });
@@ -87,6 +86,8 @@ int main(int argc, const char* argv[])
   MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_OddChessboardMove> odd_chessboard_move_test(in,Eternity2_sm,Eternity2_om,odd_chess_nhe, "Odd Chessboard Move", tester);
   MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_ThreeTileStreakMove> tts_move_test(in,Eternity2_sm,Eternity2_om,tts_nhe, "Three Tiles Streak Move", tester);
   MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, Eternity2_LMove> l_move_test(in,Eternity2_sm,Eternity2_om,ell_nhe, "L Move", tester);
+  MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, decltype(seo_nhe)::MoveType> seo_move_test(in,Eternity2_sm,Eternity2_om,seo_nhe, "SEO Move", tester);
+  MoveTester<Eternity2_Input, Eternity2_Output, Eternity2_State, decltype(stl_nhe)::MoveType> stl_move_test(in,Eternity2_sm,Eternity2_om,stl_nhe, "STL Move", tester);
   
 
   SimpleLocalSearch<Eternity2_Input, Eternity2_Output, Eternity2_State> simple_solver(in, Eternity2_sm, Eternity2_om, "simple solver");

@@ -3,7 +3,7 @@
 #define Eternity2_HELPERS_HH
 
 #include "Eternity2_Basics.hh"
-
+#include "easylocal/helpers/multimodalneighborhoodexplorer.hh"
 
 using namespace EasyLocal::Core;
 
@@ -153,6 +153,35 @@ protected:
   bool incrementPermutation(Eternity2_OddChessboardMove& mv) const;
   vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State&,Eternity2_OddChessboardMove&) const;
   void createMove(Eternity2_OddChessboardMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>>& graph) const;
+};
+
+
+
+
+
+class SEONeighborhoodExplorer
+  : public SetUnionNeighborhoodExplorer<Eternity2_Input, Eternity2_State, DefaultCostStructure<int>, SingletonMoveNeighborhoodExplorer, EvenChessboardMoveNeighborhoodExplorer, OddChessboardMoveNeighborhoodExplorer> 
+{
+public:
+  SEONeighborhoodExplorer(const Eternity2_Input & pin, StateManager<Eternity2_Input,Eternity2_State>& psm, 
+                          SingletonMoveNeighborhoodExplorer singleton_nhe, 
+                          EvenChessboardMoveNeighborhoodExplorer even_chess_nhe, 
+                          OddChessboardMoveNeighborhoodExplorer odd_chess_nhe, 
+                          double c1, double c2, double c3 )  
+    : SetUnionNeighborhoodExplorer<Eternity2_Input, Eternity2_State, DefaultCostStructure<int>, decltype(singleton_nhe), decltype(even_chess_nhe), decltype(odd_chess_nhe)> 
+      (in, psm, "Singleton+Even+Odd", singleton_nhe, even_chess_nhe, odd_chess_nhe, {c1, c2, c3}) {} 
+  //bool FeasibleMove(const Eternity2_State&, const Eternity2_OddChessboardMove&) const;  
+  //void MakeMove(Eternity2_State&,const Eternity2_OddChessboardMove&) const;
+  //bool NextMove(const Eternity2_State&,Eternity2_OddChessboardMove&) const;
+  EvaluatedMove<tuple<EasyLocal::Core::ActiveMove<Eternity2_SingletonMove>,
+      EasyLocal::Core::ActiveMove<Eternity2_EvenChessboardMove>, EasyLocal::Core::ActiveMove<Eternity2_OddChessboardMove> >, DefaultCostStructure<int>> SelectBest(const Eternity2_State& st, size_t& explored, const MoveAcceptor& AcceptMove, const std::vector<double>& weights) const throw (EmptyNeighborhood) {}
+  //void RandomMove(const Eternity2_State&, Eternity2_OddChessboardMove&) const throw(EmptyNeighborhood);        
+  //void FirstMove(const Eternity2_State&,Eternity2_OddChessboardMove&) const throw(EmptyNeighborhood);
+protected:
+  //bool incrementOrientation(Eternity2_OddChessboardMove& mv) const;
+  //bool incrementPermutation(Eternity2_OddChessboardMove& mv) const;
+  //vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State&,Eternity2_OddChessboardMove&) const;
+  //void createMove(Eternity2_OddChessboardMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>>& graph) const;
 };
 
 
