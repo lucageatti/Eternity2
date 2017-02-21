@@ -581,7 +581,7 @@ EvaluatedMove<Eternity2_EvenChessboardMove, DefaultCostStructure<int>> EvenChess
   Eternity2_EvenChessboardMove mv = Eternity2_EvenChessboardMove();
   mv.setCoordinates(st.even_chessboard);
   //forcing the update
-  forceUpdate(st);
+  //forceUpdate(st);
   //creating the graph
   vector<vector<pair<int,Orientation>>> graph = createGraph(st, mv);
 
@@ -682,26 +682,29 @@ bool EvenChessboardMoveNeighborhoodExplorer::incrementPermutation(Eternity2_Even
 
 
 /*
-*
+* 
 */
-vector<vector<pair<int,Orientation>>> EvenChessboardMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st, Eternity2_EvenChessboardMove& mv) const{
-  bool stop;
+vector<vector<pair<int,Orientation>>> EvenChessboardMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st, Eternity2_SingletonMove& mv) const{
   pair<int,Orientation> best_weight;
   vector<Coord> mv_coords = mv.getCoordinates();
   //declaring the matrix
-  vector<vector<pair<int,Orientation>>> graph = vector<vector<pair<int,Orientation>>>(mv_coords.size());
+  vector<vector<pair<int,Orientation>>> graph(mv_coords.size());
   //filling the matrix
   for(int r = 0; r < graph.size(); ++r){
     graph[r] = vector<pair<int,Orientation>>(graph.size());
     IDO old_tile = st.getIDOAt(mv_coords[r]);
     for(int c = 0; c < graph.size(); ++c){
-      stop = false;
       old_tile.second = 0;
-      best_weight.first = singleTileCost(old_tile, mv_coords[c], st);
-      for(int i = 1; i < 3; i++){
+      best_weight.first = deltaSingleTileCost(old_tile, mv_coords[c], st);
+      best_weight.second = 0;
+      int new_stl;
+      for(int i = 1; i < 4; i++){
         old_tile.second = i;
-        best_weight.first = std::min( singleTileCost(old_tile, mv_coords[c], st), best_weight.first );
-        best_weight.second = i;
+        new_stl = deltaSingleTileCost(old_tile, mv_coords[c], st);
+        if( new_stl < best_weight.first ){ 
+          best_weight.first = new_stl;
+          best_weight.second = i;
+        }
       }
       graph[r][c] = best_weight;
     }
@@ -710,12 +713,6 @@ vector<vector<pair<int,Orientation>>> EvenChessboardMoveNeighborhoodExplorer::cr
 }
 
 
-/*
-* 
-*/
-void EvenChessboardMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& st) const {
-  st.singleton_counter = 0;
-}
 
 
 /*
@@ -879,7 +876,7 @@ EvaluatedMove<Eternity2_OddChessboardMove, DefaultCostStructure<int>> OddChessbo
   Eternity2_OddChessboardMove mv = Eternity2_OddChessboardMove();
   mv.setCoordinates(st.odd_chessboard);
   //forcing the update
-  forceUpdate(st);
+  //forceUpdate(st);
   //creating the graph
   vector<vector<pair<int,Orientation>>> graph = createGraph(st, mv);
 
@@ -982,24 +979,27 @@ bool OddChessboardMoveNeighborhoodExplorer::incrementPermutation(Eternity2_OddCh
 /*
 * 
 */
-vector<vector<pair<int,Orientation>>> OddChessboardMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st, Eternity2_OddChessboardMove& mv) const{
-  bool stop;
+vector<vector<pair<int,Orientation>>> OddChessboardMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st, Eternity2_SingletonMove& mv) const{
   pair<int,Orientation> best_weight;
   vector<Coord> mv_coords = mv.getCoordinates();
   //declaring the matrix
-  vector<vector<pair<int,Orientation>>> graph = vector<vector<pair<int,Orientation>>>(mv_coords.size());
+  vector<vector<pair<int,Orientation>>> graph(mv_coords.size());
   //filling the matrix
   for(int r = 0; r < graph.size(); ++r){
     graph[r] = vector<pair<int,Orientation>>(graph.size());
     IDO old_tile = st.getIDOAt(mv_coords[r]);
     for(int c = 0; c < graph.size(); ++c){
-      stop = false;
       old_tile.second = 0;
-      best_weight.first = singleTileCost(old_tile, mv_coords[c], st);
-      for(int i = 1; i < 3; i++){
+      best_weight.first = deltaSingleTileCost(old_tile, mv_coords[c], st);
+      best_weight.second = 0;
+      int new_stl;
+      for(int i = 1; i < 4; i++){
         old_tile.second = i;
-        best_weight.first = std::min( singleTileCost(old_tile, mv_coords[c], st), best_weight.first );
-        best_weight.second = i;
+        new_stl = deltaSingleTileCost(old_tile, mv_coords[c], st);
+        if( new_stl < best_weight.first ){ 
+          best_weight.first = new_stl;
+          best_weight.second = i;
+        }
       }
       graph[r][c] = best_weight;
     }
@@ -1007,13 +1007,6 @@ vector<vector<pair<int,Orientation>>> OddChessboardMoveNeighborhoodExplorer::cre
   return graph;
 }
 
-
-/*
-* 
-*/
-void OddChessboardMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& st) const {
-  st.singleton_counter = 0;
-}
 
 
 /*
