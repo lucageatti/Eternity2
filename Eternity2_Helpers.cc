@@ -243,9 +243,6 @@ void SingletonMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eter
   vector<tileMove> changes = vector<tileMove>(coords.size());
   for(unsigned c = 0; c < coords.size(); c++){
     changes[c] = make_pair(make_pair(st.getIDOAt( coords[mv.getIndexAt(c)] ).first , mv.getOrientationAt(c)) , coords[c]);
-    cout << "changes[c].first.first = " << changes[c].first.first << endl;
-    cout << "changes[c].first.second = " << changes[c].first.second << endl;
-
   }
   for(unsigned c = 0; c < changes.size(); c++){
     st.insertTile(changes[c].first, changes[c].second);
@@ -279,7 +276,7 @@ EvaluatedMove<Eternity2_SingletonMove, DefaultCostStructure<int>> SingletonMoveN
   forceUpdate(st);
   //creating the graph
   vector<vector<pair<int,Orientation>>> graph = createGraph(st, mv);
-  
+
   //calling the hungarian algorithm
   vector<int> match = hungarianAlgorithm(graph);
   //creating the move

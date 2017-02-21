@@ -1,0 +1,38 @@
+0 CONFLICTS:
+
+--- Simulated Annealing with 3-modal move Singleton+Even+Odd (prob: 0.7, 0.15, 0.15)
+./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_03x03.txt" --main::seed 0 --main::method SEO-SA --SEO_SA::start_temperature 5000 --SEO_SA::min_temperature 1 --SEO_SA::cooling_rate 0.99 --SEO_SA::neighbors_sampled 1000 --SEO_SA::neighbors_accepted 1000 --main::insert_ratio 0.7
+
+
+--- Simulated Annealing with 3-modal move Singleton+Even+Odd (prob: 0.7, 0.15, 0.15)
+./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_04x04.txt" --main::seed 0 --main::method SEO-SA --SEO_SA::start_temperature 10000 --SEO_SA::min_temperature 1 --SEO_SA::cooling_rate 0.99 --SEO_SA::neighbors_sampled 1000 --SEO_SA::neighbors_accepted 500 --main::insert_ratio 0.5
+
+
+
+
+
+
+
+TESTS:
+
+--- Steepest Descent with 3-modal move Singleton+Even+Odd (prob: 0.5, 0.25, 0.25)
+./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_03x03.txt" --main::seed 5 --main::method SD --SEO_SD::max_evaluations 1000000000
+
+
+
+--- Simulated Annealing with 3-modal move Singleton+Even+Odd (prob: 0.5, 0.25, 0.25)
+./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_04x04.txt" --main::seed 0 --main::method SA --SEO_SA::start_temperature 10000 --SEO_SA::min_temperature 1 --SEO_SA::cooling_rate 0.99 --SEO_SA::neighbors_sampled 1000 --SEO_SA::neighbors_accepted 1000 --main::insert_ratio 0.25
+
+
+
+--- Simulated Annealing with 4-modal move Singleton+TTS+LMove (prob: 0.3, 0.3, 0.3)
+./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_04x04.txt" --main::seed 0 --main::method SA --STL_SA::start_temperature 10000 --STL_SA::min_temperature 1 --STL_SA::cooling_rate 0.99 --STL_SA::neighbors_sampled 1000 --STL_SA::neighbors_accepted 1000 --main::insert_ratio 0.25
+
+
+
+
+--- ...
+./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_07x07.txt" --main::seed 0 --main::method STL-SA --STL_SA::start_temperature 10000 --STL_SA::min_temperature 1 --STL_SA::cooling_rate 0.96 --STL_SA::neighbors_sampled 1000 --STL_SA::neighbors_accepted 1000 
+
+--- ...
+./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_07x07.txt" --main::seed 0 --main::method SEO-SA --SEO_SA::start_temperature 10000 --SEO_SA::min_temperature 1 --SEO_SA::cooling_rate 0.97 --SEO_SA::neighbors_sampled 1000 --SEO_SA::neighbors_accepted 1000 

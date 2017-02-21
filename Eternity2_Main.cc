@@ -56,7 +56,7 @@ int main(int argc, const char* argv[])
       seo_nhe(in, Eternity2_sm, "Singleton+Even+Odd", singleton_nhe, even_chess_nhe, odd_chess_nhe, { insert_ratio, (1-insert_ratio)/2 , (1-insert_ratio)/2 });
     // 2. singleton + tts + l_move
     SetUnionNeighborhoodExplorer<Eternity2_Input, Eternity2_State, DefaultCostStructure<int>, decltype(singleton_nhe), decltype(tts_nhe), decltype(ell_nhe)> 
-      stl_nhe(in, Eternity2_sm, "Singleton+TTS", singleton_nhe, tts_nhe, ell_nhe, { 1/3, 1/3, 1/3 });
+      stl_nhe(in, Eternity2_sm, "Singleton+TTS+LMove", singleton_nhe, tts_nhe, ell_nhe, { 2/3, 1/6, 1/6 });
       
   Eternity2_OutputManager Eternity2_om(in);
   
@@ -74,9 +74,10 @@ int main(int argc, const char* argv[])
   HillClimbing<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_hc(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveHillClimbing");
   //SteepestDescent<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_sd(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSteepestDescent");
   //SimulatedAnnealing<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_sa(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSimulatedAnnealing");
-  SimulatedAnnealing<Eternity2_Input, Eternity2_State, decltype(seo_nhe)::MoveType> Eternity2_sa(in, Eternity2_sm, seo_nhe, "SEO_SA"); 
+  SimulatedAnnealing<Eternity2_Input, Eternity2_State, decltype(seo_nhe)::MoveType> seo_sa(in, Eternity2_sm, seo_nhe, "SEO_SA"); 
   SimulatedAnnealing<Eternity2_Input, Eternity2_State, decltype(stl_nhe)::MoveType> stl_sa(in, Eternity2_sm, stl_nhe, "STL_SA"); 
-  SteepestDescent<Eternity2_Input, Eternity2_State, decltype(seo_nhe)::MoveType> Eternity2_sd(in, Eternity2_sm, seo_nhe, "SEO_SD");
+  SteepestDescent<Eternity2_Input, Eternity2_State, decltype(seo_nhe)::MoveType> seo_sd(in, Eternity2_sm, seo_nhe, "SEO_SD");
+  SteepestDescent<Eternity2_Input, Eternity2_State, decltype(stl_nhe)::MoveType> stl_sd(in, Eternity2_sm, stl_nhe, "STL_SD");
 
   // tester
   Tester<Eternity2_Input, Eternity2_Output, Eternity2_State> tester(in,Eternity2_sm,Eternity2_om);
@@ -101,17 +102,25 @@ int main(int argc, const char* argv[])
   else
     {
 
-      if (method == string("SA"))
+      if (method == string("SEO-SA"))
+        {
+          Eternity2_solver.SetRunner(seo_sa);
+        }
+      else if (method == string("STL-SA"))
         {
           Eternity2_solver.SetRunner(stl_sa);
         }
-      else if (method == string("HC"))
+      else if (method == string("SEO-SD"))
+        {
+          Eternity2_solver.SetRunner(seo_sd);
+        }
+      else if (method == string("STL-SD"))
+        {
+          Eternity2_solver.SetRunner(stl_sd);
+        }
+      else
         {
           Eternity2_solver.SetRunner(Eternity2_hc);
-        }
-      else // if (method.GetValue() == string("SD"))
-        {
-          Eternity2_solver.SetRunner(Eternity2_sd);
         }
       auto result = Eternity2_solver.Solve();
 	  // result is a tuple: 0: solutio, 1: number of violations, 2: total cost, 3: computing time
