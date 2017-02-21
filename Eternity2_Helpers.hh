@@ -65,7 +65,7 @@ public:
   bool FeasibleMove(const Eternity2_State&, const Eternity2_SingletonMove&) const;  
   void MakeMove(Eternity2_State&,const Eternity2_SingletonMove&) const;
   bool NextMove(const Eternity2_State&,Eternity2_SingletonMove&) const;
-  void BestMove(const Eternity2_State&,Eternity2_SingletonMove&) const;
+  EvaluatedMove<Eternity2_SingletonMove, DefaultCostStructure<int>> SelectBest(const Eternity2_State& st, size_t& explored, const MoveAcceptor& AcceptMove, const std::vector<double>& weights) const throw (EmptyNeighborhood);
   void RandomMove(const Eternity2_State&, Eternity2_SingletonMove&) const throw(EmptyNeighborhood);        
   void FirstMove(const Eternity2_State&,Eternity2_SingletonMove&) const throw(EmptyNeighborhood);
 protected:
@@ -74,7 +74,7 @@ protected:
   vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State&,Eternity2_SingletonMove&) const;
   void updateCoords(Eternity2_State& st) const;
   void forceUpdate(const Eternity2_State& st) const;
-  void createMove(Eternity2_SingletonMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const;
+  void createMove(Eternity2_SingletonMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>>& graph) const;
 };
 
 
@@ -188,13 +188,13 @@ class ThreeTileStreakMoveNeighborhoodExplorer
   public:
     ThreeTileStreakMoveNeighborhoodExplorer(const Eternity2_Input & pin, StateManager<Eternity2_Input,Eternity2_State>& psm)  
       : NeighborhoodExplorer<Eternity2_Input,Eternity2_State,Eternity2_ThreeTileStreakMove>(pin, psm, "ThreeTileStreakMoveNeighborhoodExplorer") {} 
-    void RandomMove(const Eternity2_State&, Eternity2_ThreeTileStreakMove&) const throw(EmptyNeighborhood);          
     bool FeasibleMove(const Eternity2_State&, const Eternity2_ThreeTileStreakMove&) const;  
     void MakeMove(Eternity2_State&,const Eternity2_ThreeTileStreakMove&) const;             
-    void FirstMove(const Eternity2_State&,Eternity2_ThreeTileStreakMove&) const throw(EmptyNeighborhood);  
     bool NextMove(const Eternity2_State&,Eternity2_ThreeTileStreakMove&) const;
-    void BestMove(const Eternity2_State&,Eternity2_ThreeTileStreakMove&) const;
-
+    EvaluatedMove<Eternity2_ThreeTileStreakMove, DefaultCostStructure<int>> SelectBest(const Eternity2_State& st, size_t& explored, const MoveAcceptor& AcceptMove, const std::vector<double>& weights) const throw (EmptyNeighborhood);
+    void RandomMove(const Eternity2_State&, Eternity2_ThreeTileStreakMove&) const throw(EmptyNeighborhood);
+    void FirstMove(const Eternity2_State&,Eternity2_ThreeTileStreakMove&) const throw(EmptyNeighborhood);  
+    
   protected:
     bool incrementOrientation(Eternity2_ThreeTileStreakMove& mv) const;
     bool incrementPermutation(Eternity2_ThreeTileStreakMove& mv) const;
@@ -264,6 +264,7 @@ public:
 //Common methods and functions
 vector<unsigned> FisherYatesShuffle(unsigned sz);
 int singleTileCost(IDO ido, Coord crd, const Eternity2_State& st);
+int deltaSingleTileCost(IDO ido, Coord crd, const Eternity2_State& st);
 
 //Hungarian Algorithm
 vector<int> hungarianAlgorithm(vector<vector<pair<int,Orientation>>>& m);
