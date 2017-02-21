@@ -684,7 +684,7 @@ bool EvenChessboardMoveNeighborhoodExplorer::incrementPermutation(Eternity2_Even
 /*
 * 
 */
-vector<vector<pair<int,Orientation>>> EvenChessboardMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st, Eternity2_SingletonMove& mv) const{
+vector<vector<pair<int,Orientation>>> EvenChessboardMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st, Eternity2_EvenChessboardMove& mv) const{
   pair<int,Orientation> best_weight;
   vector<Coord> mv_coords = mv.getCoordinates();
   //declaring the matrix
@@ -979,7 +979,7 @@ bool OddChessboardMoveNeighborhoodExplorer::incrementPermutation(Eternity2_OddCh
 /*
 * 
 */
-vector<vector<pair<int,Orientation>>> OddChessboardMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st, Eternity2_SingletonMove& mv) const{
+vector<vector<pair<int,Orientation>>> OddChessboardMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st, Eternity2_OddChessboardMove& mv) const{
   pair<int,Orientation> best_weight;
   vector<Coord> mv_coords = mv.getCoordinates();
   //declaring the matrix

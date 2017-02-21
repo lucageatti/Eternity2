@@ -112,7 +112,7 @@ public:
 protected:
   bool incrementOrientation(Eternity2_EvenChessboardMove& mv) const;
   bool incrementPermutation(Eternity2_EvenChessboardMove& mv) const;
-  vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State&,Eternity2_EvenChessboardMove&) const;
+  vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State& st, Eternity2_EvenChessboardMove& mv) const;
   void createMove(Eternity2_EvenChessboardMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>>& graph) const;
 };
 
