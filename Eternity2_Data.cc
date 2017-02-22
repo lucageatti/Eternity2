@@ -166,6 +166,13 @@ ostream& operator<<(ostream& os, const Eternity2_Output& out)
     }
     //os << endl;
   }
+  cout << "Orientations:" << endl;
+  for(int i = 0; i < out.board.size(); i++){
+    for(int j = 0; j < out.board[i].size(); j++){
+      cout << "(" << i << "," << j << ") --> " << out.board[i][j].second << endl;
+    }
+  }
+
   return os;
 }
 
