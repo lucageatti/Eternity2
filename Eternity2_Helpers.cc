@@ -1960,19 +1960,11 @@ void Eternity2_LMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& st)
   st.L_counter = 0;
 }
 
-/*
-           T
-      T TODO
-     TODO  D
-      D D  O
-     TODO
 
-*/
 void Eternity2_LMoveNeighborhoodExplorer::createMove(Eternity2_LMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const {
-  /*for(int i = 0; i < match.size(); ++i){
-    mv.setIndex(i, match[i]);
-    mv.setOrientation(i, graph[i][match[i]].second);
-  }*/
+  for(int i = 0; i < match.size(); ++i){
+    mv.ellSelection[i] = match[i];
+  }
 }
 
 
