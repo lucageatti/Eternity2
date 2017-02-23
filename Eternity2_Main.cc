@@ -17,8 +17,10 @@ int main(int argc, const char* argv[])
   Parameter<string> init_state("init_state", "Initial state (to be read from file)", main_parameters);
   Parameter<unsigned> observer("observer", "Attach the observers", main_parameters);
   Parameter<string> output_file("output_file", "Write the output to a file (filename required)", main_parameters);
-  Parameter<double> insert_ratio("insert_ratio", "Ratio of Insert moves", main_parameters);
-  insert_ratio = 0.5;
+  Parameter<double> p1("p1", "Ratio of first move", main_parameters);
+  Parameter<double> p2("p2", "Ratio of first move", main_parameters);
+  Parameter<double> p3("p3", "Ratio of first move", main_parameters);
+  p1 = p2 = p3 = 1/3;
 
   // 3rd parameter: false = do not check unregistered parameters
   // 4th parameter: true = silent
@@ -53,10 +55,11 @@ int main(int argc, const char* argv[])
 
   //3-modal neighborhood explorers:
     // 1. singleton + odd-chessboard + even-chessboard
-    SEONeighborhoodExplorer seo_nhe(in, Eternity2_sm, singleton_nhe, even_chess_nhe, odd_chess_nhe, insert_ratio, (1-insert_ratio)/2 , (1-insert_ratio)/2);
+    SetUnionNeighborhoodExplorer<Eternity2_Input, Eternity2_State, DefaultCostStructure<int>, decltype(singleton_nhe), decltype(even_chess_nhe), decltype(odd_chess_nhe)> 
+      seo_nhe(in, Eternity2_sm, "Singleton+Even+Odd", singleton_nhe, even_chess_nhe, odd_chess_nhe, {p1, p2, p3});
     // 2. singleton + tts + l_move
     SetUnionNeighborhoodExplorer<Eternity2_Input, Eternity2_State, DefaultCostStructure<int>, decltype(singleton_nhe), decltype(tts_nhe), decltype(ell_nhe)> 
-      stl_nhe(in, Eternity2_sm, "Singleton+TTS+LMove", singleton_nhe, tts_nhe, ell_nhe, { 2/3, 1/6, 1/6 });
+      stl_nhe(in, Eternity2_sm, "Singleton+TTS+LMove", singleton_nhe, tts_nhe, ell_nhe, {p1, p2, p3});
       
   Eternity2_OutputManager Eternity2_om(in);
   
@@ -71,13 +74,13 @@ int main(int argc, const char* argv[])
   ell_nhe.AddDeltaCostComponent(ell_move);  
   
   // runners
-  HillClimbing<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_hc(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveHillClimbing");
-  //SteepestDescent<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_sd(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSteepestDescent");
-  //SimulatedAnnealing<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> Eternity2_sa(in, Eternity2_sm, singleton_nhe, "Eternity2_SingletonMoveSimulatedAnnealing");
+  //SA
   SimulatedAnnealing<Eternity2_Input, Eternity2_State, decltype(seo_nhe)::MoveType> seo_sa(in, Eternity2_sm, seo_nhe, "SEO_SA"); 
   SimulatedAnnealing<Eternity2_Input, Eternity2_State, decltype(stl_nhe)::MoveType> stl_sa(in, Eternity2_sm, stl_nhe, "STL_SA"); 
-  SteepestDescent<Eternity2_Input, Eternity2_State, decltype(seo_nhe)::MoveType> seo_sd(in, Eternity2_sm, seo_nhe, "SEO_SD");
-  SteepestDescent<Eternity2_Input, Eternity2_State, decltype(stl_nhe)::MoveType> stl_sd(in, Eternity2_sm, stl_nhe, "STL_SD");
+  //SD
+  SteepestDescent<Eternity2_Input, Eternity2_State, Eternity2_SingletonMove> singleton_sd(in, Eternity2_sm, singleton_nhe, "SING_SD");
+  SteepestDescent<Eternity2_Input, Eternity2_State, Eternity2_ThreeTileStreakMove> tts_sd(in, Eternity2_sm, tts_nhe, "TTS_SD");
+  SteepestDescent<Eternity2_Input, Eternity2_State, Eternity2_LMove> l_sd(in, Eternity2_sm, ell_nhe, "ELL_SD");
 
   // tester
   Tester<Eternity2_Input, Eternity2_Output, Eternity2_State> tester(in,Eternity2_sm,Eternity2_om);
@@ -105,25 +108,29 @@ int main(int argc, const char* argv[])
   else
     {
 
-      if (method == string("SEO-SA"))
+      if (method == string("SEO_SA"))
         {
           simple_solver.SetRunner(seo_sa);
         }
-      else if (method == string("STL-SA"))
+      else if (method == string("STL_SA"))
         {
           simple_solver.SetRunner(stl_sa);
         }
-      else if (method == string("SEO-SD"))
+      else if (method == string("SING_SD"))
         {
-          simple_solver.SetRunner(seo_sd);
+          simple_solver.SetRunner(singleton_sd);
         }
-      else if (method == string("STL-SD"))
+      else if (method == string("TTS_SD"))
         {
-          simple_solver.SetRunner(stl_sd);
+          simple_solver.SetRunner(tts_sd);
+        }
+      else if (method == string("ELL_SD"))
+        {
+          simple_solver.SetRunner(l_sd);
         }
       else
         {
-          simple_solver.SetRunner(Eternity2_hc);
+          cerr << "Runners parameters not valid" << endl;
         }
       auto result = simple_solver.Solve();
 	  // result is a tuple: 0: solutio, 1: number of violations, 2: total cost, 3: computing time

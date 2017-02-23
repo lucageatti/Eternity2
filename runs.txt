@@ -1,11 +1,11 @@
 0 CONFLICTS:
 
 --- Simulated Annealing with 3-modal move Singleton+Even+Odd (prob: 0.7, 0.15, 0.15)
-./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_03x03.txt" --main::seed 0 --main::method SEO-SA --SEO_SA::start_temperature 5000 --SEO_SA::min_temperature 1 --SEO_SA::cooling_rate 0.99 --SEO_SA::neighbors_sampled 1000 --SEO_SA::neighbors_accepted 1000 --main::insert_ratio 0.7
+./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_03x03.txt" --main::seed 0 --main::method SEO_SA --SEO_SA::start_temperature 5000 --SEO_SA::min_temperature 1 --SEO_SA::cooling_rate 0.99 --SEO_SA::neighbors_sampled 1000 --SEO_SA::neighbors_accepted 1000 --main::p1 0.7  --main::p2 0.15  --main::p3 0.15
 
 
 --- Steepest Descent with 3-modal move Singleton+Even+Odd (prob: 0.5, 0.25, 0.25)
-./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_03x03.txt" --main::seed 0 --main::method SEO-SD --SEO_SD::max_evaluations 1000000000
+...
 
 
 
