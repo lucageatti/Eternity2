@@ -1520,6 +1520,12 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
     unsigned j1 = mv.ellList.at(i).first.second;
     unsigned i2 = mv.ellList.at(from).first.first;
     unsigned j2 = mv.ellList.at(from).first.second;
+
+    if (!(i1 < st.getHeight()-1 && i2 < st.getHeight()-1 && j1 < st.getWidth()-1 && j2 < st.getWidth()-1))
+    {
+      continue;
+    }
+
     // Backup IDOs
     IDO eLstIDO[]= { 
         st.getIDOAt(pair<unsigned,unsigned>(i1,j1)), 
@@ -1665,20 +1671,27 @@ bool Eternity2_LMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Et
 
 int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const
 {
-  cout << "DeltaCost" << endl;
+  cout << "<DeltaCost>" << endl;
   int cost = 0;
   int originalCost = 0;
   int swappedCost = 0;
   // Insert the code that computes the delta cost of component 1 for move mv in state st
-  
+
   // Same code as MakeMove, but I calculate the deltacost instead of updating the state
   for(unsigned i = 0; i < mv.ellSelection.size(); i++)
   { 
 	  // Compute the cost of moving ellList[ellSelection[i]] in place of ellList[i]
+
     unsigned i1 = mv.ellList.at(i).first.first;
     unsigned j1 = mv.ellList.at(i).first.second;
     unsigned i2 = mv.ellList.at(mv.ellSelection.at(i)).first.first;
     unsigned j2 = mv.ellList.at(mv.ellSelection.at(i)).first.second;
+
+    if (!(i1 < st.getHeight()-1 && i2 < st.getHeight()-1 && j1 < st.getWidth()-1 && j2 < st.getWidth()-1))
+    {
+      continue;
+    }
+
 
     // Store the IDOs of the single cells
     IDO eLstIDO[]= { 
@@ -1723,6 +1736,7 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
     // First off map the first L into the second 
     // This means that, for each cell of ellList[i], I store the index of the cell of
     // ellList[ellSelection[i]] that is moved in its place.
+
 	  unsigned map[4];
     for (unsigned i = 0; i < 4; ++i)
     {
@@ -1811,6 +1825,11 @@ vector<vector<pair<int,Orientation>>> Eternity2_LMoveNeighborhoodExplorer::creat
     unsigned i1 = mv.ellList.at(i).first.first;
     unsigned j1 = mv.ellList.at(i).first.second;
 
+    if (!(i1 < st.getHeight()-1 && j1 < st.getWidth()-1))
+    {
+      continue;
+    }
+
     // Store the IDOs of the single cells
     IDO eLstIDO[]= { 
         st.getIDOAt(pair<unsigned,unsigned>(i1,j1)), 
@@ -1846,6 +1865,12 @@ vector<vector<pair<int,Orientation>>> Eternity2_LMoveNeighborhoodExplorer::creat
         int swappedCost = 0;
         unsigned i2 = mv.ellList.at(j).first.first;
         unsigned j2 = mv.ellList.at(j).first.second;
+
+        if (!(i2 < st.getHeight()-1 && j2 < st.getWidth()-1))
+        {
+          continue;
+        }
+
         IDO eSelIDO[]= { 
           st.getIDOAt(pair<unsigned,unsigned>(i2,j2)), 
           st.getIDOAt(pair<unsigned,unsigned>(i2,j2+1)),
