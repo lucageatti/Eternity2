@@ -1803,11 +1803,146 @@ vector<vector<pair<int,Orientation>>> Eternity2_LMoveNeighborhoodExplorer::creat
   unsigned size = mv.ellSelection.size();
   vector<vector<pair<int,Orientation>>> graph = vector<vector<pair<int,Orientation>>>(size);
 
-  // Taken from ComputeDeltaCost
+  // Empty graph if the move is empty
+  if(size == 0) return graph;
 
+  for (int i = 0; i < size; ++i) // For each L
+  {
+    unsigned i1 = mv.ellList.at(i).first.first;
+    unsigned j1 = mv.ellList.at(i).first.second;
 
+    // Store the IDOs of the single cells
+    IDO eLstIDO[]= { 
+        st.getIDOAt(pair<unsigned,unsigned>(i1,j1)), 
+        st.getIDOAt(pair<unsigned,unsigned>(i1,j1+1)),
+        st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1+1)), 
+        st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1)) 
+    };
+    // Store the coordinates of the single cells
+    Coord eLstCoord[] = { 
+        pair<unsigned,unsigned>(i1,j1), 
+        pair<unsigned,unsigned>(i1,j1+1), 
+        pair<unsigned,unsigned>(i1+1,j1+1), 
+        pair<unsigned,unsigned>(i1+1,j1) 
+    };
+    
+    graph[i] = vector<pair<int,Orientation>>(size);
+    
+    for (int j = 0; j < size; ++j)
+    {      
+      // Compute the "one-directional" delta cost to all other ells (i.e. don't subtract the original cost)
+      if(j==i)
+      {
+        // Original cost
+        int originalCost = 0;
+        for(unsigned k = 0; k < 3; j++)
+        {
+          originalCost += singleTileCost(eLstIDO[k], eLstCoord[k], st);
+        }
+        graph[i][j] = pair<int,Orientation>(originalCost,mv.ellList[i].second);
+      }else
+      {
+        // Swapped cost
+        int swappedCost = 0;
+        unsigned i2 = mv.ellList.at(j).first.first;
+        unsigned j2 = mv.ellList.at(j).first.second;
+        IDO eSelIDO[]= { 
+          st.getIDOAt(pair<unsigned,unsigned>(i2,j2)), 
+          st.getIDOAt(pair<unsigned,unsigned>(i2,j2+1)),
+          st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2+1)),
+          st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2)) 
+        };
+        Coord eSelCoord[] = { 
+          pair<unsigned,unsigned>(i2,j2), 
+          pair<unsigned,unsigned>(i2,j2+1), 
+          pair<unsigned,unsigned>(i2+1,j2+1), 
+          pair<unsigned,unsigned>(i2+1,j2) 
+        };
+        // Calculate the rotation  needed to fit ellList[i] in place of ellList[ellSelection[i]]
+        // Positive rotation = counter-clockwise rotation of the L
+        int rot = mv.ellList.at(i).second - mv.ellList.at(j).second;
+   
+        // First off map the first L into the second 
+        // This means that, for each cell of ellList[i], I store the index of the cell of
+        // ellList[ellSelection[i]] that is moved in its place.
+        unsigned map[4];
+        for (unsigned k = 0; k < 4; ++i)
+        {
+          int val = st.strangeMod(k-rot,4);
+          map[k] = (unsigned int)val;
+        }
+    
+        // Now compute the cost after the swap is (supposedly) made 
+        // This is done by checking for violations
+        for(unsigned k = 0; k < 4; k++)
+        {
+          // Rename the orientation of the moved L for convenience
+          // Also indicates where the "hole" in the L is
+          unsigned newOrient = mv.ellList.at(i).second;
+
+          if(k != newOrient) // No point in checking for mistmatches in the hole
+          {
+            // DOWN
+            if( ((newOrient==0 || newOrient==1) && (k==2 || k==3)) || (newOrient==2 && (k==1 || k==3)) || (newOrient==3 && (k==0 || k==2)) )
+            {
+              // South color of the cell that maps into k
+              unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(0-rot,4));
+              unsigned c2; // North color of the cell below k
+              // Check that we don't go over the border
+              if(eLstCoord[k].first+1 < st.getHeight())
+              {
+                c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first+1, eLstCoord[k].second)),2);  
+              } else c2 = 0; // Grey
+              if(c1!=c2) swappedCost++; // Mismatch
+            }
+  
+            // LEFT
+            if( (newOrient==0 && (k==1 || k==3)) || ((newOrient==1 || newOrient==2) && (k==0 || k==3)) || (newOrient==3 && (k==0 || k==2)) )
+            {
+              unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(1-rot,4));
+              unsigned c2;
+              if(eLstCoord[k].second > 0)
+              {
+                c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first, eLstCoord[k].second-1)),3);  
+              } else c2 = 0;
+              if(c1!=c2) swappedCost++;
+            }
+  
+            // UP
+            if( (newOrient==0 && (k==1 || k==3)) || (newOrient==1 && (k==0 || k==2)) || ((newOrient==2 || newOrient==3) && (k==0 || k==1)) )
+            {
+              unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(2-rot,4));
+              unsigned c2;
+              if(eLstCoord[k].first > 0)
+              {
+                c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first-1, eLstCoord[k].second)),0);  
+              } else c2 = 0;
+              if(c1!=c2) swappedCost++;
+            }
+  
+            // RIGHT
+            if( ((newOrient==0 || newOrient==3) && (k==1 || k==2)) || (newOrient==1 && (k==0 || k==2)) || (newOrient==2 && (k==1 || k==3)) )
+            {
+              unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(3-rot,4));
+              unsigned c2;
+              if(eLstCoord[k].second+1 < st.getWidth())
+              {
+                c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first, eLstCoord[k].second+1)),1);  
+              } else c2 = 0;
+              if(c1!=c2) swappedCost++;
+            }
+          }
+        } // end foreach cell of an L
+
+        graph[i][j] = pair<int,Orientation>(swappedCost,mv.ellList[j].second); 
+
+      }// end swapped cost computation 
+    }// end foreach possible swap
+  } // end foreach L
   return graph;
 }
+
+
 
 void Eternity2_LMoveNeighborhoodExplorer::BestMove(const Eternity2_State& st, Eternity2_LMove& mv) const
 {
@@ -1825,19 +1960,11 @@ void Eternity2_LMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& st)
   st.L_counter = 0;
 }
 
-/*
-           T
-      T TODO
-     TODO  D
-      D D  O
-     TODO
 
-*/
 void Eternity2_LMoveNeighborhoodExplorer::createMove(Eternity2_LMove& mv, vector<int>& match, vector<vector<pair<int,Orientation>>> graph) const {
-  /*for(int i = 0; i < match.size(); ++i){
-    mv.setIndex(i, match[i]);
-    mv.setOrientation(i, graph[i][match[i]].second);
-  }*/
+  for(int i = 0; i < match.size(); ++i){
+    mv.ellSelection[i] = match[i];
+  }
 }
 
 
