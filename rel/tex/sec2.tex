@@ -7,7 +7,27 @@
 
     \paragraph{\emph{Even Chessboard} e \emph{Odd Chessboard Move}} % (fold)
     \label{par:even_odd}
+        
         La mossa prevede la selezione di tile alternate della \emph{board} di gioco (si immagini in questo senso di avere una scacchiera e di selezionare solamente le pedine in posizioni nere, o alternativamente, bianche). Si noti che le pedine non selezionate sono sufficienti a poter calcolare in modo semplice ed agevole il $\Delta$--costo di una data mossa.
+
+        \begin{figure}[H]
+            \centering
+            \begin{tikzpicture}
+                \foreach \x/\y in {2/2}
+                {
+                    \fill[fill=gray!15!white] (\x,\y) rectangle (\x+1,\y+1);
+                    \fill[fill=gray!15!white] (\x+1,\y) rectangle (\x+2,\y+1);
+                    \fill[fill=gray!15!white] (\x,\y+1) rectangle (\x+1,\y+2);
+                    \fill[fill=gray!15!white] (\x-1,\y) rectangle (\x,\y+1);
+                    \fill[fill=gray!15!white] (\x,\y-1) rectangle (\x+1,\y);
+                    \draw[black] (\x+.05,\y+.05) rectangle (\x+.95,\y+.95);
+                    \draw[black] (\x+.05,\y+.05) -- (\x+.95,\y+.95);
+                    \draw[black] (\x+.95,\y+.05) -- (\x+.05,\y+.95);
+                }
+                \draw[step=1cm,gray,very thin] (.2,.2) grid (4.8,4.8);
+            \end{tikzpicture}
+            \caption{Single tile selection}
+        \end{figure}
 
         \begin{figure}[H]
             \centering
@@ -29,35 +49,51 @@
 
     \paragraph{Singleton Move} % (fold)
     \label{par:singleton}
+
+        La mossa prevede una selezione massimale random di \emph{tiles} e un loro ricombinamento con eventuale rotazione. Si veda più in dettaglio la descrizione della mossa per alcune osservazioni sulla massimalità della selezione e sulla gestione di un intorno esponenziale.
     
     % paragraph singleton (end)
 
     \paragraph{L Move} % (fold)
     \label{par:l}
+
+        La mossa prevede la selezione di cluster di tile che formino una ``L'' con orientamento qualsiasi. Anche in questo caso viene selezionato un numero arbitrario di cluster, che viene ricombinato in una mossa.
+
+        \begin{figure}[H]
+            \centering
+            \begin{tikzpicture}
+                \foreach \x/\y in {2/2,2/3,3/2,2/4,4/2,3/3,1/2,1/3,2/1,3/1,8/2,8/3,9/3,7/2,7/3,8/4,9/4,9/2,10/3,8/1,3/9,2/9,3/8,2/8,1/9,3/7,3/10,2/10,4/9,4/8,9/9,9/8,8/8,8/9,9/10,7/8,10/9,10/8,9/7,8/7}
+                {
+                    \fill[fill=gray!15!white] (\x,\y) rectangle (\x+1,\y+1);
+                }
+                \foreach \x/\y in {2/2,2/3,3/2,8/2,8/3,9/3,3/9,2/9,3/8,9/9,9/8,8/8}
+                {
+                    \draw[black] (\x+.05,\y+.05) rectangle (\x+.95,\y+.95);
+                    \draw[black] (\x+.05,\y+.05) -- (\x+.95,\y+.95);
+                    \draw[black] (\x+.95,\y+.05) -- (\x+.05,\y+.95);
+                }
+                \draw[step=1cm,gray,very thin] (6.2,6.2) grid (11.8,11.8);
+                \draw[step=1cm,gray,very thin] (.2,6.2) grid (5.8,11.8);
+                \draw[step=1cm,gray,very thin] (.2,.2) grid (5.8,5.8);
+                \draw[step=1cm,gray,very thin] (6.2,0.2) grid (11.8,5.8);
+            \end{tikzpicture}
+            \caption{L Selections}
+        \end{figure}
     
     % paragraph l (end)
 
     \paragraph{Three--Tile Move} % (fold)
     \label{par:three_tile_move}
+
+        La mossa prevede la selezione di sequenze di tre tile consecutive (orizzontalmente o verticalmente). Come per i casi precedenti, vengono selezionate un numero arbitrario di sequenze e ricombinate con eventuale rotazione.
     
     % paragraph three_tile_move (end)
 
-%    Componenti delle mosse e componenti dello stato. Come abbiamo diviso la selezione dal ricombinamento.
-%
-%    Mosse scelte
-%
-%    implementazione della SelectBest con Hungarian algorithm, esplorazione polinomiale di un intorno esponenziale 
-%
-%    tecniche scelte
-%    simulated anealing con mossa 3-modale (singleton, even, odd)
-%    simulated anealing con mosse 3-modali (singleton, tts, L)
-%
-%    steepest descend (singleton)
-%    steepest descend (tts)
-%    steepest descend (L)
-%
-%    perchè non sono state usate mosse multimodali per steepest descend.
-
-
+    Per ogni mossa si è scelto di dividere il processo di \emph{selezione} dal processo di \emph{ricombinamento}. La selezione è fatta nello stato di gioco, mentre la permutazione è parte integrante della mossa. Questo ci ha permesso di ottenere alcuni vantaggi:
+    \begin{itemize}
+        \item[--] la selezione delle tessere di gioco da muovere può essere fatta con minor frequenza;
+        \item[--] è possibile applicare l'\emph{Hungarian Algorithm} per il calcolo della \emph{Best Move}, in modo da poter analizzare un intorno esponenziale in tempo polinomiale;
+        \item[--] non richiediamo che il processo di selezione sia \emph{unbiased}, potendo così sfruttare algoritmi più efficienti.
+    \end{itemize}
     
 % section overview (end)
