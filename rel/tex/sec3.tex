@@ -1,7 +1,15 @@
-
 \section{Singleton Move} % (fold)
 \label{sec:singleton_move}
 
-    To do\dots
+    La prima mossa che si è scelto di implementare è la Singleton Move. Nel seguito, indicheremo con il termine \textit{tile} una cella della \textit{board} di gioco. Il \textit{contorno} di una tile è definito come in figura \ref{fig:}, ovvero consiste dell'insieme di tiles adiacenti alla tile corrente rispetto ai quattro punti cardinali. Una \textit{copertura} è un insieme di tiles posizionate nella board in modo che nessuna di queste tile sia posizionata nel contorno di un'altra. Una \textit{copertura massimale} è una copertura di cardinalità massima, ovvero: aggiungendo una qualsiasi tile, tale insieme non è più una copertura.
+
+    La SingletonMove consiste nei seguenti passi:
+    \begin{itemize}
+    	\item[1.] prende una copertura massimale in modo random, garantendo che tale scelta sia \textbf{unbiased}. In questa fase, un vettore $coords$ di coordinate viene creato, corrispondente alle coordinate nell board delle tile scelte. 
+    	\item[2.] crea un vettore di interi $perm$ lungo tanto quanto il numero di tile selezionate. Inizialmente, tale vettore è settato al vettore identico ($perm[i] = i \ \forall i$). La semantica è la seguente: la mossa sceglie di spostare la tile che si trovava in coordinata $coords[perm[i]]$ nella coordinata $coords[i]$.
+    	\item[3.] sceglie (in modo random o tramite la First e la Next) una permutazione del vettore $perm$ e applica la mossa (si veda il metodo \texttt{MakeMove(\dots)}).
+    \end{itemize}
+
+    Analizziamo il primo passo: la selezione delle coordinate random avviene nello stato. Questa scelta è stata fatta perchè si è voluto rigenerare l'insieme di coordinate dopo un certo numero di applicazioni random di tale mossa e perchè, nel momento in cui si chiami \texttt{BestMove(\dots)} si arriva subito ad un ottimo locale di questa mossa. Il passo $1$ è implementato dalla funzione \texttt{singletonRandomCoords(\dots)}: viene scelta una coordinata random in modo totalmente unbiased, cioè scegliendo random due numeri nel range $[1 \dots board.size]$, e viene controllata la sua feasibility testando se corrisponde al contorno di un'altra tile: in tal caso, viene ripetuta la generazione di una coordinata. Il ciclo si ferma quando tutte le celle della board sono state coperte da una tile o dal contorno di una tile, ottenendo quindi una \textit{copertura massimale}. Il vantaggio di questa funzione è che genera una copertura massimale in modo unbiased; lo svantaggio è che nelle ultime iterazioni del ciclo, potrebbe essere il caso che scarti molte volte la coordinata generata in quanto infeasible e che quindi ci vogliano molte iterazioni per arrivare alla massimalità.
 
 % section singleton_move (end)
