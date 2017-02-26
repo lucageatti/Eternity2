@@ -141,81 +141,150 @@ bool Eternity2_State::inRange(int val, bool parity) const {
   return val >= 0 && val < ((parity) ? getWidth() : getHeight()); 
 }
 
+/*
+* Partition the board randomly into L-shaped clusters such that no two of them 
+* "touch" each other horizontally or vertically.
+*/
 void Eternity2_State::LRandomCoords(){
+  // List of ells from the random partition
   random_L = vector<pair<Coord,int> >();
-  int i,j,r;
-  int wing1_x;
-  int wing1_y;
-  int wing2_x;
-  int wing2_y;
-  vector<vector<bool>> feas_board(in.getHeight(),vector<bool>(in.getWidth(),0));
-  int pseudo_distribution = std::max((unsigned int)2,(in.getWidth() * in.getHeight()) / 6);
-  for (i = 0; i < in.getWidth(); ++i)
-  {
-      for ( j = 0; j < in.getHeight(); ++j)
-      {
-          if( ! Random::Int(0,pseudo_distribution-1))
-          {
-              r = Random::Int(0,3);
-
-              wing1_x = (r-2)*strangeMod(r,2);
-              wing1_y = (r-1)*strangeMod(r+1,2);
-
-              wing2_x = (r-1)*strangeMod(r+1,2);
-              wing2_y = (r-2)*strangeMod(r,2);
-
-              bool g1 = !inRange(i-wing1_x,0);
-              bool g2 = !inRange(j-wing1_y,1);
-              bool g3 = !inRange(i-wing2_x,0);
-              bool g4 = !inRange(j-wing2_y,1);
-              bool g5 = !inRange(i-wing1_x+wing2_x,0);
-              bool g6 = !inRange(j-wing1_y+wing2_y,1);
-              bool g7 = !inRange(i+wing1_x-wing2_x,0);
-              bool g8 = !inRange(j+wing1_y-wing2_y,1);
-              bool g9 = !inRange(i+2*wing1_x,0);
-              bool g10 = !inRange(j+2*wing1_y,1);
-              bool g11 = !inRange(i+2*wing2_x,0);
-              bool g12 = !inRange(j+2*wing2_y,1);
-              bool g13 = inRange(i+wing1_x,0);
-              bool g14 = inRange(j+wing1_y,1);
-              bool g15 = inRange(i+wing2_x,0);
-              bool g16 = inRange(j-wing2_y,1);
-
-              bool g17 = !inRange(i+wing1_x+wing2_x,0);
-              bool g18 = !inRange(j+wing1_y+wing1_y,1);
-              
-              if (  !feas_board[i][j]
-                 // first wing
-                 && g13 && g14
-                 && !feas_board[i+wing1_x][j+wing1_y]
-                 //second wing
-                 && g15 && g16
-                 && !feas_board[i+wing2_x][j-wing2_y]
-                 //third wing
-                 && ( g1 || g2 || !feas_board[i-wing1_x][j-wing1_y] )
-                 //fourth wing
-                 && ( g3 || g4 || !feas_board[i-wing2_x][j-wing2_y] )
-                 //center wing
-                 && ( g17 || g18 || !feas_board[i+wing1_x+wing2_x][j+wing1_y+wing1_y])
-                 //borders wings
-                 && ( g5 || g6 || !feas_board[i-wing1_x+wing2_x][j-wing1_y+wing2_y])
-                 && ( g7 || g8 || !feas_board[i+wing1_x-wing2_x][j+wing1_y-wing2_y])
-                 && ( g9 || g10 || !feas_board[i+2*wing1_x][j+2*wing1_y])
-                 && ( g11 || g12 || !feas_board[i+2*wing2_x][j+2*wing2_y])
-                )
-               {
-                    feas_board[i][j] = 1;
-                    feas_board[i + wing1_x][j + wing1_y] = 1;
-                    feas_board[i + wing2_x][j + wing2_y] = 1;
-                    random_L.push_back(make_pair(make_pair( (unsigned int)i, (unsigned int)j ),r));
-               }
-               
-          }
-      }
-
+  // Initialize the partition matrix
+  vector<vector<unsigned>> partition = vector<vector<unsigned>>(r);
+  for(int i = 0; i<r; i++){
+    partition.at(i) = vector<unsigned>(c, 5); // 5 = ANY_ELL
   }
+  unsigned constraintMatrix[5][5] = {{5,5,2,3,5},{5,2,4,4,3},{2,4,0,4,4},{1,4,4,4,0},{5,1,4,0,5}};
+  // x/y coordinates + rotation of the L
+  int i=0, j=0; 
+  // Matrix of feasible placement positions
+
+  /* Space between the current cell and each border of the matrix
+  *  L= left, U = up, ... 
+  */
+  unsigned spaceL=0, spaceR=0, spaceU=0, spaceD=0;
+  // Orientation of the last L inserted
+  int lo = -1; 
+  bool done = false; 
+  unsigned nextPosi = 0, nextPosj = 0;
+  // We want to make sure there are more empty slots than filled slots
+  int pseudo_distribution = std::max((unsigned int)2,(in.getWidth() * in.getHeight()) / 6);
+
+  while (i < in.getHeight()) // for each row
+  {
+      for ( j = 0; j < in.getWidth(); ++j) // for each column
+      {
+          if( ! Random::Int(0,pseudo_distribution-1)) // the slot isn't empty, generate an L
+          {
+            // If the slot is free of constraints place a random L
+            if(partition[i][j]=5)
+            {
+               // Randomized start
+               lo = Random::Int(0,3);
+               partition.at(0).at(0) = lo;
+            } else
+            { 
+             
+               // Use the computed constraints
+               if(partition.at(cr).at(cc) == ANY_ELL){
+                 // No constraints, use random
+                 lo = Random::Int(0,3);
+                 partition.at(cr).at(cc) = lo;       
+               }else if(partition.at(cr).at(cc) < NO_ELL){
+                 // A constraint has been placed here
+                 lo = partition.at(cr).at(cc);       
+               }else{
+                 lo = NO_ELL;
+                 if(++cc == c){ // Move to the next position
+                   cc = 0;
+                   cr++;
+                 } 
+                 continue;
+               }      
+            } // end if-then-else
+
+    ells++;
+    ellList.push_back(tuple<unsigned,unsigned,unsigned>(cr,cc,lo));
+
+              
+              
+              if (  )
+              {
+
+                random_L.push_back(make_pair(make_pair( (unsigned int)i, (unsigned int)j ),r));
+              }
+               
+          } // end random L generation
+      } // end for each column
+  } // end for each row
+  // Make sure there's at least one L if the random partition's empty
   if( random_L.size() < 1 ) random_L.push_back(make_pair(make_pair( (unsigned int)Random::Int(0,getHeight()-2), 
       (unsigned int)Random::Int(0,getWidth()-2) ), Random::Int(0,3)));
+}
+
+/*
+*
+* !!!!!!111!!!!1!!!!!!!!!!!!!!!!!111
+* !!!!!! REMOVE THIS STUFF !!!11!!1!!!!!1
+* 1!!!!!!!!!!!!!!!!!!!!!!!11111111111111!!!!!!!111!!1
+*
+*/
+vector<vector<unsigned>> Eternity2_LMove::EllGeneration(const Eternity2_State& st)
+{   
+  while(/*!done*/ /*cc < c &&*/ cr < r){
+    
+    
+      
+    /* Now we want to place constraints on which ells can be placed next
+    * based on the ell placed this iteration. */
+    // Compute the area to work on
+    spaceL = cc;
+    spaceR = c-cc-1;
+    //spaceU = cr;
+    spaceD = r-cr-1;
+    unsigned i1 = std::max((int)(2-spaceL), 0);
+    unsigned j1 = 2;//2 - std::max(2,spaceU);
+    unsigned i2 = std::min(4, (int)(2+spaceR));
+    unsigned j2 = std::min(4,(int)(2+spaceD));
+    
+    /* The placement matrix tells us which constraints to put around the 
+    * last placed ell in a 5x5 radius.
+    * I read the placement matrix from (i1,2) to (i2,j2) so constraints 
+    * can be placed on which ells (if any) to place next.
+    * Actually I can skip (i1,j1) to (2,2)*/
+    for(unsigned i=3; i<=i2; i++){
+      unsigned constraint = readPlacementMatrix(2,i,lo);
+      partition.at(2).at(i) = constraint;
+      // Jump to the first position that allows and ell
+      if(nextPosr == 0 && nextPosc == 0 && constraint != NO_ELL){ 
+        nextPosr = 2;
+        nextPosc = i;
+      }
+    }
+    for(unsigned j=j1; j<=j2; j++){
+      for(unsigned i=i1; i<=i2; i++){
+        unsigned constraint = readPlacementMatrix(j,i,lo);
+        partition.at(j).at(i) = constraint;
+        // Jump to the first position that allows and ell
+        if(nextPosr == 0 && nextPosc == 0 && constraint != NO_ELL){ 
+          nextPosr = 2;
+          nextPosc = i;
+        }
+      }
+    }
+    
+    // Jump over squares where ells are not allowed
+    if(nextPosr > 0 && nextPosc > 0){
+      cc = nextPosc;
+      cr = nextPosr;
+      nextPosc = 0;
+      nextPosr = 0;
+    }else if(++cc == c){ // Move to the next position
+      cc = 0;
+      cr++;
+    } 
+  } // test
+  // End while
+
 }
 
 
