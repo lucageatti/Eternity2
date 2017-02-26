@@ -36,6 +36,12 @@ protected:
   const Eternity2_Input & in;
   vector<vector<IDO> > board;
   bool inRange(int val, bool parity) const;
+  // Read the placement matrix, modifying it depending on the ell considered.
+  unsigned readPlacementMatrix(unsigned row, unsigned column, unsigned ell);
+  /* This matrix tells us if, which and where Ls can be placed around a given L.
+  ** Constraint matrix is for HOLE_UL 
+  */
+  unsigned constraintMatrix[5][5];
 };
 
 
@@ -170,9 +176,7 @@ class Eternity2_LMove
   unsigned NO_ELL/*=4*/;
   unsigned ANY_ELL/*=5*/; // used in placementMatrix
   
-  // Read the placement matrix, modifying it depending on the ell considered.
-  // TODO explain this as well
-  unsigned readPlacementMatrix(unsigned row, unsigned column, unsigned ell);
+  
   
  //protected:
   /* 
@@ -198,11 +202,7 @@ class Eternity2_LMove
   // How many ells in the partition
   unsigned ells;
   
-  // This matrix tells us if, which and where Ls can be placed around a given L.
-  // TODO explain this
-  // Placement matrix is for HOLE_UL
-  // TODO use constants here (less readable though)
-  unsigned placementMatrix[5][5];
+  
 
   void setCoordinates(vector<pair<Coord,int>> newEL) { ellList = newEL; }
 

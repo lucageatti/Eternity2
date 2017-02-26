@@ -141,6 +141,40 @@ bool Eternity2_State::inRange(int val, bool parity) const {
   return val >= 0 && val < ((parity) ? getWidth() : getHeight()); 
 }
 
+
+/* Read the placement matrix for a given ell.
+* The placement matrix tells us which ell placements are valid after
+* placing a given ell in a 5x5 area around it. 
+* Only the placement matrix for HOLE_UL is stored; the others are
+* computed by modifying it at run-time.
+* This function essentially maps a position on a matrix into the corresponding
+* position in the rotated matrix, and adds something to the result.*/
+unsigned Eternity2_State::readPlacementMatrix(unsigned row, unsigned column, unsigned ell){
+  unsigned ret = 4; // NO_ELL
+  unsigned rows = sizeof(constraintMatrix);
+  unsigned cols = sizeof(constraintMatrix[0]);
+  switch(ell){
+    case 0:
+      ret = constraintMatrix[row][column];
+      break;
+    case 1:
+      ret = constraintMatrix[rows-1-column][row];
+      break;
+    case 2:
+      ret = constraintMatrix[rows-1-row][cols-1-column];
+      break;
+    case 3:
+      ret = constraintMatrix[column][cols-1-row];
+      break;
+    default:
+      ret = ell;
+      break;
+  }
+  if(ret < 4) ret+=ell; // 4 = NO_ELL
+  return ret;
+}
+
+
 /*
 * Partition the board randomly into L-shaped clusters such that no two of them 
 * "touch" each other horizontally or vertically.
@@ -149,27 +183,29 @@ void Eternity2_State::LRandomCoords(){
   // List of ells from the random partition
   random_L = vector<pair<Coord,int> >();
   // Initialize the partition matrix
-  vector<vector<unsigned>> partition = vector<vector<unsigned>>(r);
-  for(int i = 0; i<r; i++){
-    partition.at(i) = vector<unsigned>(c, 5); // 5 = ANY_ELL
+  vector<vector<unsigned>> partition = vector<vector<unsigned>>(in.getHeight());
+  for(int i = 0; i < in.getHeight(); i++){
+    partition.at(i) = vector<unsigned>(in.getWidth(), 5); // 5 = ANY_ELL
   }
-  unsigned constraintMatrix[5][5] = {{5,5,2,3,5},{5,2,4,4,3},{2,4,0,4,4},{1,4,4,4,0},{5,1,4,0,5}};
+  if(sizeof(constraintMatrix==0)){
+    unsigned temp[5][5] = {{5,5,2,3,5},{5,2,4,4,3},{2,4,0,4,4},{1,4,4,4,0},{5,1,4,0,5}};
+    for (int i = 0; i < 5; ++i)
+    {
+      for (int j = 0; j < 5; ++j)
+      {
+        constraintMatrix[i][j]=temp[i][j];
+      }
+    }
+  }  
   // x/y coordinates + rotation of the L
   int i=0, j=0; 
   // Matrix of feasible placement positions
-
-  /* Space between the current cell and each border of the matrix
-  *  L= left, U = up, ... 
-  */
-  unsigned spaceL=0, spaceR=0, spaceU=0, spaceD=0;
   // Orientation of the last L inserted
   int lo = -1; 
-  bool done = false; 
-  unsigned nextPosi = 0, nextPosj = 0;
   // We want to make sure there are more empty slots than filled slots
   int pseudo_distribution = std::max((unsigned int)2,(in.getWidth() * in.getHeight()) / 6);
 
-  while (i < in.getHeight()) // for each row
+  for ( i = 0; i < in.getHeight(); ++i) // for each row
   {
       for ( j = 0; j < in.getWidth(); ++j) // for each column
       {
@@ -183,108 +219,47 @@ void Eternity2_State::LRandomCoords(){
                partition.at(0).at(0) = lo;
             } else
             { 
-             
-               // Use the computed constraints
-               if(partition.at(cr).at(cc) == ANY_ELL){
-                 // No constraints, use random
-                 lo = Random::Int(0,3);
-                 partition.at(cr).at(cc) = lo;       
-               }else if(partition.at(cr).at(cc) < NO_ELL){
-                 // A constraint has been placed here
-                 lo = partition.at(cr).at(cc);       
-               }else{
-                 lo = NO_ELL;
-                 if(++cc == c){ // Move to the next position
-                   cc = 0;
-                   cr++;
-                 } 
-                 continue;
-               }      
+              // Use the computed constraints
+              if(partition.at(i).at(j) == 5){ // 5 = ANY_ELL 
+                // No constraints, use random
+                lo = Random::Int(0,3);
+                partition.at(i).at(j) = lo;       
+              }else if(partition.at(i).at(j) < 4){ // 4 = NO_ELL
+                // A constraint has been placed here
+                lo = partition.at(i).at(j);       
+              }else{
+                // No L can be placed
+                lo = 4;
+              }      
             } // end if-then-else
 
-    ells++;
-    ellList.push_back(tuple<unsigned,unsigned,unsigned>(cr,cc,lo));
-
-              
-              
-              if (  )
+            
+            if(lo!=4)
+            {
+              // Add the L to our list
+              random_L.push_back(make_pair(make_pair( (unsigned int)i, (unsigned int)j ),lo));    
+              // Now we want to update the constraints
+              unsigned rows = 0;
+              int ii = i, jj = j;
+              bool gotNextPos = 0;
+              while(ii-i <= 2 && ii+rows < in.getHeight())
               {
-
-                random_L.push_back(make_pair(make_pair( (unsigned int)i, (unsigned int)j ),r));
+                partition[ii][jj] = readPlacementMatrix(ii,jj,lo);
+                if(!gotNextPos && readPlacementMatrix(ii,jj,lo) != 4){
+                  i=ii;
+                  j=jj;
+                  gotNextPos = 1;
+                }
+                if(++jj >= in.getWidth()) ii++;
               }
-               
+            }     
+            
           } // end random L generation
       } // end for each column
   } // end for each row
   // Make sure there's at least one L if the random partition's empty
   if( random_L.size() < 1 ) random_L.push_back(make_pair(make_pair( (unsigned int)Random::Int(0,getHeight()-2), 
       (unsigned int)Random::Int(0,getWidth()-2) ), Random::Int(0,3)));
-}
-
-/*
-*
-* !!!!!!111!!!!1!!!!!!!!!!!!!!!!!111
-* !!!!!! REMOVE THIS STUFF !!!11!!1!!!!!1
-* 1!!!!!!!!!!!!!!!!!!!!!!!11111111111111!!!!!!!111!!1
-*
-*/
-vector<vector<unsigned>> Eternity2_LMove::EllGeneration(const Eternity2_State& st)
-{   
-  while(/*!done*/ /*cc < c &&*/ cr < r){
-    
-    
-      
-    /* Now we want to place constraints on which ells can be placed next
-    * based on the ell placed this iteration. */
-    // Compute the area to work on
-    spaceL = cc;
-    spaceR = c-cc-1;
-    //spaceU = cr;
-    spaceD = r-cr-1;
-    unsigned i1 = std::max((int)(2-spaceL), 0);
-    unsigned j1 = 2;//2 - std::max(2,spaceU);
-    unsigned i2 = std::min(4, (int)(2+spaceR));
-    unsigned j2 = std::min(4,(int)(2+spaceD));
-    
-    /* The placement matrix tells us which constraints to put around the 
-    * last placed ell in a 5x5 radius.
-    * I read the placement matrix from (i1,2) to (i2,j2) so constraints 
-    * can be placed on which ells (if any) to place next.
-    * Actually I can skip (i1,j1) to (2,2)*/
-    for(unsigned i=3; i<=i2; i++){
-      unsigned constraint = readPlacementMatrix(2,i,lo);
-      partition.at(2).at(i) = constraint;
-      // Jump to the first position that allows and ell
-      if(nextPosr == 0 && nextPosc == 0 && constraint != NO_ELL){ 
-        nextPosr = 2;
-        nextPosc = i;
-      }
-    }
-    for(unsigned j=j1; j<=j2; j++){
-      for(unsigned i=i1; i<=i2; i++){
-        unsigned constraint = readPlacementMatrix(j,i,lo);
-        partition.at(j).at(i) = constraint;
-        // Jump to the first position that allows and ell
-        if(nextPosr == 0 && nextPosc == 0 && constraint != NO_ELL){ 
-          nextPosr = 2;
-          nextPosc = i;
-        }
-      }
-    }
-    
-    // Jump over squares where ells are not allowed
-    if(nextPosr > 0 && nextPosc > 0){
-      cc = nextPosc;
-      cr = nextPosr;
-      nextPosc = 0;
-      nextPosr = 0;
-    }else if(++cc == c){ // Move to the next position
-      cc = 0;
-      cr++;
-    } 
-  } // test
-  // End while
-
 }
 
 
@@ -486,13 +461,13 @@ Eternity2_LMove::Eternity2_LMove()
   //ellMatrix = vector<vector<unsigned>>();
   ellSelection = vector<unsigned>();
   ells = 0;
-  unsigned temp[5][5] = {{5,5,2,3,5},{5,2,4,4,3},{2,4,0,4,4},{1,4,4,4,0},{5,1,4,0,5}};
+  /*unsigned temp[5][5] = {{5,5,2,3,5},{5,2,4,4,3},{2,4,0,4,4},{1,4,4,4,0},{5,1,4,0,5}};
   for (int i = 0; i < 5; ++i){
     for (int j = 0; j < 5; ++j)
     {
       placementMatrix[i][j]=temp[i][j];
     }
-  }
+  }*/
   /*HOLE_UL=0;
   HOLE_UR=1;
   HOLE_DR=2;
@@ -564,43 +539,6 @@ ostream& operator<<(ostream& os, const Eternity2_LMove& mv)
   }
   return os;
 }
-
-/* Read the placement matrix for a given ell.
-* The placement matrix tells us which ell placements are valid after
-* placing a given ell in a 5x5 area around it. 
-* Only the placement matrix for HOLE_UL is stored; the others are
-* computed by modifying it at run-time.
-* This function essentially maps a position on a matrix into the corresponding
-* position in the rotated matrix, and adds something to the result.*/
-unsigned Eternity2_LMove::readPlacementMatrix(unsigned row, unsigned column, unsigned ell){
-  unsigned ret = 4; // NO_ELL
-  unsigned rows = sizeof(Eternity2_LMove::placementMatrix);
-  unsigned cols = sizeof(Eternity2_LMove::placementMatrix[0]);
-  switch(ell){
-    case 0:
-      ret = placementMatrix[row][column];
-      break;
-    case 1:
-      ret = placementMatrix[rows-1-column][row];
-      break;
-    case 2:
-      ret = placementMatrix[rows-1-row][cols-1-column];
-      break;
-    case 3:
-      ret = placementMatrix[column][cols-1-row];
-      break;
-    default:
-      ret = ell;
-      break;
-  }
-  if(ret < Eternity2_LMove::NO_ELL) ret+=ell;
-  return ret;
-}
-
-
-
-
-
 
 
 Eternity2_SingletonMove::Eternity2_SingletonMove() : Eternity2_GenericMove() {
