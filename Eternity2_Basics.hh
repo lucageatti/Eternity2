@@ -126,17 +126,19 @@ class Eternity2_ThreeTileStreakMove
     void setTTSPerm(int i, int j) { permutation[i].first = j; }
     void setTTSOrientation(int i, int o) { permutation[i].second = o; }
 
+    //Coordinates getter and setter
     vector<pair<Coord,int>> getCoordinates() const { return coords; };
     void setCoordinates(vector<pair<Coord,int>> new_coords) { coords = new_coords; }
 
-    int getSize() const {return permutation.size(); }
 
+    // Auxiliary methods
+    int getSize() const {return permutation.size(); }
     tuple<tileMove,tileMove,tileMove,int> computeSimpleMove(const Eternity2_State& st, const pair<unsigned,int>& perm, int dest) const;
     void swapPerm(int i, int j);
  
   protected:
   
-    // Needs to be initialized with 'setCoords' public method in 'firstMove'
+    // Needs to be initialized with 'setCoordinates' public method in 'firstMove'
     // and 'randomMove'. Not too reliable as a parameter, since we can't really
     // tell when it will be initialized.
     vector<pair<Coord,int>> coords;

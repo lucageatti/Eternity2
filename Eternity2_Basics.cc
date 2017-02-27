@@ -565,14 +565,16 @@ Eternity2_OddChessboardMove::Eternity2_OddChessboardMove() : Eternity2_GenericMo
 ***********************************************************************************************/
 
 // The Eternity2 Move constructor simply instantiate an unsized vector. To define 
-// a move properly, 'setCoords' method needs to be called. If 'size' is set to -1
-// the move is not specified yet.
+// a move properly, 'setCoordinates' method needs to be called.
 Eternity2_ThreeTileStreakMove::Eternity2_ThreeTileStreakMove()
 {
+    coords = vector<pair<Coord,int>>();
     permutation = vector<pair<unsigned,int>>();
 }
 
 // Compute simple tile-wise moves from the three tile streak moves.
+// Tile moves of the same tts move are still considered all together
+// and are packed in a tuple of tileMoves.
 tuple<tileMove,tileMove,tileMove,int> Eternity2_ThreeTileStreakMove::computeSimpleMove(const Eternity2_State& st, const pair<unsigned,int>& perm, int dest) const
 {
     Coord from,to;
@@ -608,14 +610,16 @@ tuple<tileMove,tileMove,tileMove,int> Eternity2_ThreeTileStreakMove::computeSimp
 }
 
 
-// Swaps two elements in a permutation of the tiles
+// Swaps two elements in a permutation of the tiles. 
+// Used in order to generate random permutations.
 void Eternity2_ThreeTileStreakMove::swapPerm(int i, int j)
 {
     swap(permutation[i],permutation[j]);
 }
 
 // Checks the equality between moves.
-// N.B. we assume the elements of the 'coords' vectors are ordered.
+// Since we are checking MOVE equality, selected coordinates are
+// not considered during this step.
 bool operator==(const Eternity2_ThreeTileStreakMove& mv1, const Eternity2_ThreeTileStreakMove& mv2)
 {
     int i;
@@ -638,9 +642,17 @@ bool operator!=(const Eternity2_ThreeTileStreakMove& mv1, const Eternity2_ThreeT
 
 bool operator<(const Eternity2_ThreeTileStreakMove& mv1, const Eternity2_ThreeTileStreakMove& mv2)
 {
-  // Insert the code that checks if one move precedes another one
-  // (in any selected order)
-  throw logic_error("operator<(const Eternity2_ThreeTileStreakMove& mv1, const Eternity2_ThreeTileStreakMove& mv2) not implemented yet"); 
+    int i;
+
+    if (mv1.getSize() != mv2.getSize())
+    {
+      throw logic_error("operator<(const Eternity2_ThreeTileStreakMove& mv1, const Eternity2_ThreeTileStreakMove& mv2): can't compare moves of different size."); 
+    
+    } else {
+
+      for (i =0; i < mv1.getSize() && mv1.permutation[i] == mv2.permutation[i]; ++i);
+      return ((i<mv1.getSize()) ? mv1.permutation[i] < mv2.permutation[i] : false);
+    }
   return true;
 }
 
