@@ -179,6 +179,9 @@ class ThreeTileStreakMoveDeltaCostComponent
     int ComputeDeltaCost(const Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const;
 };
 
+// This is a flexible method to compute the delta cost of a single move. With the default parameters
+// it basically computes the partial 'ComputeDeltaCost' (i.e. computes the difference between
+// the new configuration cost and the old one). With delta set to false it only states the new config cost.
 int computeTTSDeltaCost(const Eternity2_State& st, const tuple<tileMove,tileMove,tileMove,int>& single_move, bool delta = true);
 
 class ThreeTileStreakMoveNeighborhoodExplorer
@@ -193,10 +196,10 @@ class ThreeTileStreakMoveNeighborhoodExplorer
     EvaluatedMove<Eternity2_ThreeTileStreakMove, DefaultCostStructure<int>> SelectBest(const Eternity2_State& st, size_t& explored, const MoveAcceptor& AcceptMove, const std::vector<double>& weights) const throw (EmptyNeighborhood);
     void RandomMove(const Eternity2_State&, Eternity2_ThreeTileStreakMove&) const throw(EmptyNeighborhood);
     void FirstMove(const Eternity2_State&,Eternity2_ThreeTileStreakMove&) const throw(EmptyNeighborhood);  
+    // N.B: Due to some 'EasyLocal++' limitations we are not able to use BestMove here.
+    // Refer instead to SelectBest.
     
   protected:
-    bool incrementOrientation(Eternity2_ThreeTileStreakMove& mv) const;
-    bool incrementPermutation(Eternity2_ThreeTileStreakMove& mv) const;
     vector<vector<pair<int,Orientation>>> createGraph(const Eternity2_State&,Eternity2_ThreeTileStreakMove&) const;
     void updateCoords(Eternity2_State& st) const;
     void forceUpdate(const Eternity2_State& st) const;

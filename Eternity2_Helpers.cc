@@ -1041,24 +1041,31 @@ void OddChessboardMoveNeighborhoodExplorer::createMove(Eternity2_OddChessboardMo
 // is achieved using Fisher-Yates shuffle algorithm.
 void ThreeTileStreakMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_ThreeTileStreakMove& mv) const throw(EmptyNeighborhood)
 {
+    // Setting (state) coordinates in the current move instance;
     mv.setCoordinates(st.random_tts);
     int i,r;
     vector<pair<unsigned,int>> perm(st.random_tts.size());
+
+    // Calling Fisher-Yates shuffle algorithm
     vector<unsigned> rand_perm = FisherYatesShuffle(st.random_tts.size());
 
     for (i = 0; i < st.random_tts.size(); ++i)
     {
+      // Generating Direct/Inverse tts orientation
       r = Random::Int(0,1);
       perm[i] = make_pair(rand_perm[i],r);
     }
 
     mv.setPermutation(perm);
+
+    // Increasing tts counter to refresh the random coordinate selection
     st.tts_counter++;
 } 
 
 // First permutation of the three-tile streaks, corresponding to the sequence 1,2,...,n, with standard orientation (0).
 void ThreeTileStreakMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, Eternity2_ThreeTileStreakMove& mv) const  throw(EmptyNeighborhood)
 {
+    // Setting (state) coordinates in the current move instance;
     mv.setCoordinates(st.random_tts);
     vector<pair<unsigned,int>> perm = vector<pair<unsigned,int>>(st.random_tts.size());
 
@@ -1068,6 +1075,8 @@ void ThreeTileStreakMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& s
     }
 
     mv.setPermutation(perm);
+
+    // Increasing tts counter to refresh the random coordinate selection
     st.tts_counter++;
 }
 
@@ -1078,12 +1087,15 @@ bool ThreeTileStreakMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st
     int j;
     int i = s-1;
 
+    // Increasing orientation (basically incrementing a binary number)
     while (i >= 0 && mv.getTTSOrientation(i) == 1)
     {
         mv.setTTSOrientation(i,0);
         --i;
     }
 
+    // Incrementing permutation (if not reached the end) using 
+    // the algorithm discussed during class
     if (i >= 0)
     {
         mv.setTTSOrientation(i,1);
@@ -1226,29 +1238,39 @@ bool ThreeTileStreakMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State
 //          vertical (1)                        horizontal (0)
 //
 
+// 'MakeMove' will convert tts moves in simple tile moves,
+// keeping the relation between tiles from the same tts selection.
 void ThreeTileStreakMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Eternity2_ThreeTileStreakMove& mv) const
 {
     int i;
     auto perm = mv.getPermutation();
     vector<tuple<tileMove,tileMove,tileMove,int>> changes(perm.size());
 
+    // Disassembling the tts moves
     for (i = 0; i < perm.size(); ++i)
     {
         changes[i] = mv.computeSimpleMove(st,perm[i],i);
     }
 
+    // Appling move changes
     for (i = 0; i < changes.size(); ++i)
     {
         st.insertTile(std::get<0>(changes[i]).first,std::get<0>(changes[i]).second);
         st.insertTile(std::get<1>(changes[i]).first,std::get<1>(changes[i]).second);
         st.insertTile(std::get<2>(changes[i]).first,std::get<2>(changes[i]).second);
     }
+
+    // Updates coordinates if needed.
     updateCoords(st);
 }
 
+// 'SelectBest' definition. This should be 'BestMove' but, due to same recent
+// framework changes we had to use 'SelectBest' as a placeholder.
 EvaluatedMove<Eternity2_ThreeTileStreakMove, DefaultCostStructure<int>> ThreeTileStreakMoveNeighborhoodExplorer::SelectBest(const Eternity2_State& st, size_t& explored, const MoveAcceptor& AcceptMove, const std::vector<double>& weights) const throw (EmptyNeighborhood)
 {
     Eternity2_ThreeTileStreakMove mv = Eternity2_ThreeTileStreakMove();
+
+    // Setting (state) coordinates in the current move instance;
     mv.setCoordinates(st.random_tts);
     
     unsigned i;
@@ -1256,16 +1278,6 @@ EvaluatedMove<Eternity2_ThreeTileStreakMove, DefaultCostStructure<int>> ThreeTil
 
     // Creating the graph
     vector<vector<pair<int,Orientation>>> graph = createGraph(st, mv);
-    /*
-    for (int i = 0; i < graph.size(); ++i)
-    {
-      for (int j = 0; j < graph[i].size(); ++j)
-      {
-          cout << "<" << graph[i][j].first << "," << graph[i][j].second << ">" << "\t";
-      }
-      cout << endl;
-    }
-    */
     
     // Calling the hungarian algorithm
     //cout << "Calling the hungarian algorithm..." << endl;
@@ -1280,10 +1292,14 @@ EvaluatedMove<Eternity2_ThreeTileStreakMove, DefaultCostStructure<int>> ThreeTil
     mv.setPermutation(perm);
     cout << mv << endl;
     
+    // Forces the coordinates update during the next 'MakeMove'
     forceUpdate(st);
+
     return EvaluatedMove<Eternity2_ThreeTileStreakMove, DefaultCostStructure<int>>(mv, DefaultCostStructure<int>());
 }
 
+// Hungarian algorithm auxiliary method.
+// Creates a recombination graph as explained in the report
 vector<vector<pair<int,Orientation>>> ThreeTileStreakMoveNeighborhoodExplorer::createGraph(const Eternity2_State& st ,Eternity2_ThreeTileStreakMove& mv) const
 {
     int i,j;
@@ -1295,6 +1311,7 @@ vector<vector<pair<int,Orientation>>> ThreeTileStreakMoveNeighborhoodExplorer::c
     {
         for (j = 0; j < size; ++j)
         {
+            // Takes the best among the two possible Direct/Inverse orientations
             cost_0 = computeTTSDeltaCost(st, mv.computeSimpleMove(st, make_pair((unsigned int)i,0), j), false);
             cost_1 = computeTTSDeltaCost(st, mv.computeSimpleMove(st, make_pair((unsigned int)i,1), j), false);
             
@@ -1305,11 +1322,12 @@ vector<vector<pair<int,Orientation>>> ThreeTileStreakMoveNeighborhoodExplorer::c
     return graph;
 }
 
-
+// Forces the coordinates update during the next 'MakeMove'
 void ThreeTileStreakMoveNeighborhoodExplorer::forceUpdate(const Eternity2_State& st) const {
   st.tts_counter = 0;
 }
 
+// Updates coordinates if needed.
 void ThreeTileStreakMoveNeighborhoodExplorer::updateCoords(Eternity2_State& st) const
 {
     if( !(st.tts_counter %= 10) )
@@ -1378,7 +1396,6 @@ int checkColor(const Eternity2_State& st, tileMove m, CardinalPoint cp, bool del
           std::cerr << "Invalid Cardinal Point: " << cp;
     }
 
-    //cout << "Checking adjacent color " << adj_color << " with tile color " << st.getColor(m.first,cp) << " (CP: " << cp << ")" << endl;
     cost += (st.getColor(m.first,cp) != adj_color);
     if (delta) cost -= (st.getColor(st.getIDOAt(m.second),cp) != adj_color);
 
@@ -1402,6 +1419,7 @@ int ThreeTileStreakMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_Stat
   return cost;
 }
 
+// Computes delta cost, keeping in mind the orientation of the tts selection.
 int computeTTSDeltaCost(const Eternity2_State& st, const tuple<tileMove,tileMove,tileMove,int>& single_move, bool delta)
 {
     int cost = 0;
@@ -2138,7 +2156,7 @@ vector<unsigned> FisherYatesShuffle(unsigned sz) {
 }
 
 /*
-* Implementation of the "Augmenting Path Algorithm"
+* Implementation of the "Augmenting Path Algorithm" (see the original specification and our report)
 */
 
 vector<int> hungarianAlgorithm(vector<vector<pair<int,Orientation>>>& m)
