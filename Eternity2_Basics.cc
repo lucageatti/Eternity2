@@ -237,17 +237,21 @@ void Eternity2_State::testReadPlacementMatrix(){
 * "touch" each other horizontally or vertically.
 */
 void Eternity2_State::LRandomCoords(){
-  cout << "LRC" << endl;
-  testReadPlacementMatrix();
-  // List of ells from the random partition
-  //random_L = vector<pair<Coord,int>>();
+  // Debug
+  //cout << "LRC" << endl;
+  //testReadPlacementMatrix();
+
+  // Reset the list of ells
   random_L.clear();
-  // Initialize the partition matrix
-  vector<vector<unsigned>> partition = vector<vector<unsigned>>(in.getHeight());
-  for(int i = 0; i < in.getHeight(); i++){
-    partition.at(i) = vector<unsigned>(in.getWidth(), 5); // 5 = ANY_ELL
+  /* Initialize the support matrix used to build a valid partition
+  *  Each cell tells me if an ell can be placed in that square
+  */
+  vector<vector<unsigned>> constraints = vector<vector<unsigned>>(in.getHeight()-1);
+  for(int i = 0; i < in.getHeight()-1; i++){ // init
+    constraints.at(i) = vector<unsigned>(in.getWidth()-1, 5); // 5 = ANY_ELL
   }
-  if(sizeof(constraintMatrix==0)){
+  // Initialize the constraint matrix if needed
+  if(constraintMatrix[0][0]==0){
     unsigned temp[5][5] = {{5,5,2,3,5},{5,2,4,4,3},{2,4,0,4,4},{1,4,4,4,0},{5,1,4,0,5}};
     for (int i = 0; i < 5; ++i)
     {
@@ -257,82 +261,112 @@ void Eternity2_State::LRandomCoords(){
       }
     }
   }  
-  // x/y coordinates + rotation of the L
   int i=0, j=0; 
-  // Matrix of feasible placement positions
   // Orientation of the last L inserted
   int lo = -1; 
   // We want to make sure there are more empty slots than filled slots
   int pseudo_distribution = std::max((unsigned int)2,(in.getWidth() * in.getHeight()) / 6);
   //cout << "LRC1" << endl;
-  for ( i = 0; i < in.getHeight(); ++i) // for each row
+
+  // Iterate on each "square"
+  for ( i = 0; i < in.getHeight()-1; ++i) // for each row
   {
-      for ( j = 0; j < in.getWidth(); ++j) // for each column
+      for ( j = 0; j < in.getWidth()-1; ++j) // for each column
       {
         //cout << "LRC2" << endl;        
-          if( ! Random::Int(0,pseudo_distribution-1)) // the slot isn't empty, generate an L
+        if( ! Random::Int(0,pseudo_distribution-1)) // the slot isn't empty, generate an L
+        {
+          //cout << "Trying to add in (" << i << "," << j << ")." << endl;
+          /*cout << "constraints: " << endl;
+          for (int i = 0; i < constraints.size(); ++i)
           {
-            //cout << "LRC3" << endl;
-            // If the slot is free of constraints place a random L
-            if(partition[i][j]=5)
+            for (int j = 0; j < constraints[0].size(); ++j)
             {
-              //cout << "Random!" << endl;
-              lo = Random::Int(0,3);
-              partition[i][j] = lo;
-            } else if(partition.at(i).at(j) < 4) // 4 = NO_ELL
-            { 
-              // A constraint has been placed here
-              //cout << "Constrained!" << endl;
-              lo = partition.at(i).at(j);       
-            }else
-            {
-              // No L can be placed
-              //cout << "le fu" << endl;
-              lo = 4;
-            }// end if-then-else
+              cout << constraints[i][j] << " " ;
+            }
+            cout << endl;
+          }
+          cout << "constraints[" << i << "][" << j << "] = " << constraints[i][j] << endl;*/
+          //cout << "LRC3" << endl;
 
-            //cout << "LRC4" << endl;
-            if(lo!=4)
+          // If the slot is free of constraints place a random L
+          if(constraints[i][j]==5)
+          {
+            //cout << "Random!" << endl;
+            lo = Random::Int(0,3);
+            constraints[i][j] = lo;
+          } else if(constraints.at(i).at(j) < 4) // 4 = NO_ELL
+          { 
+            // A constraint has been placed here, use it
+            //cout << "Constrained!" << endl;
+            lo = constraints.at(i).at(j);       
+          }else
+          {
+            // No L can be placed
+            //cout << "le fu" << endl;
+            lo = 4;
+          }// end if-then-else
+
+          //cout << "LRC4" << endl;
+
+          // If an L has been added, add it to the list and update the support matrix
+          if(lo!=4)
+          {
+            // Add the L to our list 
+            //cout << "Adding <(" << i << "," << j << ")," << lo << ">." << endl;       
+            random_L.push_back(make_pair(make_pair( (unsigned int)i, (unsigned int)j ),lo));  
+
+            // Now we want to update the constraints
+            // Start updating from the next position
+            int ii = i, jj = j;            
+            if(++jj >= in.getWidth()-1)
             {
-              //cout << "LRC10" << endl;
-              // Add the L to our list
-              //cout << "i: " << i << "j: " << j << "lo: " << lo << endl;              
-              random_L.push_back(make_pair(make_pair( (unsigned int)i, (unsigned int)j ),lo));  
-              //random_L.push_back(pair<Coord,int>(pair<unsigned,unsigned>(i,j),lo));  
-              //cout << "LRC11" << endl;  
-              // Now we want to update the constraints
-              unsigned rows = 0;
-              int ii = i, jj = j;
-              bool gotNextPos = 0;
-              //cout << "LRC7" << endl;
-              while(ii-i <= 2 && ii+rows < in.getHeight())
-              {
-                //cout << "LRC8" << endl;
-                //cout << "ii: " << ii << " jj: " << jj << endl;  
-                partition[ii][jj] = readPlacementMatrix(ii,jj,lo);
-                if(!gotNextPos && readPlacementMatrix(ii,jj,lo) != 4){
-                  i=ii;
-                  j=jj;
-                  gotNextPos = 1;
-                }
-                if(++jj >= in.getWidth())
-                {
-                  ii++;
-                  jj = 0;
-                } 
-                //cout << "LRC9" << endl;
-                //cout << "ii: " << ii << " jj: " << jj << endl;  
+              ii++;
+              jj = max(0,j-2); // i want to stay in the 5x5 range centered on (i,j)
+            } 
+            bool gotNextPos = 0; // tells me if I know the next position where I can place an L
+            int nexti, nextj;
+
+            /* To update the constraints, read from the constraint matrix
+            *  OBS: the current position (i,j) corresponds to (2,2) in the constraint matrix 
+            */
+            //cout << "Updating constraints..." << endl;
+            while(ii-i <= 2 && ii < in.getHeight()-1)
+            {             
+              //cout << i << " " << j << " " << ii << " " << jj << " -> " << 2+ii-i  << " " <<  2+jj-j << " " << readPlacementMatrix(2+ii-i,2+jj-j,lo) << endl;
+              //cout << "ii: " << ii << " jj: " << jj << endl;  
+              constraints[ii][jj] = readPlacementMatrix(2+ii-i,2+jj-j,lo);
+              // If a position is found where and L can be placed, store it so we can resume from there
+              if(!gotNextPos && readPlacementMatrix(2+ii-i,2+jj-j,lo) != 4){
+                nexti=ii;
+                nextj=jj;
+                gotNextPos = 1;
               }
-            }     
+              // Move to the next position
+              if(++jj >= in.getWidth()-1)
+              {
+                ii++;
+                jj = max(0,j-2);
+              } 
+              //cout << "LRC9" << endl;
+              //cout << "ii: " << ii << " jj: " << jj << endl;  
+            }
+
+            if(gotNextPos)
+            {
+              i = nexti;
+              j = nextj;
+            }
+          }// Done updating and adding     
             //cout << "LRC5" << endl;
-          } // end random L generation
+        } // end random L generation
       } // end for each column
   } // end for each row
   
   // Make sure there's at least one L if the random partition's empty
   if( random_L.size() < 1 ) random_L.push_back(make_pair(make_pair( (unsigned int)Random::Int(0,getHeight()-2), 
-      (unsigned int)Random::Int(0,getWidth()-2) ), Random::Int(0,3)));
-  cout << "</LRC>" << endl;
+      (unsigned int)Random::Int(0,getWidth()-2) ), Random::Int(0,3)));  
+  //cout << "</LRC>" << endl;
 }
 
 
