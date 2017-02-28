@@ -180,8 +180,10 @@ unsigned Eternity2_State::readPlacementMatrix(unsigned row, unsigned column, uns
 * "touch" each other horizontally or vertically.
 */
 void Eternity2_State::LRandomCoords(){
+  cout << "LRC" << endl;
   // List of ells from the random partition
-  random_L = vector<pair<Coord,int> >();
+  //random_L = vector<pair<Coord,int>>();
+  random_L.clear();
   // Initialize the partition matrix
   vector<vector<unsigned>> partition = vector<vector<unsigned>>(in.getHeight());
   for(int i = 0; i < in.getHeight(); i++){
@@ -204,62 +206,75 @@ void Eternity2_State::LRandomCoords(){
   int lo = -1; 
   // We want to make sure there are more empty slots than filled slots
   int pseudo_distribution = std::max((unsigned int)2,(in.getWidth() * in.getHeight()) / 6);
-
+  cout << "LRC1" << endl;
   for ( i = 0; i < in.getHeight(); ++i) // for each row
   {
       for ( j = 0; j < in.getWidth(); ++j) // for each column
       {
+        cout << "LRC2" << endl;        
           if( ! Random::Int(0,pseudo_distribution-1)) // the slot isn't empty, generate an L
           {
+            cout << "LRC3" << endl;
             // If the slot is free of constraints place a random L
             if(partition[i][j]=5)
             {
-               // Randomized start
-               lo = Random::Int(0,3);
-               partition.at(0).at(0) = lo;
-            } else
+              cout << "Random!" << endl;
+              lo = Random::Int(0,3);
+              partition[i][j] = lo;
+            } else if(partition.at(i).at(j) < 4) // 4 = NO_ELL
             { 
-              // Use the computed constraints
-              if(partition.at(i).at(j) == 5){ // 5 = ANY_ELL 
-                // No constraints, use random
-                lo = Random::Int(0,3);
-                partition.at(i).at(j) = lo;       
-              }else if(partition.at(i).at(j) < 4){ // 4 = NO_ELL
-                // A constraint has been placed here
-                lo = partition.at(i).at(j);       
-              }else{
-                // No L can be placed
-                lo = 4;
-              }      
-            } // end if-then-else
+              // A constraint has been placed here
+              cout << "Constrained!" << endl;
+              lo = partition.at(i).at(j);       
+            }else
+            {
+              // No L can be placed
+              cout << "le fu" << endl;
+              lo = 4;
+            }// end if-then-else
 
-            
+            cout << "LRC4" << endl;
             if(lo!=4)
             {
+              cout << "LRC10" << endl;
               // Add the L to our list
-              random_L.push_back(make_pair(make_pair( (unsigned int)i, (unsigned int)j ),lo));    
+              cout << "i: " << i << "j: " << j << "lo: " << lo << endl;              
+              random_L.push_back(make_pair(make_pair( (unsigned int)i, (unsigned int)j ),lo));  
+              //random_L.push_back(pair<Coord,int>(pair<unsigned,unsigned>(i,j),lo));  
+              cout << "LRC11" << endl;  
               // Now we want to update the constraints
               unsigned rows = 0;
               int ii = i, jj = j;
               bool gotNextPos = 0;
+              cout << "LRC7" << endl;
               while(ii-i <= 2 && ii+rows < in.getHeight())
               {
+                cout << "LRC8" << endl;
+                cout << "ii: " << ii << " jj: " << jj << endl;  
                 partition[ii][jj] = readPlacementMatrix(ii,jj,lo);
                 if(!gotNextPos && readPlacementMatrix(ii,jj,lo) != 4){
                   i=ii;
                   j=jj;
                   gotNextPos = 1;
                 }
-                if(++jj >= in.getWidth()) ii++;
+                if(++jj >= in.getWidth())
+                {
+                  ii++;
+                  jj = 0;
+                } 
+                cout << "LRC9" << endl;
+                cout << "ii: " << ii << " jj: " << jj << endl;  
               }
             }     
-            
+            cout << "LRC5" << endl;
           } // end random L generation
       } // end for each column
   } // end for each row
+  
   // Make sure there's at least one L if the random partition's empty
   if( random_L.size() < 1 ) random_L.push_back(make_pair(make_pair( (unsigned int)Random::Int(0,getHeight()-2), 
       (unsigned int)Random::Int(0,getWidth()-2) ), Random::Int(0,3)));
+  cout << "</LRC>" << endl;
 }
 
 
@@ -457,6 +472,7 @@ ostream& operator<<(ostream& os, const Eternity2_GenericMove& mv)
 
 Eternity2_LMove::Eternity2_LMove()
 {
+  cout << "LMove()" << endl;
   // Insert the code that initializes the move
   //ellMatrix = vector<vector<unsigned>>();
   ellSelection = vector<unsigned>();
