@@ -151,14 +151,15 @@ bool Eternity2_State::inRange(int val, bool parity) const {
 * position in the rotated matrix, and adds something to the result.*/
 unsigned Eternity2_State::readPlacementMatrix(unsigned row, unsigned column, unsigned ell){
   unsigned ret = 4; // NO_ELL
-  unsigned rows = sizeof(constraintMatrix);
-  unsigned cols = sizeof(constraintMatrix[0]);
+  unsigned rows = sizeof(constraintMatrix)/sizeof(constraintMatrix[0]);
+  unsigned cols = sizeof(constraintMatrix[0])/sizeof(constraintMatrix[0][0]);
   switch(ell){
     case 0:
       ret = constraintMatrix[row][column];
       break;
-    case 1:
+    case 1:     
       ret = constraintMatrix[rows-1-column][row];
+      //cout << "ret: " << ret << endl;
       break;
     case 2:
       ret = constraintMatrix[rows-1-row][cols-1-column];
@@ -170,10 +171,66 @@ unsigned Eternity2_State::readPlacementMatrix(unsigned row, unsigned column, uns
       ret = ell;
       break;
   }
-  if(ret < 4) ret+=ell; // 4 = NO_ELL
+  if(ret < 4) ret = (ret+ell)%4; // 4 = NO_ELL
   return ret;
 }
 
+/*
+* Test function, can be deleted.
+*/
+void Eternity2_State::testReadPlacementMatrix(){
+  cout << "--- Test readPlacementMatrix() ---" << endl;
+  int rows = sizeof(constraintMatrix)/sizeof(constraintMatrix[0]);
+  cout << "constraintMatrix has " << rows <<  " rows!" << endl;
+  int cols = sizeof(constraintMatrix[0])/sizeof(constraintMatrix[0][0]);
+  cout << "constraintMatrix has " << cols <<  " columns!" << endl;
+  if(constraintMatrix[0][0]==0){ 
+    cout << "filling constraintMatrix." << endl;
+    unsigned temp[5][5] = {{5,5,2,3,5},{5,2,4,4,3},{2,4,0,4,4},{1,4,4,4,0},{5,1,4,0,5}};
+    for (int i = 0; i < 5; ++i)
+    {
+      for (int j = 0; j < 5; ++j)
+      {
+        constraintMatrix[i][j]=temp[i][j];
+      }
+    }
+  }  
+  for (int i = 0; i < 5; ++i)
+  {
+    for (int j = 0; j < 5; ++j)
+    {
+      cout << readPlacementMatrix(i,j,0) << " ";
+    }
+    cout << endl;
+  }
+  cout << endl;
+  for (int i = 0; i < 5; ++i)
+  {
+    for (int j = 0; j < 5; ++j)
+    {
+      cout << readPlacementMatrix(i,j,1)<< " ";
+    }
+    cout << endl;
+  }
+  cout << endl;
+  for (int i = 0; i < 5; ++i)
+  {
+    for (int j = 0; j < 5; ++j)
+    {
+      cout << readPlacementMatrix(i,j,2)<< " ";
+    }
+    cout << endl;
+  }
+  cout << endl;
+  for (int i = 0; i < 5; ++i)
+  {
+    for (int j = 0; j < 5; ++j)
+    {
+      cout << readPlacementMatrix(i,j,3)<< " ";
+    }
+    cout << endl;
+  }
+}
 
 /*
 * Partition the board randomly into L-shaped clusters such that no two of them 
@@ -181,6 +238,7 @@ unsigned Eternity2_State::readPlacementMatrix(unsigned row, unsigned column, uns
 */
 void Eternity2_State::LRandomCoords(){
   cout << "LRC" << endl;
+  testReadPlacementMatrix();
   // List of ells from the random partition
   //random_L = vector<pair<Coord,int>>();
   random_L.clear();
@@ -206,51 +264,51 @@ void Eternity2_State::LRandomCoords(){
   int lo = -1; 
   // We want to make sure there are more empty slots than filled slots
   int pseudo_distribution = std::max((unsigned int)2,(in.getWidth() * in.getHeight()) / 6);
-  cout << "LRC1" << endl;
+  //cout << "LRC1" << endl;
   for ( i = 0; i < in.getHeight(); ++i) // for each row
   {
       for ( j = 0; j < in.getWidth(); ++j) // for each column
       {
-        cout << "LRC2" << endl;        
+        //cout << "LRC2" << endl;        
           if( ! Random::Int(0,pseudo_distribution-1)) // the slot isn't empty, generate an L
           {
-            cout << "LRC3" << endl;
+            //cout << "LRC3" << endl;
             // If the slot is free of constraints place a random L
             if(partition[i][j]=5)
             {
-              cout << "Random!" << endl;
+              //cout << "Random!" << endl;
               lo = Random::Int(0,3);
               partition[i][j] = lo;
             } else if(partition.at(i).at(j) < 4) // 4 = NO_ELL
             { 
               // A constraint has been placed here
-              cout << "Constrained!" << endl;
+              //cout << "Constrained!" << endl;
               lo = partition.at(i).at(j);       
             }else
             {
               // No L can be placed
-              cout << "le fu" << endl;
+              //cout << "le fu" << endl;
               lo = 4;
             }// end if-then-else
 
-            cout << "LRC4" << endl;
+            //cout << "LRC4" << endl;
             if(lo!=4)
             {
-              cout << "LRC10" << endl;
+              //cout << "LRC10" << endl;
               // Add the L to our list
-              cout << "i: " << i << "j: " << j << "lo: " << lo << endl;              
+              //cout << "i: " << i << "j: " << j << "lo: " << lo << endl;              
               random_L.push_back(make_pair(make_pair( (unsigned int)i, (unsigned int)j ),lo));  
               //random_L.push_back(pair<Coord,int>(pair<unsigned,unsigned>(i,j),lo));  
-              cout << "LRC11" << endl;  
+              //cout << "LRC11" << endl;  
               // Now we want to update the constraints
               unsigned rows = 0;
               int ii = i, jj = j;
               bool gotNextPos = 0;
-              cout << "LRC7" << endl;
+              //cout << "LRC7" << endl;
               while(ii-i <= 2 && ii+rows < in.getHeight())
               {
-                cout << "LRC8" << endl;
-                cout << "ii: " << ii << " jj: " << jj << endl;  
+                //cout << "LRC8" << endl;
+                //cout << "ii: " << ii << " jj: " << jj << endl;  
                 partition[ii][jj] = readPlacementMatrix(ii,jj,lo);
                 if(!gotNextPos && readPlacementMatrix(ii,jj,lo) != 4){
                   i=ii;
@@ -262,11 +320,11 @@ void Eternity2_State::LRandomCoords(){
                   ii++;
                   jj = 0;
                 } 
-                cout << "LRC9" << endl;
-                cout << "ii: " << ii << " jj: " << jj << endl;  
+                //cout << "LRC9" << endl;
+                //cout << "ii: " << ii << " jj: " << jj << endl;  
               }
             }     
-            cout << "LRC5" << endl;
+            //cout << "LRC5" << endl;
           } // end random L generation
       } // end for each column
   } // end for each row

@@ -34,3 +34,6 @@ test4: Eternity2
 
 test6: Eternity2
 	./Eternity2 --main::instance "./instances/pieces_06x06.txt" --main::seed 0
+
+testlsd: Eternity2
+	./Eternity2 --main::instance "./instances/pieces_03x03.txt" --main::seed 0 --main::method ELL_SD --ELL_SD::max_evaluations 10000000000000

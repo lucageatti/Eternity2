@@ -42,6 +42,9 @@ protected:
   ** Constraint matrix is for HOLE_UL 
   */
   unsigned constraintMatrix[5][5];
+
+private:
+  void testReadPlacementMatrix();
 };
 
 

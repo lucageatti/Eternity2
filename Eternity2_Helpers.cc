@@ -1689,7 +1689,7 @@ bool Eternity2_LMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Et
 
 int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const
 {
-  cout << "<DeltaCost>" << endl;
+  //cout << "<DeltaCost>" << endl;
   int cost = 0;
   int originalCost = 0;
   int swappedCost = 0;
@@ -1826,7 +1826,7 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
   }
   
   cost = swappedCost - originalCost;
-  cout << "</Deltacost>" << endl;
+  //cout << "</Deltacost>" << endl;
   return cost;
 }
 
