@@ -238,7 +238,7 @@ void Eternity2_State::testReadPlacementMatrix(){
 */
 void Eternity2_State::LRandomCoords(){
   // Debug
-  cout << "LRC" << endl;
+  cout << "<LRC>" << endl;
   //testReadPlacementMatrix();
 
   // Reset the list of ells
@@ -266,7 +266,7 @@ void Eternity2_State::LRandomCoords(){
   int lo = -1; 
   // We want to make sure there are more empty slots than filled slots
   int pseudo_distribution = std::max((unsigned int)2,(in.getWidth() * in.getHeight()) / 6);
-  cout << "LRC1" << endl;
+  //cout << "LRC1" << endl;
 
   // Iterate on each "square"
   for ( i = 0; i < in.getHeight()-1; ++i) // for each row
@@ -276,7 +276,7 @@ void Eternity2_State::LRandomCoords(){
         //cout << "LRC2" << endl;        
         if( ! Random::Int(0,pseudo_distribution-1)) // the slot isn't empty, generate an L
         {
-          //cout << "Trying to add in (" << i << "," << j << ")." << endl;
+          cout << "Trying to add in (" << i << "," << j << ")." << endl;
           /*cout << "constraints: " << endl;
           for (int i = 0; i < constraints.size(); ++i)
           {
@@ -303,11 +303,11 @@ void Eternity2_State::LRandomCoords(){
           }else
           {
             // No L can be placed
-            //cout << "le fu" << endl;
+            //cout << "Nope!" << endl;
             lo = 4;
           }// end if-then-else
 
-          cout << "LRC4" << endl;
+          //cout << "LRC4" << endl;
 
           // If an L has been added, add it to the list and update the support matrix
           if(lo!=4)
@@ -330,11 +330,11 @@ void Eternity2_State::LRandomCoords(){
             /* To update the constraints, read from the constraint matrix
             *  OBS: the current position (i,j) corresponds to (2,2) in the constraint matrix 
             */
-            cout << "Updating constraints..." << endl;
+            //cout << "Updating constraints..." << endl;
             while(ii-i <= 2 && ii < in.getHeight()-1)
             {             
               //cout << i << " " << j << " " << ii << " " << jj << " -> " << 2+ii-i  << " " <<  2+jj-j << " " << readPlacementMatrix(2+ii-i,2+jj-j,lo) << endl;
-              //cout << "ii: " << ii << " jj: " << jj << endl;  
+              cout << "ii: " << ii << " jj: " << jj << endl;  
               constraints[ii][jj] = readPlacementMatrix(2+ii-i,2+jj-j,lo);
               // If a position is found where and L can be placed, store it so we can resume from there
               if(!gotNextPos && readPlacementMatrix(2+ii-i,2+jj-j,lo) != 4){
@@ -343,7 +343,7 @@ void Eternity2_State::LRandomCoords(){
                 gotNextPos = 1;
               }
               // Move to the next position
-              if(++jj > j+2)
+              if(++jj > std::min(in.getWidth()-2,(unsigned int)(j+2)) )
               {
                 ii++;
                 jj = max(0,j-2);
@@ -358,7 +358,7 @@ void Eternity2_State::LRandomCoords(){
               j = nextj;
             }
           }// Done updating and adding     
-          cout << "LRC5" << endl;
+          //cout << "LRC5" << endl;
         } // end random L generation
       } // end for each column
   } // end for each row
@@ -587,6 +587,7 @@ Eternity2_LMove::Eternity2_LMove()
 
 bool operator==(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
 {
+  cout << "<L==>" << endl;
   // Insert the code that checks if two moves are identical
   unsigned m = mv1.ellList.size();
   if(m != mv1.ellList.size()) return false;
@@ -601,6 +602,7 @@ bool operator==(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
 	 if(mv1.ellSelection.at(i)!=mv2.ellSelection.at(i)) 
 		 return false;
   }
+  cout << "</L==>" << endl;
   return true;
 }
 
@@ -612,6 +614,7 @@ bool operator!=(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
 
 bool operator<(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
 {
+  cout << "<L<>" << endl;
   // Insert the code that checks if one move precedes another one
   // (in any selected order)
   unsigned n = mv1.ellList.size();
@@ -623,6 +626,7 @@ bool operator<(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
       mv1.ellList.at(i).first.second < mv2.ellList.at(i).first.second ||
       mv1.ellList.at(i).second < mv2.ellList.at(i).second ) return true;
   }
+  cout << "</L<>" << endl;
   return false;
 }
 
@@ -635,6 +639,7 @@ istream& operator>>(istream& is, Eternity2_LMove& mv)
 
 ostream& operator<<(ostream& os, const Eternity2_LMove& mv)
 {
+  cout << "<L<<>" << endl;
   // Insert the code that writes a move
   os << endl;
   for(unsigned i = 0; i < mv.ellList.size(); i++)
@@ -645,6 +650,7 @@ ostream& operator<<(ostream& os, const Eternity2_LMove& mv)
       mv.ellList.at(mv.ellSelection.at(i)).first.second << ">," << mv.ellList.at(mv.ellSelection.at(i)).second << ")\t";
     os << endl;
   }
+  cout << "</L<<>" << endl;
   return os;
 }
 

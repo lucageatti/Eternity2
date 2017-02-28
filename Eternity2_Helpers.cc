@@ -1504,6 +1504,7 @@ void Eternity2_LMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, 
 // check move feasibility
 bool Eternity2_LMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st, const Eternity2_LMove& mv) const
 {
+  cout << "<LFeasibleMove>" << endl;
   // Insert the code that check is move mv is legal in state st 
   // (return true if legal, false otherwise)
   
@@ -1520,6 +1521,7 @@ bool Eternity2_LMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st
   }
   
   // Maybe we should check that the generated L-partition is good. (but not here)
+  cout << "</LFeasibleMove>" << endl;
   return true;
 } 
 
@@ -1621,7 +1623,9 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
 
 void Eternity2_LMoveNeighborhoodExplorer::updateCoords(Eternity2_State& st) const {
   if( st.L_counter % 10 == 0 )
+    cout << "upd" << endl;
     st.LRandomCoords();
+  cout << "dupd" << endl;  
 }
 
 
@@ -1630,18 +1634,18 @@ void Eternity2_LMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, E
 {
   // Insert the code the generate the first move in the neighborhood and store it in mv
   // The list of ells in the partition is produced.
-  //cout << "<FirstMove>" << endl;
+  cout << "<FirstMove>" << endl;
   mv.setCoordinates(st.random_L);
   //unsigned id = 0;
   for(unsigned i=0; i<mv.ellList.size(); i++){
 	  mv.ellSelection.push_back(i);
   }
-  //cout << "</FirstMove>" << endl;
+  cout << "</FirstMove>" << endl;
 }
 
 bool Eternity2_LMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Eternity2_LMove& mv) const
 {
-  //cout << "<NextMove>" << endl;
+  cout << "<NextMove>" << endl;
   // Insert the code that generate the move that follows mv in the neighborhood, and writes
   // it back in mv. Return false if mv is already the last move.
   unsigned size = mv.ellSelection.size();
@@ -1682,14 +1686,14 @@ bool Eternity2_LMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Et
 	  mv.ellSelection.at(size-i) = temp;
   }
   
-  //cout << "</FirstMove>" << endl;
+  cout << "</NextMove>" << endl;
   return true;
 }
 
 
 int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const
 {
-  //cout << "<DeltaCost>" << endl;
+  cout << "<DeltaCost>" << endl;
   int cost = 0;
   int originalCost = 0;
   int swappedCost = 0;
@@ -1826,7 +1830,7 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
   }
   
   cost = swappedCost - originalCost;
-  //cout << "</Deltacost>" << endl;
+  cout << "</Deltacost>" << endl;
   return cost;
 }
 
