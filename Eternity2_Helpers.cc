@@ -1974,13 +1974,14 @@ vector<vector<pair<int,Orientation>>> Eternity2_LMoveNeighborhoodExplorer::creat
         // This is done by checking for violations
         for(unsigned k = 0; k < 4; k++)
         {
+          //cout << "for4!" << endl;
           // Rename the orientation of the moved L for convenience
           // Also indicates where the "hole" in the L is
           unsigned newOrient = mv.ellList.at(i).second;
 
-          if(k != newOrient) // No point in checking for mistmatches in the hole
+          if(k != newOrient) // No point in checking for mismatches in the hole
           {
-            // DOWN
+            // DOWN external
             if( ((newOrient==0 || newOrient==1) && (k==2 || k==3)) || (newOrient==2 && (k==1 || k==3)) || (newOrient==3 && (k==0 || k==2)) )
             {
               // South color of the cell that maps into k
@@ -1991,10 +1992,22 @@ vector<vector<pair<int,Orientation>>> Eternity2_LMoveNeighborhoodExplorer::creat
               {
                 c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first+1, eLstCoord[k].second)),2);  
               } else c2 = 0; // Grey
-              if(c1!=c2) swappedCost++; // Mismatch
+              if(c1!=c2) swappedCost+=2; // External Mismatch
             }
-  
-            // LEFT
+
+            // DOWN internal
+            if( ((newOrient==0 || newOrient==3) && k== 1) || ((newOrient==1 || newOrient==2) && k==0) )
+            {
+              // South color of the cell that maps into k
+              unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(0-rot,4));
+              // North color of the cell below k
+              int l;
+              if(k == 0) l = 3; else l = 2; 
+              unsigned c2 = st.getColor(eSelIDO[map[l]], st.strangeMod(2-rot,4));
+              if(c1!=c2) swappedCost++; // Internal Mismatch
+            }
+
+            // LEFT external
             if( (newOrient==0 && (k==1 || k==3)) || ((newOrient==1 || newOrient==2) && (k==0 || k==3)) || (newOrient==3 && (k==0 || k==2)) )
             {
               unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(1-rot,4));
@@ -2003,10 +2016,20 @@ vector<vector<pair<int,Orientation>>> Eternity2_LMoveNeighborhoodExplorer::creat
               {
                 c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first, eLstCoord[k].second-1)),3);  
               } else c2 = 0;
+              if(c1!=c2) swappedCost+=2;
+            }
+
+            // LEFT internal
+            if( ((newOrient==0 || newOrient==1) && k== 2) || ((newOrient==2 || newOrient==3) && k==1) )
+            {
+              unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(1-rot,4));
+              int l;
+              if(k == 1) l = 0; else l = 3; 
+              unsigned c2 = st.getColor(eSelIDO[map[l]], st.strangeMod(3-rot,4));
               if(c1!=c2) swappedCost++;
             }
-  
-            // UP
+
+            // UP external
             if( (newOrient==0 && (k==1 || k==3)) || (newOrient==1 && (k==0 || k==2)) || ((newOrient==2 || newOrient==3) && (k==0 || k==1)) )
             {
               unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(2-rot,4));
@@ -2015,10 +2038,20 @@ vector<vector<pair<int,Orientation>>> Eternity2_LMoveNeighborhoodExplorer::creat
               {
                 c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first-1, eLstCoord[k].second)),0);  
               } else c2 = 0;
+              if(c1!=c2) swappedCost+=2;
+            }
+
+            // UP internal
+            if( ((newOrient==0 || newOrient==3) && k== 2) || ((newOrient==1 || newOrient==2) && k==3) )
+            {
+              unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(2-rot,4));
+              int l;
+              if(k == 2) l = 1; else l = 0; 
+              unsigned c2 = st.getColor(eSelIDO[map[l]], st.strangeMod(0-rot,4));
               if(c1!=c2) swappedCost++;
             }
-  
-            // RIGHT
+
+            // RIGHT external
             if( ((newOrient==0 || newOrient==3) && (k==1 || k==2)) || (newOrient==1 && (k==0 || k==2)) || (newOrient==2 && (k==1 || k==3)) )
             {
               unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(3-rot,4));
@@ -2027,9 +2060,19 @@ vector<vector<pair<int,Orientation>>> Eternity2_LMoveNeighborhoodExplorer::creat
               {
                 c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first, eLstCoord[k].second+1)),1);  
               } else c2 = 0;
+              if(c1!=c2) swappedCost+=2;
+            }
+
+            // RIGHT internal
+            if( ((newOrient==0 || newOrient==1) && k==3) || ((newOrient==2 || newOrient==3) && k==0) )
+            {
+              unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(3-rot,4));
+              int l;
+              if(k == 3) l = 2; else l = 1; 
+              unsigned c2 = st.getColor(eSelIDO[map[l]], st.strangeMod(1-rot,4));
               if(c1!=c2) swappedCost++;
             }
-          }
+          } 
         } // end foreach cell of an L
 
         graph[i][j] = pair<int,Orientation>(swappedCost,mv.ellList[j].second); 
