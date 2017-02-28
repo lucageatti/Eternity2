@@ -276,7 +276,7 @@ void Eternity2_State::LRandomCoords(){
         //cout << "LRC2" << endl;        
         if( ! Random::Int(0,pseudo_distribution-1)) // the slot isn't empty, generate an L
         {
-          cout << "Trying to add in (" << i << "," << j << ")." << endl;
+          //cout << "Trying to add in (" << i << "," << j << ")." << endl;
           /*cout << "constraints: " << endl;
           for (int i = 0; i < constraints.size(); ++i)
           {
@@ -334,7 +334,7 @@ void Eternity2_State::LRandomCoords(){
             while(ii-i <= 2 && ii < in.getHeight()-1)
             {             
               //cout << i << " " << j << " " << ii << " " << jj << " -> " << 2+ii-i  << " " <<  2+jj-j << " " << readPlacementMatrix(2+ii-i,2+jj-j,lo) << endl;
-              cout << "ii: " << ii << " jj: " << jj << endl;  
+              //cout << "ii: " << ii << " jj: " << jj << endl;  
               constraints[ii][jj] = readPlacementMatrix(2+ii-i,2+jj-j,lo);
               // If a position is found where and L can be placed, store it so we can resume from there
               if(!gotNextPos && readPlacementMatrix(2+ii-i,2+jj-j,lo) != 4){

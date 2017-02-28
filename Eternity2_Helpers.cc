@@ -1543,7 +1543,8 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
 
     if (!(i1 < st.getHeight()-1 && i2 < st.getHeight()-1 && j1 < st.getWidth()-1 && j2 < st.getWidth()-1))
     {
-      continue;
+      //continue;
+      throw logic_error("MakeMove got an invalid L-partition (out of bounds square)."); 
     }
 
     // Backup IDOs
@@ -1572,7 +1573,7 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
         pair<unsigned,unsigned>(i2+1,j2+1), 
         pair<unsigned,unsigned>(i2+1,j2) 
     };
-    cout << "mkmv 1" << endl;
+    //cout << "mkmv 1" << endl;
     // Calculate the rotation  needed to fit ellList[i] in place of ellList[from]
     // Positive rotation = counter-clockwise rotation of the L
     int rot = mv.ellList.at(i).second - mv.ellList.at(from).second;
@@ -1587,7 +1588,7 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
       map[i] = (unsigned int)val;
     }
 
-	  cout << "mkmv 2" << endl;
+	  //cout << "mkmv 2" << endl;
 
 	  // Store the changes needed for the swap
 	  /* Swap Example:
@@ -1606,7 +1607,7 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
 
   }
 
-  cout << "mkmv 3" << endl;
+  //cout << "mkmv 3" << endl;
 
   // Apply changes
   for (int i = 0; i < changes.size(); ++i)
@@ -1614,7 +1615,7 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
     st.insertTile( changes[i].first, changes[i].second );
   }
 
-  cout << "mkmv 4" << endl;
+  //cout << "mkmv 4" << endl;
 
   updateCoords(st);
   cout << "</MakeMove>" << endl;
@@ -1702,6 +1703,7 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
   // Same code as MakeMove, but I calculate the deltacost instead of updating the state
   for(unsigned i = 0; i < mv.ellSelection.size(); i++)
   { 
+    //cout << "for1!" << endl;
 	  // Compute the cost of moving ellList[ellSelection[i]] in place of ellList[i]
 
     unsigned i1 = mv.ellList.at(i).first.first;
@@ -1711,7 +1713,8 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
 
     if (!(i1 < st.getHeight()-1 && i2 < st.getHeight()-1 && j1 < st.getWidth()-1 && j2 < st.getWidth()-1))
     {
-      continue;
+      //continue;
+      throw logic_error("MakeMove got an invalid L-partition (out of bounds square)."); 
     }
 
 
@@ -1750,6 +1753,7 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
     // Original cost
     for(unsigned j = 0; j < 3; j++)
     {
+      //cout << "for2!" << endl;
 		  originalCost += singleTileCost(eLstIDO[j], eLstCoord[j], st);
 	  }
 
@@ -1760,23 +1764,26 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
     // ellList[ellSelection[i]] that is moved in its place.
 
 	  unsigned map[4];
-    for (unsigned i = 0; i < 4; ++i)
+    for (unsigned k = 0; k < 4; ++k)
     {
-      int val = st.strangeMod(i-rot,4);
-      map[i] = (unsigned int)val;
+      //cout << "for3!" << endl;
+      int val = st.strangeMod(k-rot,4);
+      map[k] = (unsigned int)val;
     }
 
     // Now compute the cost after the swap is (supposedly) made 
     // This is done by checking for violations
+    // First compute the violations towards cell external to the L
     for(unsigned k = 0; k < 4; k++)
     {
+      //cout << "for4!" << endl;
       // Rename the orientation of the moved L for convenience
       // Also indicates where the "hole" in the L is
       unsigned newOrient = mv.ellList.at(i).second;
 
-      if(k != newOrient) // No point in checking for mistmatches in the hole
+      if(k != newOrient) // No point in checking for mismatches in the hole
       {
-        // DOWN
+        // DOWN external
         if( ((newOrient==0 || newOrient==1) && (k==2 || k==3)) || (newOrient==2 && (k==1 || k==3)) || (newOrient==3 && (k==0 || k==2)) )
         {
           // South color of the cell that maps into k
@@ -1787,10 +1794,22 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
           {
             c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first+1, eLstCoord[k].second)),2);  
           } else c2 = 0; // Grey
-          if(c1!=c2) swappedCost++; // Mismatch
+          if(c1!=c2) swappedCost+=2; // External Mismatch
         }
 
-        // LEFT
+        // DOWN internal
+        if( ((newOrient==0 || newOrient==3) && k== 1) || ((newOrient==1 || newOrient==2) && k==0) )
+        {
+          // South color of the cell that maps into k
+          unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(0-rot,4));
+          // North color of the cell below k
+          int l;
+          if(k == 0) l = 3; else l = 2; 
+          unsigned c2 = st.getColor(eSelIDO[map[l]], st.strangeMod(2-rot,4));
+          if(c1!=c2) swappedCost++; // Internal Mismatch
+        }
+
+        // LEFT external
         if( (newOrient==0 && (k==1 || k==3)) || ((newOrient==1 || newOrient==2) && (k==0 || k==3)) || (newOrient==3 && (k==0 || k==2)) )
         {
           unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(1-rot,4));
@@ -1799,10 +1818,20 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
           {
             c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first, eLstCoord[k].second-1)),3);  
           } else c2 = 0;
+          if(c1!=c2) swappedCost+=2;
+        }
+
+        // LEFT internal
+        if( ((newOrient==0 || newOrient==1) && k== 2) || ((newOrient==2 || newOrient==3) && k==1) )
+        {
+          unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(1-rot,4));
+          int l;
+          if(k == 1) l = 0; else l = 3; 
+          unsigned c2 = st.getColor(eSelIDO[map[l]], st.strangeMod(3-rot,4));
           if(c1!=c2) swappedCost++;
         }
 
-        // UP
+        // UP external
         if( (newOrient==0 && (k==1 || k==3)) || (newOrient==1 && (k==0 || k==2)) || ((newOrient==2 || newOrient==3) && (k==0 || k==1)) )
         {
           unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(2-rot,4));
@@ -1811,10 +1840,20 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
           {
             c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first-1, eLstCoord[k].second)),0);  
           } else c2 = 0;
+          if(c1!=c2) swappedCost+=2;
+        }
+
+        // UP internal
+        if( ((newOrient==0 || newOrient==3) && k== 2) || ((newOrient==1 || newOrient==2) && k==3) )
+        {
+          unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(2-rot,4));
+          int l;
+          if(k == 2) l = 1; else l = 0; 
+          unsigned c2 = st.getColor(eSelIDO[map[l]], st.strangeMod(0-rot,4));
           if(c1!=c2) swappedCost++;
         }
 
-        // RIGHT
+        // RIGHT external
         if( ((newOrient==0 || newOrient==3) && (k==1 || k==2)) || (newOrient==1 && (k==0 || k==2)) || (newOrient==2 && (k==1 || k==3)) )
         {
           unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(3-rot,4));
@@ -1823,13 +1862,25 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
           {
             c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(eLstCoord[k].first, eLstCoord[k].second+1)),1);  
           } else c2 = 0;
+          if(c1!=c2) swappedCost+=2;
+        }
+
+        // RIGHT internal
+        if( ((newOrient==0 || newOrient==1) && k==3) || ((newOrient==2 || newOrient==3) && k==0) )
+        {
+          unsigned c1 = st.getColor(eSelIDO[map[k]], st.strangeMod(3-rot,4));
+          int l;
+          if(k == 3) l = 2; else l = 1; 
+          unsigned c2 = st.getColor(eSelIDO[map[l]], st.strangeMod(1-rot,4));
           if(c1!=c2) swappedCost++;
         }
-      } // Done computing swappedCost
-    }
+      } 
+    } // Done computing swappedCost
+    
   }
   
   cost = swappedCost - originalCost;
+  cout << "originalCost: " << originalCost << " swappedCost: " << swappedCost << " Deltacost: " << cost << endl;
   cout << "</Deltacost>" << endl;
   return cost;
 }
