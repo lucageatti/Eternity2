@@ -238,7 +238,7 @@ void Eternity2_State::testReadPlacementMatrix(){
 */
 void Eternity2_State::LRandomCoords(){
   // Debug
-  //cout << "LRC" << endl;
+  cout << "LRC" << endl;
   //testReadPlacementMatrix();
 
   // Reset the list of ells
@@ -266,7 +266,7 @@ void Eternity2_State::LRandomCoords(){
   int lo = -1; 
   // We want to make sure there are more empty slots than filled slots
   int pseudo_distribution = std::max((unsigned int)2,(in.getWidth() * in.getHeight()) / 6);
-  //cout << "LRC1" << endl;
+  cout << "LRC1" << endl;
 
   // Iterate on each "square"
   for ( i = 0; i < in.getHeight()-1; ++i) // for each row
@@ -307,7 +307,7 @@ void Eternity2_State::LRandomCoords(){
             lo = 4;
           }// end if-then-else
 
-          //cout << "LRC4" << endl;
+          cout << "LRC4" << endl;
 
           // If an L has been added, add it to the list and update the support matrix
           if(lo!=4)
@@ -330,7 +330,7 @@ void Eternity2_State::LRandomCoords(){
             /* To update the constraints, read from the constraint matrix
             *  OBS: the current position (i,j) corresponds to (2,2) in the constraint matrix 
             */
-            //cout << "Updating constraints..." << endl;
+            cout << "Updating constraints..." << endl;
             while(ii-i <= 2 && ii < in.getHeight()-1)
             {             
               //cout << i << " " << j << " " << ii << " " << jj << " -> " << 2+ii-i  << " " <<  2+jj-j << " " << readPlacementMatrix(2+ii-i,2+jj-j,lo) << endl;
@@ -343,7 +343,7 @@ void Eternity2_State::LRandomCoords(){
                 gotNextPos = 1;
               }
               // Move to the next position
-              if(++jj >= in.getWidth()-1)
+              if(++jj > j+2)
               {
                 ii++;
                 jj = max(0,j-2);
@@ -358,7 +358,7 @@ void Eternity2_State::LRandomCoords(){
               j = nextj;
             }
           }// Done updating and adding     
-            //cout << "LRC5" << endl;
+          cout << "LRC5" << endl;
         } // end random L generation
       } // end for each column
   } // end for each row
@@ -366,7 +366,7 @@ void Eternity2_State::LRandomCoords(){
   // Make sure there's at least one L if the random partition's empty
   if( random_L.size() < 1 ) random_L.push_back(make_pair(make_pair( (unsigned int)Random::Int(0,getHeight()-2), 
       (unsigned int)Random::Int(0,getWidth()-2) ), Random::Int(0,3)));  
-  //cout << "</LRC>" << endl;
+  cout << "</LRC>" << endl;
 }
 
 
