@@ -564,7 +564,7 @@ ostream& operator<<(ostream& os, const Eternity2_GenericMove& mv)
 
 Eternity2_LMove::Eternity2_LMove()
 {
-  cout << "LMove()" << endl;
+  //cout << "LMove()" << endl;
   // Insert the code that initializes the move
   //ellMatrix = vector<vector<unsigned>>();
   ellSelection = vector<unsigned>();
@@ -587,7 +587,7 @@ Eternity2_LMove::Eternity2_LMove()
 
 bool operator==(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
 {
-  cout << "<L==>" << endl;
+  //cout << "<L==>" << endl;
   // Insert the code that checks if two moves are identical
   unsigned m = mv1.ellList.size();
   if(m != mv1.ellList.size()) return false;
@@ -602,7 +602,7 @@ bool operator==(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
 	 if(mv1.ellSelection.at(i)!=mv2.ellSelection.at(i)) 
 		 return false;
   }
-  cout << "</L==>" << endl;
+  //cout << "</L==>" << endl;
   return true;
 }
 
@@ -614,19 +614,32 @@ bool operator!=(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
 
 bool operator<(const Eternity2_LMove& mv1, const Eternity2_LMove& mv2)
 {
-  cout << "<L<>" << endl;
+  //cout << "<L < >" << endl;
+  /*cout << "mv1: " ;
+  for (int i = 0; i < mv1.ellSelection.size(); ++i)
+  {
+    cout << mv1.ellSelection[i] << " " ;
+  }
+  cout << endl << "mv2: " ;
+  for (int i = 0; i < mv2.ellSelection.size(); ++i)
+  {
+    cout << mv2.ellSelection[i] << " " ;
+  }
+  cout << endl;*/
   // Insert the code that checks if one move precedes another one
   // (in any selected order)
   unsigned n = mv1.ellList.size();
   if(n!=mv2.ellList.size())
 	  throw logic_error("operator< for Eternity2_LMove called on instances with different size!");
-  for(unsigned i=0; i<n; i++)
+  unsigned i = 0;
+  while (mv1.ellSelection[i] == mv2.ellSelection[i])
   {
-	 if(mv1.ellList.at(i).first.first < mv2.ellList.at(i).first.first ||
-      mv1.ellList.at(i).first.second < mv2.ellList.at(i).first.second ||
-      mv1.ellList.at(i).second < mv2.ellList.at(i).second ) return true;
+    i++;
   }
-  cout << "</L<>" << endl;
+  // Now mv1.ellSelection[i] != mv2.ellSelection[i]
+	if( mv1.ellSelection[i] < mv2.ellSelection[i] ) return true;
+    else return false;
+  //cout << "</L < >" << endl;
   return false;
 }
 
@@ -639,7 +652,7 @@ istream& operator>>(istream& is, Eternity2_LMove& mv)
 
 ostream& operator<<(ostream& os, const Eternity2_LMove& mv)
 {
-  cout << "<L<<>" << endl;
+  //cout << "<L<<>" << endl;
   // Insert the code that writes a move
   os << endl;
   for(unsigned i = 0; i < mv.ellList.size(); i++)
@@ -650,7 +663,7 @@ ostream& operator<<(ostream& os, const Eternity2_LMove& mv)
       mv.ellList.at(mv.ellSelection.at(i)).first.second << ">," << mv.ellList.at(mv.ellSelection.at(i)).second << ")\t";
     os << endl;
   }
-  cout << "</L<<>" << endl;
+  //cout << "</L<<>" << endl;
   return os;
 }
 
