@@ -23,6 +23,7 @@ do
     echo "Test $i) "
     echo "Seed: $SEED"
     SOL="$(./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_$INST.txt" --main::seed $SEED --main::method $METHOD --$METHOD::max_evaluations $MAX_EVAL)"
-    echo $SOL
+    echo $SOL | grep -o "Cost: [0-9]*"
+    echo $SOL | grep -o "Time: [0-9]*\.[0-9]*s"
     echo
 done
