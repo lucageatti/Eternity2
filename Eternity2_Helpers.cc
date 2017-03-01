@@ -1290,7 +1290,7 @@ EvaluatedMove<Eternity2_ThreeTileStreakMove, DefaultCostStructure<int>> ThreeTil
       perm[match[i]] = make_pair(i,graph[i][match[i]].second);
     }
     mv.setPermutation(perm);
-    cout << mv << endl;
+    //cout << mv << endl;
     
     // Forces the coordinates update during the next 'MakeMove'
     forceUpdate(st);
@@ -1492,19 +1492,19 @@ int computeTTSDeltaCost(const Eternity2_State& st, const tuple<tileMove,tileMove
 // initial move builder
 void Eternity2_LMoveNeighborhoodExplorer::RandomMove(const Eternity2_State& st, Eternity2_LMove& mv) const  throw(EmptyNeighborhood)
 {
-  cout << "<RandomMove>" << endl;
+  //cout << "<RandomMove>" << endl;
   // insert the code that writes a random move on mv in state st
   // shuffle partition
   mv.setCoordinates(st.random_L);
   mv.ellSelection = FisherYatesShuffle(mv.ellList.size());
   st.L_counter++;
-  cout << "</RandomMove>" << endl;
+  //cout << "</RandomMove>" << endl;
 } 
 
 // check move feasibility
 bool Eternity2_LMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st, const Eternity2_LMove& mv) const
 {
-  cout << "<LFeasibleMove>" << endl;
+  //cout << "<LFeasibleMove>" << endl;
   // Insert the code that check is move mv is legal in state st 
   // (return true if legal, false otherwise)
   
@@ -1521,7 +1521,7 @@ bool Eternity2_LMoveNeighborhoodExplorer::FeasibleMove(const Eternity2_State& st
   }
   
   // Maybe we should check that the generated L-partition is good. (but not here)
-  cout << "</LFeasibleMove>" << endl;
+  //cout << "</LFeasibleMove>" << endl;
   return true;
 } 
 
@@ -1631,9 +1631,7 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
 
 void Eternity2_LMoveNeighborhoodExplorer::updateCoords(Eternity2_State& st) const {
   if( st.L_counter % 10 == 0 )
-    cout << "upd" << endl;
     st.LRandomCoords();
-  cout << "dupd" << endl;  
 }
 
 
@@ -1642,18 +1640,18 @@ void Eternity2_LMoveNeighborhoodExplorer::FirstMove(const Eternity2_State& st, E
 {
   // Insert the code the generate the first move in the neighborhood and store it in mv
   // The list of ells in the partition is produced.
-  cout << "<FirstMove>" << endl;
+  //cout << "<FirstMove>" << endl;
   mv.setCoordinates(st.random_L);
   //unsigned id = 0;
   for(unsigned i=0; i<mv.ellList.size(); i++){
 	  mv.ellSelection.push_back(i);
   }
-  cout << "</FirstMove>" << endl;
+  //cout << "</FirstMove>" << endl;
 }
 
 bool Eternity2_LMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Eternity2_LMove& mv) const
 {
-  cout << "<NextMove>" << endl;
+  //cout << "<NextMove>" << endl;
   // Insert the code that generate the move that follows mv in the neighborhood, and writes
   // it back in mv. Return false if mv is already the last move.
   unsigned size = mv.ellSelection.size();
@@ -1694,7 +1692,7 @@ bool Eternity2_LMoveNeighborhoodExplorer::NextMove(const Eternity2_State& st, Et
 	  mv.ellSelection.at(size-i) = temp;
   }
   
-  cout << "</NextMove>" << endl;
+  //cout << "</NextMove>" << endl;
   return true;
 }
 
@@ -1718,7 +1716,7 @@ int Eternity2_LMoveDeltaCostComponent::computePartialDeltaCost
   }
   //cout << endl;
 
-  cout << "Rotating " << newOrient+rot << " into " << newOrient << endl;
+  //cout << "Rotating " << newOrient+rot << " into " << newOrient << endl;
 
   // Now compute the cost after the swap is (supposedly) made 
   // This is done by checking for violations
@@ -1737,7 +1735,7 @@ int Eternity2_LMoveDeltaCostComponent::computePartialDeltaCost
         if(toCoord[k].first+1 < st.getHeight())
         {
           c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(toCoord[k].first+1, toCoord[k].second)),2);  
-          cout << "k=" << k << " D: " << c1 << "-" << c2 << endl;          
+          //cout << "k=" << k << " D: " << c1 << "-" << c2 << endl;          
         } else c2 = 0; // Grey
         if(c1!=c2) dcost+=2; // External Mismatch
       }
@@ -1751,7 +1749,7 @@ int Eternity2_LMoveDeltaCostComponent::computePartialDeltaCost
         int l;
         if(k == 0) l = 3; else l = 2; 
         unsigned c2 = st.getColor(fromIDO[map[l]], st.strangeMod(2+rot,4));
-        cout << "k=" << k << " Di: " << c1 << "-" << c2 << endl; 
+        //cout << "k=" << k << " Di: " << c1 << "-" << c2 << endl; 
         if(c1!=c2) dcost++; // Internal Mismatch
       }
 
@@ -1764,7 +1762,7 @@ int Eternity2_LMoveDeltaCostComponent::computePartialDeltaCost
         if(toCoord[k].second > 0)
         {
           c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(toCoord[k].first, toCoord[k].second-1)),3); 
-          cout << "k=" << k << " L: " << c2 << "-" << c1 << endl; 
+          //cout << "k=" << k << " L: " << c2 << "-" << c1 << endl; 
         } else c2 = 0;
         if(c1!=c2) dcost+=2;
       }
@@ -1776,7 +1774,7 @@ int Eternity2_LMoveDeltaCostComponent::computePartialDeltaCost
         int l;
         if(k == 1) l = 0; else l = 3; 
         unsigned c2 = st.getColor(fromIDO[map[l]], st.strangeMod(3+rot,4));
-        cout << "k=" << k << " Li: " << c2 << "-" << c1 << endl; 
+        //cout << "k=" << k << " Li: " << c2 << "-" << c1 << endl; 
         if(c1!=c2) dcost++;
       }
 
@@ -1788,7 +1786,7 @@ int Eternity2_LMoveDeltaCostComponent::computePartialDeltaCost
         if(toCoord[k].first > 0)
         {
           c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(toCoord[k].first-1, toCoord[k].second)),0); 
-          cout << "k=" << k << " U: " << c1 << "-" << c2 << endl; 
+          //cout << "k=" << k << " U: " << c1 << "-" << c2 << endl; 
         } else c2 = 0;
         if(c1!=c2) dcost+=2;
       }
@@ -1800,7 +1798,7 @@ int Eternity2_LMoveDeltaCostComponent::computePartialDeltaCost
         int l;
         if(k == 2) l = 1; else l = 0; 
         unsigned c2 = st.getColor(fromIDO[map[l]], st.strangeMod(0+rot,4));
-        cout << "k=" << k << " Ui: " << c1 << "-" << c2 << endl;
+        //cout << "k=" << k << " Ui: " << c1 << "-" << c2 << endl;
         if(c1!=c2) dcost++;
       }
 
@@ -1812,7 +1810,7 @@ int Eternity2_LMoveDeltaCostComponent::computePartialDeltaCost
         if(toCoord[k].second+1 < st.getWidth())
         {
           c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(toCoord[k].first, toCoord[k].second+1)),1);  
-          cout << "k=" << k << " R: " << c1 << "-" << c2 << endl;
+          //cout << "k=" << k << " R: " << c1 << "-" << c2 << endl;
         } else c2 = 0;
         if(c1!=c2) dcost+=2;
       }
@@ -1824,17 +1822,17 @@ int Eternity2_LMoveDeltaCostComponent::computePartialDeltaCost
         int l;
         if(k == 3) l = 2; else l = 1; 
         unsigned c2 = st.getColor(fromIDO[map[l]], st.strangeMod(1+rot,4));
-        cout << "k=" << k << " Ri: " << c1 << "-" << c2 << endl;
+        //cout << "k=" << k << " Ri: " << c1 << "-" << c2 << endl;
         if(c1!=c2) dcost++;
       }
-    } else cout << "Ignoring " << k << endl;
+    } //else cout << "Ignoring " << k << endl;
   } // Done computing dcost
   return dcost;
 }
 
 int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const
 {
-  cout << "<DeltaCost>" << endl;
+  //cout << "<DeltaCost>" << endl;
   int cost = 0;
   int originalCost = 0;
   int swappedCost = 0;
@@ -1900,8 +1898,8 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
   }
   
   cost = swappedCost - originalCost;
-  cout << "originalCost: " << originalCost << " swappedCost: " << swappedCost << " Deltacost: " << cost << endl;
-  cout << "</Deltacost>" << endl;
+  //cout << "originalCost: " << originalCost << " swappedCost: " << swappedCost << " Deltacost: " << cost << endl;
+  //cout << "</Deltacost>" << endl;
   return cost;
 }
 

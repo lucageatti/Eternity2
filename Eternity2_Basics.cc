@@ -179,13 +179,13 @@ unsigned Eternity2_State::readPlacementMatrix(unsigned row, unsigned column, uns
 * Test function, can be deleted.
 */
 void Eternity2_State::testReadPlacementMatrix(){
-  cout << "--- Test readPlacementMatrix() ---" << endl;
+  //cout << "--- Test readPlacementMatrix() ---" << endl;
   int rows = sizeof(constraintMatrix)/sizeof(constraintMatrix[0]);
-  cout << "constraintMatrix has " << rows <<  " rows!" << endl;
+  //cout << "constraintMatrix has " << rows <<  " rows!" << endl;
   int cols = sizeof(constraintMatrix[0])/sizeof(constraintMatrix[0][0]);
-  cout << "constraintMatrix has " << cols <<  " columns!" << endl;
+  //cout << "constraintMatrix has " << cols <<  " columns!" << endl;
   if(constraintMatrix[0][0]==0){ 
-    cout << "filling constraintMatrix." << endl;
+    //cout << "filling constraintMatrix." << endl;
     unsigned temp[5][5] = {{5,5,2,3,5},{5,2,4,4,3},{2,4,0,4,4},{1,4,4,4,0},{5,1,4,0,5}};
     for (int i = 0; i < 5; ++i)
     {
@@ -199,36 +199,36 @@ void Eternity2_State::testReadPlacementMatrix(){
   {
     for (int j = 0; j < 5; ++j)
     {
-      cout << readPlacementMatrix(i,j,0) << " ";
+      //cout << readPlacementMatrix(i,j,0) << " ";
     }
-    cout << endl;
+    //cout << endl;
   }
-  cout << endl;
+  //cout << endl;
   for (int i = 0; i < 5; ++i)
   {
     for (int j = 0; j < 5; ++j)
     {
-      cout << readPlacementMatrix(i,j,1)<< " ";
+      //cout << readPlacementMatrix(i,j,1)<< " ";
     }
-    cout << endl;
+    //cout << endl;
   }
-  cout << endl;
+  //cout << endl;
   for (int i = 0; i < 5; ++i)
   {
     for (int j = 0; j < 5; ++j)
     {
-      cout << readPlacementMatrix(i,j,2)<< " ";
+      //cout << readPlacementMatrix(i,j,2)<< " ";
     }
-    cout << endl;
+    //cout << endl;
   }
-  cout << endl;
+  //cout << endl;
   for (int i = 0; i < 5; ++i)
   {
     for (int j = 0; j < 5; ++j)
     {
-      cout << readPlacementMatrix(i,j,3)<< " ";
+     //cout << readPlacementMatrix(i,j,3)<< " ";
     }
-    cout << endl;
+    //cout << endl;
   }
 }
 
@@ -238,7 +238,7 @@ void Eternity2_State::testReadPlacementMatrix(){
 */
 void Eternity2_State::LRandomCoords(){
   // Debug
-  cout << "<LRC>" << endl;
+  //cout << "<LRC>" << endl;
   //testReadPlacementMatrix();
 
   // Reset the list of ells
@@ -366,7 +366,7 @@ void Eternity2_State::LRandomCoords(){
   // Make sure there's at least one L if the random partition's empty
   if( random_L.size() < 1 ) random_L.push_back(make_pair(make_pair( (unsigned int)Random::Int(0,getHeight()-2), 
       (unsigned int)Random::Int(0,getWidth()-2) ), Random::Int(0,3)));  
-  cout << "</LRC>" << endl;
+  //cout << "</LRC>" << endl;
 }
 
 
