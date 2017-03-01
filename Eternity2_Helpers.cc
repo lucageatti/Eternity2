@@ -1574,7 +1574,7 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
     };
     //cout << "mkmv 1" << endl;
     // Calculate the rotation  needed to fit ellList[i] in place of ellList[from]
-    // Positive rotation = counter-clockwise rotation of the L
+    // Positive rotation = clockwise rotation of the L
    // cout << "From (" << i2 << "," << j2 << ") to (" << i1 << "," << j1 << ")." << endl; 
     int rot = mv.ellList.at(i).second - mv.ellList.at(from).second;
    // cout << "rot: " << rot << endl;
@@ -1600,7 +1600,7 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
 	   *   | |#| = |0|1| --> |#| | = |3|0| 
 	   *   |#|#| = |3|2| --> |#|#| = |2|1|
 	   *
-	   * I do a clockwise rotation of 1 (respectively -1), also rotating each individual cell.
+	   * I do a clockwise rotation of, also rotating each individual cell.
 	   */
 	  for(unsigned j = 0; j<4; j++){
       // Don't move the hole
@@ -1705,34 +1705,39 @@ int Eternity2_LMoveDeltaCostComponent::computePartialDeltaCost
 {
   int dcost = 0; 
 
-  // First off map the first L into the second 
+  // First off map the second L into the first 
   // This means that, for each cell of ellList[i], I store the index of the cell of
   // ellList[ellSelection[i]] that is moved in its place.
 
   unsigned map[4];
   for (unsigned k = 0; k < 4; ++k)
   {
-    int val = st.strangeMod(k-rot,4);
+    int val = st.strangeMod(k+rot,4);
     map[k] = (unsigned int)val;
+    //cout << map[k] << " ";
   }
+  //cout << endl;
+
+  cout << "Rotating " << newOrient+rot << " into " << newOrient << endl;
 
   // Now compute the cost after the swap is (supposedly) made 
   // This is done by checking for violations
   for(unsigned k = 0; k < 4; k++)
   { 
 
-    if(k != newOrient) // No point in checking for mismatches in the hole
+    if(k != newOrient) // Ignore the hole
     {
       // DOWN external
       if( ((newOrient==0 || newOrient==1) && (k==2 || k==3)) || (newOrient==2 && (k==1 || k==3)) || (newOrient==3 && (k==0 || k==2)) )
       {
         // South color of the cell that maps into k
-        unsigned c1 = st.getColor(toIDO[map[k]], st.strangeMod(0-rot,4));
+        unsigned c1 = st.getColor(fromIDO[map[k]], st.strangeMod(0+rot,4));
         unsigned c2; // North color of the cell below k
         // Check that we don't go over the border
-        if(fromCoord[k].first+1 < st.getHeight())
+        if(toCoord[k].first+1 < st.getHeight())
         {
-          c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(fromCoord[k].first+1, fromCoord[k].second)),2);  
+          c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(toCoord[k].first+1, toCoord[k].second)),2);  
+          cout << "k=" << k << " D: " << c1 << "-" << c2 << endl;          
         } else c2 = 0; // Grey
         if(c1!=c2) dcost+=2; // External Mismatch
       }
@@ -1741,22 +1746,25 @@ int Eternity2_LMoveDeltaCostComponent::computePartialDeltaCost
       if( ((newOrient==0 || newOrient==3) && k== 1) || ((newOrient==1 || newOrient==2) && k==0) )
       {
         // South color of the cell that maps into k
-        unsigned c1 = st.getColor(toIDO[map[k]], st.strangeMod(0-rot,4));
+        unsigned c1 = st.getColor(fromIDO[map[k]], st.strangeMod(0+rot,4));
         // North color of the cell below k
         int l;
         if(k == 0) l = 3; else l = 2; 
-        unsigned c2 = st.getColor(toIDO[map[l]], st.strangeMod(2-rot,4));
+        unsigned c2 = st.getColor(fromIDO[map[l]], st.strangeMod(2+rot,4));
+        cout << "k=" << k << " Di: " << c1 << "-" << c2 << endl; 
         if(c1!=c2) dcost++; // Internal Mismatch
       }
 
       // LEFT external
       if( (newOrient==0 && (k==1 || k==3)) || ((newOrient==1 || newOrient==2) && (k==0 || k==3)) || (newOrient==3 && (k==0 || k==2)) )
       {
-        unsigned c1 = st.getColor(toIDO[map[k]], st.strangeMod(1-rot,4));
+        //cout << "Getting color " << st.strangeMod(1+rot,4) << " from original cell " << map[k] << endl;
+        unsigned c1 = st.getColor(fromIDO[map[k]], st.strangeMod(1+rot,4));
         unsigned c2;
-        if(fromCoord[k].second > 0)
+        if(toCoord[k].second > 0)
         {
-          c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(fromCoord[k].first, fromCoord[k].second-1)),3);  
+          c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(toCoord[k].first, toCoord[k].second-1)),3); 
+          cout << "k=" << k << " L: " << c2 << "-" << c1 << endl; 
         } else c2 = 0;
         if(c1!=c2) dcost+=2;
       }
@@ -1764,21 +1772,23 @@ int Eternity2_LMoveDeltaCostComponent::computePartialDeltaCost
       // LEFT internal
       if( ((newOrient==0 || newOrient==1) && k== 2) || ((newOrient==2 || newOrient==3) && k==1) )
       {
-        unsigned c1 = st.getColor(toIDO[map[k]], st.strangeMod(1-rot,4));
+        unsigned c1 = st.getColor(fromIDO[map[k]], st.strangeMod(1+rot,4));
         int l;
         if(k == 1) l = 0; else l = 3; 
-        unsigned c2 = st.getColor(toIDO[map[l]], st.strangeMod(3-rot,4));
+        unsigned c2 = st.getColor(fromIDO[map[l]], st.strangeMod(3+rot,4));
+        cout << "k=" << k << " Li: " << c2 << "-" << c1 << endl; 
         if(c1!=c2) dcost++;
       }
 
       // UP external
       if( (newOrient==0 && (k==1 || k==3)) || (newOrient==1 && (k==0 || k==2)) || ((newOrient==2 || newOrient==3) && (k==0 || k==1)) )
       {
-        unsigned c1 = st.getColor(toIDO[map[k]], st.strangeMod(2-rot,4));
+        unsigned c1 = st.getColor(fromIDO[map[k]], st.strangeMod(2+rot,4));
         unsigned c2;
-        if(fromCoord[k].first > 0)
+        if(toCoord[k].first > 0)
         {
-          c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(fromCoord[k].first-1, fromCoord[k].second)),0);  
+          c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(toCoord[k].first-1, toCoord[k].second)),0); 
+          cout << "k=" << k << " U: " << c1 << "-" << c2 << endl; 
         } else c2 = 0;
         if(c1!=c2) dcost+=2;
       }
@@ -1786,21 +1796,23 @@ int Eternity2_LMoveDeltaCostComponent::computePartialDeltaCost
       // UP internal
       if( ((newOrient==0 || newOrient==3) && k== 2) || ((newOrient==1 || newOrient==2) && k==3) )
       {
-        unsigned c1 = st.getColor(toIDO[map[k]], st.strangeMod(2-rot,4));
+        unsigned c1 = st.getColor(fromIDO[map[k]], st.strangeMod(2+rot,4));
         int l;
         if(k == 2) l = 1; else l = 0; 
-        unsigned c2 = st.getColor(toIDO[map[l]], st.strangeMod(0-rot,4));
+        unsigned c2 = st.getColor(fromIDO[map[l]], st.strangeMod(0+rot,4));
+        cout << "k=" << k << " Ui: " << c1 << "-" << c2 << endl;
         if(c1!=c2) dcost++;
       }
 
       // RIGHT external
       if( ((newOrient==0 || newOrient==3) && (k==1 || k==2)) || (newOrient==1 && (k==0 || k==2)) || (newOrient==2 && (k==1 || k==3)) )
       {
-        unsigned c1 = st.getColor(toIDO[map[k]], st.strangeMod(3-rot,4));
+        unsigned c1 = st.getColor(fromIDO[map[k]], st.strangeMod(3+rot,4));
         unsigned c2;
-        if(fromCoord[k].second+1 < st.getWidth())
+        if(toCoord[k].second+1 < st.getWidth())
         {
-          c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(fromCoord[k].first, fromCoord[k].second+1)),1);  
+          c2 = st.getColor(st.getIDOAt(pair<unsigned,unsigned>(toCoord[k].first, toCoord[k].second+1)),1);  
+          cout << "k=" << k << " R: " << c1 << "-" << c2 << endl;
         } else c2 = 0;
         if(c1!=c2) dcost+=2;
       }
@@ -1808,13 +1820,14 @@ int Eternity2_LMoveDeltaCostComponent::computePartialDeltaCost
       // RIGHT internal
       if( ((newOrient==0 || newOrient==1) && k==3) || ((newOrient==2 || newOrient==3) && k==0) )
       {
-        unsigned c1 = st.getColor(toIDO[map[k]], st.strangeMod(3-rot,4));
+        unsigned c1 = st.getColor(fromIDO[map[k]], st.strangeMod(3+rot,4));
         int l;
         if(k == 3) l = 2; else l = 1; 
-        unsigned c2 = st.getColor(toIDO[map[l]], st.strangeMod(1-rot,4));
+        unsigned c2 = st.getColor(fromIDO[map[l]], st.strangeMod(1+rot,4));
+        cout << "k=" << k << " Ri: " << c1 << "-" << c2 << endl;
         if(c1!=c2) dcost++;
       }
-    } 
+    } else cout << "Ignoring " << k << endl;
   } // Done computing dcost
   return dcost;
 }
@@ -1877,12 +1890,12 @@ int Eternity2_LMoveDeltaCostComponent::ComputeDeltaCost(const Eternity2_State& s
     // Positive rotation = counter-clockwise rotation of the L
     int rot = mv.ellList.at(i).second - mv.ellList.at(mv.ellSelection.at(i)).second;
 
-    // Rename the orientation of the moved L for convenience
-    // Also indicates where the "hole" in the L is
+    // Indicates where the "hole" in the L is
     //unsigned newOrient = mv.ellList.at(i).second;
 
-    originalCost += computePartialDeltaCost(st,mv,eLstIDO,eLstIDO,eLstCoord,eLstCoord,mv.ellList[mv.ellSelection[i]].second,rot);
-    swappedCost += computePartialDeltaCost(st,mv,eLstIDO,eSelIDO,eLstCoord,eSelCoord,mv.ellList[i].second,rot);
+    //cout << mv.ellList[i].second << " sda " << mv.ellList[mv.ellSelection[i]].second << endl;
+    originalCost += computePartialDeltaCost(st,mv,eLstIDO,eLstIDO,eLstCoord,eLstCoord,mv.ellList[i].second,0);
+    swappedCost += computePartialDeltaCost(st,mv,eLstIDO,eSelIDO,eLstCoord,eSelCoord,mv.ellList[mv.ellSelection[i]].second,rot);
 
   }
   
