@@ -224,6 +224,10 @@ public:
     : DeltaCostComponent<Eternity2_Input,Eternity2_State,Eternity2_LMove>(in,cc,"Eternity2_LMoveDeltaCostComponent") 
   {}
   int ComputeDeltaCost(const Eternity2_State& st, const Eternity2_LMove& mv) const;
+protected:
+  int computePartialDeltaCost
+    (const Eternity2_State& st, const Eternity2_LMove& mv, const IDO fromIDO[], const IDO toIDO[], 
+      const Coord fromCoord[], const Coord toCoord[], const unsigned newOrient, const int rot) const;
 };
 
 class Eternity2_LMoveNeighborhoodExplorer
