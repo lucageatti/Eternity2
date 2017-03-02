@@ -173,7 +173,7 @@ ostream& operator<<(ostream& os, const Eternity2_Output& out)
     }
   }
   cout << "For the visualizer:" << endl;
-  cout << out.in.getHeight() << " " << out.in.getWidth() << endl;
+  //cout << out.in.getHeight() << " " << out.in.getWidth() << endl;
   for(int i = 0; i < out.board.size(); i++){
     for(int j = 0; j < out.board[i].size(); j++){
       cout << out.board[i][j].first << " " << out.board[i][j].second << endl;
