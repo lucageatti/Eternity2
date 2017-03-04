@@ -1,22 +1,32 @@
 
 #!/bin/bash
 
+<<<<<<< HEAD
 MAX_TESTS=111
 INST=11x11
  
+=======
+MAX_TESTS=50
+INST=05x05
+
+echo "*** Multistart Steepest Descent ***"
+echo 
+>>>>>>> 6c290cca005f7c75250116f093c3a6bd2c4c455a
 echo "Instance $INST"
 echo
 
 for i in `seq 1 $MAX_TESTS`;
 do
-    SEED="$(head -c 100 /dev/urandom | tr -dc '[:digit:]')"
+    SEED="$(head -c 100 /dev/urandom | LC_CTYPE=C tr -dc '[:digit:]')"
     if [ -z "$SEED" ];
     then
         SEED=0
     fi
 
-    echo -ne "[Test $i]\t"
-    echo -ne "SEED : $SEED\t"
-    SOL="$(./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_$INST.txt" --main::seed $SEED < bullo.txt | tail -n 50 | grep -o "COST : [0-9]*")"
-    echo $SOL 
+    echo "Test $i) "
+    echo "Seed: $SEED"
+    SOL="$(./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_$INST.txt" --main::seed $SEED < ../eternity2-data/ourInput/input_$INST.txt)"
+    echo $SOL | grep -o "CURRENT COST : [0-9]*" | tail -1
+    echo $SOL | grep -o "ELAPSED TIME : [0-9]*\.[0-9]*s" | tail -1 
+    echo
 done
