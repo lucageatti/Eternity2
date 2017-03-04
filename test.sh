@@ -1,16 +1,11 @@
 
 #!/bin/bash
 
-MAX_TESTS=5
-INST=04x04
-METHOD=TTS_SD
-MAX_EVAL=1000000000000
-
-echo "*** Multistart Steepest Descent ***"
-echo 
+MAX_TESTS=111
+INST=11x11
+ 
 echo "Instance $INST"
-echo "Method $METHOD"
-
+echo
 
 for i in `seq 1 $MAX_TESTS`;
 do
@@ -20,10 +15,8 @@ do
         SEED=0
     fi
 
-    echo "Test $i) "
-    echo "Seed: $SEED"
-    SOL="$(./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_$INST.txt" --main::seed $SEED --main::method $METHOD --$METHOD::max_evaluations $MAX_EVAL)"
-    echo $SOL | grep -o "Cost: [0-9]*"
-    echo $SOL | grep -o "Time: [0-9]*\.[0-9]*s"
-    echo
+    echo -ne "[Test $i]\t"
+    echo -ne "SEED : $SEED\t"
+    SOL="$(./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_$INST.txt" --main::seed $SEED < bullo.txt | tail -n 50 | grep -o "COST : [0-9]*")"
+    echo $SOL 
 done
