@@ -1,13 +1,13 @@
 0 CONFLICTS:
 
 --- Simulated Annealing with 3-modal move Singleton+Even+Odd (prob: 0.7, 0.15, 0.15)
-./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_03x03.txt" --main::seed 0 --main::method SEO_SA --SEO_SA::start_temperature 5000 --SEO_SA::min_temperature 1 --SEO_SA::cooling_rate 0.99 --SEO_SA::neighbors_sampled 1000 --SEO_SA::neighbors_accepted 1000 --main::p1 0.7  --main::p2 0.15  --main::p3 0.15
+./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_03x03.txt" --main::seed 0 --main::method SEO_SA --SEO_SA::start_temperature 10000 --SEO_SA::min_temperature 1 --SEO_SA::cooling_rate 0.99 --SEO_SA::neighbors_sampled 1000 --SEO_SA::neighbors_accepted 1000 --main::p1 0.70  --main::p2 0.15  --main::p3 0.15
 
 
 
 
 --- Simulated Annealing with 3-modal move Singleton+Even+Odd (prob: 0.7, 0.15, 0.15)
-./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_04x04.txt" --main::seed 0 --main::method SEO_SA --SEO_SA::start_temperature 50000 --SEO_SA::min_temperature 1 --SEO_SA::cooling_rate 0.985 --SEO_SA::neighbors_sampled 10000 --SEO_SA::neighbors_accepted 1000 --main::p1 0.90 --main::p2 0.05 --main::p3 0.05
+./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_04x04.txt" --main::seed 0 --main::method SEO_SA --SEO_SA::start_temperature 10000 --SEO_SA::min_temperature 1 --SEO_SA::cooling_rate 0.98 --SEO_SA::neighbors_sampled 1000 --SEO_SA::neighbors_accepted 1000 --main::p1 0.70 --main::p2 0.15 --main::p3 0.15
 
 --- Simulated Annealing with 3-modal move Singleton+TTS+LMove (prob: 0.7, 0.15, 0.15)
 ./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_04x04.txt" --main::seed 0 --main::method STL_SA --STL_SA::start_temperature 50000 --STL_SA::min_temperature 1 --STL_SA::cooling_rate 0.99998 --STL_SA::neighbors_sampled 10000 --STL_SA::neighbors_accepted 1000 --main::p1 0.7 --main::p2 0.15 --main::p3 0.15
