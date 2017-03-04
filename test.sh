@@ -1,11 +1,6 @@
 
 #!/bin/bash
 
-<<<<<<< HEAD
-MAX_TESTS=111
-INST=11x11
- 
-=======
 MAX_TESTS=50
 INST=05x05
 
