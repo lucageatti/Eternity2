@@ -1547,12 +1547,12 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
     }
 
     // Backup IDOs
-    IDO eLstIDO[]= { 
+    /*IDO eLstIDO[]= { 
         st.getIDOAt(pair<unsigned,unsigned>(i1,j1)), 
         st.getIDOAt(pair<unsigned,unsigned>(i1,j1+1)),
         st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1+1)), 
         st.getIDOAt(pair<unsigned,unsigned>(i1+1,j1)) 
-    };
+    };*/
     IDO eSelIDO[]= { 
         st.getIDOAt(pair<unsigned,unsigned>(i2,j2)), 
         st.getIDOAt(pair<unsigned,unsigned>(i2,j2+1)),
@@ -1566,12 +1566,12 @@ void Eternity2_LMoveNeighborhoodExplorer::MakeMove(Eternity2_State& st, const Et
         pair<unsigned,unsigned>(i1+1,j1+1), 
         pair<unsigned,unsigned>(i1+1,j1) 
     };
-    Coord eSelCoord[] = { 
+    /*Coord eSelCoord[] = { 
         pair<unsigned,unsigned>(i2,j2), 
         pair<unsigned,unsigned>(i2,j2+1), 
         pair<unsigned,unsigned>(i2+1,j2+1), 
         pair<unsigned,unsigned>(i2+1,j2) 
-    };
+    };*/
     //cout << "mkmv 1" << endl;
     // Calculate the rotation  needed to fit ellList[i] in place of ellList[from]
     // Positive rotation = clockwise rotation of the L
@@ -1968,12 +1968,12 @@ vector<vector<pair<int,Orientation>>> Eternity2_LMoveNeighborhoodExplorer::creat
           st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2+1)),
           st.getIDOAt(pair<unsigned,unsigned>(i2+1,j2)) 
         };
-        Coord eSelCoord[] = { 
+        /*Coord eSelCoord[] = { 
           pair<unsigned,unsigned>(i2,j2), 
           pair<unsigned,unsigned>(i2,j2+1), 
           pair<unsigned,unsigned>(i2+1,j2+1), 
           pair<unsigned,unsigned>(i2+1,j2) 
-        };
+        };*/
         // Calculate the rotation  needed to fit ellList[i] in place of ellList[ellSelection[i]]
         // Positive rotation = counter-clockwise rotation of the L
         int rot = mv.ellList.at(i).second - mv.ellList.at(j).second;

@@ -100,7 +100,7 @@ void Eternity2_State::ttsRandomCoords(){
   random_tts = vector<pair<Coord,int> >();
   int i,j,rnd;
   vector<vector<bool>> feas_board(in.getHeight(),vector<bool>(in.getWidth(),0));
-  int pseudo_distribution = std::max((unsigned int)2,(in.getWidth() * in.getHeight()) / 6);
+  //int pseudo_distribution = std::max((unsigned int)2,(in.getWidth() * in.getHeight()) / 6);
 
   for (i = 0; i < in.getWidth(); ++i)
   {
@@ -180,9 +180,9 @@ unsigned Eternity2_State::readPlacementMatrix(unsigned row, unsigned column, uns
 */
 void Eternity2_State::testReadPlacementMatrix(){
   //cout << "--- Test readPlacementMatrix() ---" << endl;
-  int rows = sizeof(constraintMatrix)/sizeof(constraintMatrix[0]);
+  //int rows = sizeof(constraintMatrix)/sizeof(constraintMatrix[0]);
   //cout << "constraintMatrix has " << rows <<  " rows!" << endl;
-  int cols = sizeof(constraintMatrix[0])/sizeof(constraintMatrix[0][0]);
+  //int cols = sizeof(constraintMatrix[0])/sizeof(constraintMatrix[0][0]);
   //cout << "constraintMatrix has " << cols <<  " columns!" << endl;
   if(constraintMatrix[0][0]==0){ 
     //cout << "filling constraintMatrix." << endl;
