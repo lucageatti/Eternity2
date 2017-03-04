@@ -2,6 +2,39 @@
 \section{L Move} % (fold)
 \label{sec:l_move}
 
-    To do\dots
+La "L Move" consiste nell'individuare dei gruppi di celle a forma di L nella scacchiera, per poi scambiare queste L fra di loro. Al fine di poter calcolare i delta-costi, è necessario che, per ogni coppia di L, le rispettive celle siano a due a due separate orizzontalmente e/o verticalmente da almeno una cella che non appartiene a nessuna L.
+
+\paragraph{Rappresentare le L}
+Si immagini di suddividere la scacchiera in quadrati 2x2, la cui "coordinata zero" è la cella in alto a sinistra; ognuno di questi quadrati può contenere una L. L'orientamento delle L viene indicato con un numero da 0 a 3, che indica in quale cella del quadrato si trova il "buco" (la cella vuota) della L, immaginando di numerare le celle in senso orario.
+
+
+\paragraph{L-Partition}
+Per L-Partition si intende l'atto di individuare una lista di L nella scacchiera, tali che nessuna L sia direttamente in contatto verticale od orizzontale con un'altra. In altre parole, per ogni coppia di L le rispettive celle sono a due a due separate da uno spazio vuoto (in senso verticale e/o orizzontale). 
+
+Tale partizione viene effettuata in modo pseudo-casuale: per ogni quadrato 2x2 nella scacchiera, si decide pseudo-casualmente se tentare di inserire una L oppure no; si fa in modo che i quadrati vuoti siano molto più probabili di quelli pieni. Una volta deciso di (tentare di) inserire una L, si verifica quale tipo di L è ammissibile (possibilmente anche nessuna). Dopo aver inserito una nuova L, la si aggiunge alla lista che rappresenta la partizione e si aggiornano i vincoli che restringono gli inserimenti successivi.
+
+Questi vincoli vengono mantenuti in memoria con una matrice $V$ tale che, per ogni quadrato $2\times 2$, c'è un intero da 0 a 5. Tale intero indica:
+\begin{itemize}
+	\item Da 0 a 3 - nel quadrato è possibile inserire una L dall'orientamento corrispondente al numero;
+	\item 4 - il quadrato deve rimanere vuoto;
+	\item 5 - non c'è alcun vincolo sul quadrato, è possibile inserire una L a piacere.
+\end{itemize}
+Quando si inserisce una nuova L, è necessario aggiornare $V$ in modo che gli inserimenti seguenti siano sempre ammissibili. 
+
+Per far ciò in modo efficiente, viene mantenuta in memoria una matrice dei vincoli $V'_0$ tale che, presa una L con orientamento 0, indica tutti i vincoli da imporre nell'intorno $5\times 5$ attorno ad essa. 
+
+Le matrici $V'_i$, cioè quelle per le L con orientamento da 1 a 3, si ottengono a partire da $V'_0$ tramite delle rotazioni e delle somme con modulo ai valori in esso contenuti. Di fatto è stata implementata una funzione $v$ tale che $v(i,j,r)$ ritorna $V'_r[i,j]$ a partire da $V'_0$.
+
+Alla fine del processo, se la partizione risulta ancora vuota, viene aggiunta una L a caso in posizione casuale (assumendo quindi che la scacchiera sia almeno $2\times 2$).
+
+
+\paragraph{Esecuzione della mossa}
+Una volta individuata la L-Partition, ottenendo quindi una lista $L$ delle L individuate sulla scacchiera, si crea un vettore-permutazione $\pi$ che indica come scambiare le L fra di loro. $\pi$ inizialmente indicherà la permutazione identica (i.e. 1,2,3,\dots ), venendo poi incrementato lessicograficamente per identificare la permutazione successiva ad ogni chiamata di \texttt{NextMove()}. 
+
+\paragraph{Feasibility} La correttezza della L-Partition è garantita dalla procedura che la genera. Inoltre essa non viene modificata dalla \texttt{NextMove()}. Perciò il controllo di feasibility consiste semplicemente nel verificare che la permutazione $\pi$ sia coerente, ovvero che non ci siano elementi ripetuti.
+
+% Magari spiegare come ricavo i vincoli
+
+
 
 % section l_move (end)
