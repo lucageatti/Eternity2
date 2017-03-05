@@ -1689,7 +1689,7 @@
 
 #seed = 1
 
-./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_09x09.txt" --main::seed 1 < ../eternity2-data/ourInput/input_09x09.txt 
+time ./Eternity2 --main::instance "../eternity2-data/pieces_set_2/pieces_09x09.txt" --main::seed 1 < ../eternity2-data/ourInput/input_09x09.txt | tail -n 150
 
 java -jar e2visualizer.jar pieces_set_2/pieces_09x09.txt ourSolutions/sol_09x09.txt 0
 

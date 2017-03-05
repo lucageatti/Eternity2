@@ -1,7 +1,16 @@
 
 \section{Conclusioni} % (fold)
 \label{sec:conclusioni}
+	
+    La scelta delle cinque mosse si è rivelata una buona strategia sulla base dei risultati ottenuti. Il loro vantaggio principale è stato quello di poter calcolare il $\Delta$-cost in modo efficiente, e questo ha consentito un notevole speed-up nelle performace. Un altro punto di forza è stato l'implementazione dell'\textit{Hungarian Algorithm}, che ha reso possibile l'uso della BestMove nello steepest descent, che altrimenti sarebbe risultato proibitivo usato l'enumerazione completa tramite le funzioni FirstMove e NextMove.
+    
+    Con la combinazione di queste cinque mosse si è ottenuto un risultato di $418$ \textit{matching edges} ($62$ conflitti) su un totale di $467$: scorrendo la letteratura su questo problema, tale risultato è sufficientemente buono da poter giustificare la scelta di tali mosse.
 
-    To do\dots
+    Sviluppi futuri di questo progetto potrebbero essere i seguenti:
+    \begin{itemize}
+    	\item eseguire il \textit{parameter tuning} sul simulated annealing per capire il valore ottimale dei parametri
+    	\item usare il solver \textit{Multi Start} di easylocal++, evitando di redirigere in input il file con i comandi
+    	\item implementare mosse non-standard per capire se è possibile un effettivo miglioramento
+    \end{itemize}
 
 % section conclusioni (end)
